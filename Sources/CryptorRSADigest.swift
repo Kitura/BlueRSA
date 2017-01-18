@@ -124,6 +124,7 @@ public extension Data {
 			#endif
 		}
 		
+		/// The platform/alogorithm dependent function to be used.
 		public var engine: (_ data: UnsafeRawPointer, _ len: CC_LONG, _ md: UnsafeMutablePointer<UInt8>) -> UnsafeMutablePointer<UInt8>! {
 			
 			#if os(Linux)
