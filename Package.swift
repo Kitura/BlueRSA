@@ -19,23 +19,29 @@
 
 import PackageDescription
 
-#if os(Linux) || os(macOS)
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 	
-let package = Package(
-	name: "CryptorRSA",
-	targets: [Target(name: "CryptorRSA")],
-	dependencies: [],
-	exclude: ["CryptorRSA.xcodeproj", "README.md", "Sources/Info.plist"])
+	let url = "https://github.com/IBM-Swift/CommonCrypto.git"
+	let majorVersion = 0
+	let minorVersion = 1
 	
-	#if os(Linux)
+#elseif os(Linux)
 	
-		package.dependencies.append(
-			.Package(url: "https://github.com/IBM-Swift/OpenSSL.git", majorVersion: 0, minor: 3))
-	
-	#endif
+	let url = "https://github.com/IBM-Swift/OpenSSL.git"
+	let majorVersion = 0
+	let minorVersion = 3
 	
 #else
 	
 	fatalError("Unsupported OS")
 	
 #endif
+
+let package = Package(
+	name: "CryptorRSA",
+	targets: [Target(name: "CryptorRSA")],
+	dependencies: [
+		.Package(url: url, majorVersion: majorVersion, minor: minorVersion),
+		],
+	exclude: ["Cryptor.xcodeproj", "README.md", "Sources/Info.plist"]
+)
