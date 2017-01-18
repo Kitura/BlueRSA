@@ -26,7 +26,7 @@ import Foundation
 ///
 /// Various RSA Related Utility Functions
 ///
-public struct RSAUtilities {
+public extension CryptorRSA {
 	
 	#if !os(Linux)
 	
@@ -139,7 +139,28 @@ public struct RSAUtilities {
 	#endif
 
 	///
-	/// This function strips the x509 from a provided ASN.1 DER public key. If the key doesn't contain a header, 
+	/// Get the Base64 representation of a PEM encoded string after stripping off the PEM markers.
+	///
+	/// - Parameters:
+	///		- pemString:		`String` containing PEM formatted data.
+	///
+	/// - Returns:				Base64 encoded `String` containing the data.
+	///
+	static func base64String(for pemString: String) throws -> String {
+		
+		let lines = pemString.components(separatedBy: "\n").filter { line in
+			return !line.hasPrefix(CryptorRSA.PEM_BEGIN_MARKER) && !line.hasPrefix(CryptorRSA.PEM_END_MARKER)
+		}
+		
+		guard lines.count != 0 else {
+			throw CryptorRSA.Error(code: CryptorRSA.ERR_BASE64_PEM_DATA, reason: "Couldn't get data from PEM key: no data available after stripping headers.")
+		}
+		
+		return lines.joined(separator: "")
+	}
+	
+	///
+	/// This function strips the x509 from a provided ASN.1 DER public key. If the key doesn't contain a header,
 	///	the DER data is returned as is.
 	///
 	/// - Parameters:

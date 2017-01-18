@@ -1,8 +1,8 @@
 //
-//  CryptorRSA.swift
+//  CryptorRSAConstants.swift
 //  CryptorRSA
 //
-//  Created by Bill Abt on 1/17/17.
+//  Created by Bill Abt on 1/18/17.
 //
 //  Copyright © 2017 IBM. All rights reserved.
 //
@@ -21,6 +21,24 @@
 
 import Foundation
 
-public class CryptorRSA {
+public extension CryptorRSA {
+	
+	// MARK: Constants
+	
+	// MARK: PEM Certificate Markers
+	
+	/// PEM Begin Marker
+	static let PEM_BEGIN_MARKER: String					= "-----BEGIN CERTIFICATE-----"
+
+	/// PEM End Marker
+	static let PEM_END_MARKER: String					= "-----END CERTIFICATE-----"
+	
+	// MARK: Public Key Markers
+
+	/// PK Begin Marker
+	static let PK_BEGIN_MARKER: String					= "-----BEGIN PUBLIC KEY-----"
+	
+	/// PK End Marker
+	static let PK_END_MARKER: String					= "-----END PUBLIC KEY-----"
 	
 }

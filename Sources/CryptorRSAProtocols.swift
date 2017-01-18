@@ -1,8 +1,8 @@
 //
-//  CryptorRSA.swift
+//  CryptorRSAProtocols.swift
 //  CryptorRSA
 //
-//  Created by Bill Abt on 1/17/17.
+//  Created by Bill Abt on 1/18/17.
 //
 //  Copyright © 2017 IBM. All rights reserved.
 //
@@ -21,6 +21,37 @@
 
 import Foundation
 
-public class CryptorRSA {
+///
+/// RSAKey Protocol
+///
+public protocol RSAKey {
 	
+	///
+	/// Create an RSAKey with data.
+	///
+	/// - Parameters:
+	///		- data:				`Data` containing the key data.
+	///
+	init(with data: Data) throws
 }
+
+///
+/// RSA Message Protocol
+///
+public protocol RSAMessage {
+	
+	/// `Data` containing the message.
+	var data: Data { get }
+	
+	/// Base64 representation of the message.
+	var base64String: String { get }
+	
+	///
+	/// Initialize an RSAMessage
+	///
+	/// - Parameters:
+	///		- data:				`Data` containing the message data.
+	///
+	init(data: Data)
+}
+
