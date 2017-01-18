@@ -31,9 +31,9 @@ public class CryptorRSA {
 	
 	public static let ERR_DOMAIN						= "com.ibm.oss.CryptorRSA.ErrorDomain"
 	
-	public static let ERR_ADD_KEY						= -9999
-	
+	public static let ERR_ADD_KEY						= -9999	
 	public static let ERR_DELETE_KEY					= -9998
+	public static let ERR_STRIP_PK_HEADER				= -9997
 
 	// MARK: -- Error
 	
