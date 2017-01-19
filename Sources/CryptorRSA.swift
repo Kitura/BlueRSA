@@ -142,7 +142,7 @@ public class CryptorRSA: RSAMessage {
 	/// Decrypt the data.
 	///
 	/// - Parameters:
-	///		- key:				The `Key` **Note:** Must be a public key.
+	///		- key:				The `Key` **Note:** Must be a private key.
 	///		- algorithm:		The algorithm to use (`Data.Algorithm`).
 	///
 	///	- Returns:				A new optional `Data` containing the decrypted data.
@@ -152,13 +152,13 @@ public class CryptorRSA: RSAMessage {
 		// Must be plaintext...
 		guard self.isEncrypted else {
 			
-			throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
+			throw Error(code: CryptorRSA.ERR_NOT_ENCRYTPED, reason: "Data is plaintext")
 		}
 		
-		// Key must be public...
+		// Key must be private...
 		guard key.isPublic == false else {
 			
-			throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not public")
+			throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not private")
 		}
 		
 		var response: Unmanaged<CFError>? = nil
@@ -167,10 +167,10 @@ public class CryptorRSA: RSAMessage {
 			
 			guard let error = response?.takeRetainedValue() as? Swift.Error else {
 				
-				throw Error(code: CryptorRSA.ERR_ENCRYTION_FAILED, reason: "Encryption failed. Unable to determine error.")
+				throw Error(code: CryptorRSA.ERR_ENCRYTION_FAILED, reason: "Decryption failed. Unable to determine error.")
 			}
 			
-			throw Error(code: CryptorRSA.ERR_ENCRYTION_FAILED, reason: "Encryption failed with error: \(error)")
+			throw Error(code: CryptorRSA.ERR_ENCRYTION_FAILED, reason: "Decryption failed with error: \(error)")
 		}
 		
 		return pData as? Data
@@ -178,6 +178,83 @@ public class CryptorRSA: RSAMessage {
 	
 
 	// MARK: --- Sign/Verification
+	
+	///
+	/// Sign the data
+	///
+	/// - Parameters:
+	///		- key:				The `Key` **Note:** Must be a private key.
+	///		- algorithm:		The algorithm to use (`Data.Algorithm`).
+	///
+	///	- Returns:				A new optional `Data` containing the digital signature.
+	///
+	public func signed(with key: Key, algorithm: Data.Algorithm) throws -> Data? {
+		
+		// Must be plaintext...
+		guard self.isEncrypted == false else {
+			
+			throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
+		}
+		
+		// Key must be private...
+		guard key.isPublic == false else {
+			
+			throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "Supplied key is not private")
+		}
+		
+		var response: Unmanaged<CFError>? = nil
+		let sData = SecKeyCreateSignature(key.reference, algorithm.alogrithmForDigest, self.data as CFData, &response)
+		if response != nil {
+			
+			guard let error = response?.takeRetainedValue() as? Swift.Error else {
+				
+				throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed. Unable to determine error.")
+			}
+			
+			throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed with error: \(error)")
+		}
+		
+		return sData as? Data
+	}
+	
+	///
+	/// Sign the data
+	///
+	/// - Parameters:
+	///		- key:				The `Key` **Note:** Must be a public key.
+	///		- signature:		The `Data` containing the signature to verify against.
+	///		- algorithm:		The algorithm to use (`Data.Algorithm`).
+	///
+	///	- Returns:				True if verification is successful, false otherwise
+	///
+	public func verify(with key: Key, signature: Data, algorithm: Data.Algorithm) throws -> Bool {
+		
+		// Must be plaintext...
+		guard self.isEncrypted == false else {
+			
+			throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
+		}
+		
+		// Key must be public...
+		guard key.isPublic else {
+			
+			throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "Supplied key is not public")
+		}
+		
+		var response: Unmanaged<CFError>? = nil
+		let result = SecKeyVerifySignature(key.reference, algorithm.alogrithmForDigest, self.data as CFData, signature as CFData, &response)
+		if response != nil {
+			
+			guard let error = response?.takeRetainedValue() as? Swift.Error else {
+				
+				throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Verification failed. Unable to determine error.")
+			}
+			
+			throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Verification failed with error: \(error)")
+		}
+		
+		return result
+	}
 	
 
 	// MARK: --- Utility
