@@ -21,6 +21,8 @@
 
 import Foundation
 
+// MARK: -
+
 public extension CryptorRSA {
 	
 	// MARK: Constants
@@ -36,6 +38,15 @@ public extension CryptorRSA {
 	public static let ERR_STRIP_PK_HEADER				= -9997
 	public static let ERR_INIT_PK						= -9996
 	public static let ERR_BASE64_PEM_DATA				= -9995
+	public static let ERR_STRING_ENCODING				= -9994
+	public static let ERR_KEY_NOT_PUBLIC				= -9993
+	public static let ERR_KEY_NOT_PRIVATE				= -9992
+	public static let ERR_NOT_ENCRYTPED					= -9991
+	public static let ERR_ENCRYTION_FAILED				= -9990
+	public static let ERR_NOT_PLAINTEXT					= -9989
+	public static let ERR_DECRYPTION_FAILED				= -9998
+	public static let ERR_SIGNING_FAILED				= -9987
+	public static let ERR_VERIFICATION_FAILED			= -9986
 	
 	// MARK: -- Error
 	

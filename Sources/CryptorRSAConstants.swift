@@ -21,6 +21,8 @@
 
 import Foundation
 
+// MARK: -
+
 public extension CryptorRSA {
 	
 	// MARK: Constants

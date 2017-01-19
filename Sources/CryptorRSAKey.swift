@@ -21,32 +21,36 @@
 
 import Foundation
 
+// MARK: -
+
 public extension CryptorRSA {
 	
-	/// MARK: -
-	
 	///
-	/// Public Key Handling
+	/// Key Handling
 	///
-	public class PublicKey: RSAKey {
+	public class Key: RSAKey {
 		
 		/// MARK: Statics
 		
 		/// Regular expression for the PK using the begin and end markers.
 		static let publicKeyRegex: NSRegularExpression? = {
+			
 			let publicKeyRegex = "(\(CryptorRSA.PK_BEGIN_MARKER).+?\(CryptorRSA.PK_END_MARKER)"
 			return try? NSRegularExpression(pattern: publicKeyRegex, options: .dotMatchesLineSeparators)
 		}()
 		
 		// MARK: Properties
 		
+		/// The stored key
 		let reference: SecKey
-		let tag: String
+		
+		/// True if the key is public, false if private.
+		public internal(set) var isPublic: Bool = true
 		
 		// MARK: Static Functions
 		
 		///
-		/// Takes an input string, scans for public key sections, and then returns a PublicKey for any valid keys found
+		/// Takes an input string, scans for public key sections, and then returns a Key for any valid keys found
 		/// - This method scans the file for public key armor - if no keys are found, an empty array is returned
 		/// - Each public key block found is "parsed" by `publicKeyFromPEMString()`
 		/// - should that method throw, the error is _swallowed_ and not rethrown
@@ -54,9 +58,9 @@ public extension CryptorRSA {
 		/// - Parameters:
 		///		- pemString: 		The string to use to parse out values
 		///
-		/// - Returns: 				An array of `PublicKey` objects
+		/// - Returns: 				An array of `Key` objects containing just public keys.
 		///
-		public static func publicKeys(pemEncoded pemString: String) -> [PublicKey] {
+		public static func publicKeys(pemEncoded pemString: String) -> [Key] {
 			
 			// If our regexp isn't valid, or the input string is empty, we can't move forward…
 			guard let publicKeyRegexp = publicKeyRegex, pemString.characters.count > 0 else {
@@ -74,7 +78,7 @@ public extension CryptorRSA {
 				range: all
 			)
 			
-			let keys = matches.flatMap { result -> PublicKey? in
+			let keys = matches.flatMap { result -> Key? in
 				let match = result.rangeAt(1)
 				let start = pemString.characters.index(pemString.startIndex, offsetBy: match.location)
 				let end = pemString.characters.index(start, offsetBy: match.length)
@@ -83,7 +87,7 @@ public extension CryptorRSA {
 				
 				let thisKey = pemString[range]
 				
-				return try? PublicKey(withPEM: thisKey)
+				return try? Key(withPEM: thisKey, isPublic: true)
 			}
 			
 			return keys
@@ -92,212 +96,99 @@ public extension CryptorRSA {
 		// MARK: Initializers
 		
 		///
-		/// Creates a public with a RSA public key data.
+		/// Create a key using key data.
 		///
 		/// - Parameters:
-		///		- data: 			Public key data
+		///		- data: 			Key data
+		///		- isPublic:			True the key is public, false otherwise.
 		///
-		/// - Returns:				New `PublicKey` instance.
+		/// - Returns:				New `Key` instance.
 		///
-		required public init(with data: Data) throws {
+		public required init(with data: Data, isPublic: Bool) throws {
 			
-			tag = UUID().uuidString
+			self.isPublic = isPublic
 			let data = try CryptorRSA.stripPublicKeyHeader(for: data)
-			reference = try CryptorRSA.addKey(using: data, isPublic: true, taggedWith: tag)
+			reference = try CryptorRSA.createKey(from: data, isPublic: isPublic)
 		}
 		
 		///
-		/// Creates a public key with a base64-encoded string.
+		/// Creates a key with a base64-encoded string.
 		///
 		/// - Parameters:
-		///		- base64String: 	Base64-encoded public key data
+		///		- base64String: 	Base64-encoded key data
+		///		- isPublic:			True the key is public, false otherwise.
 		///
-		/// - Returns:				New `PublicKey` instance.
+		/// - Returns:				New `Key` instance.
 		///
-		public convenience init(withBase64 base64String: String) throws {
+		public convenience init(withBase64 base64String: String, isPublic: Bool) throws {
 			
 			guard let data = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
 				
-				throw CryptorRSA.Error(code: CryptorRSA.ERR_INIT_PK, reason: "Couldn't decode base 64 string")
+				throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base 64 string")
 			}
 			
-			try self.init(with: data)
+			try self.init(with: data, isPublic: isPublic)
 		}
 		
 		///
-		/// Creates a public key with a PEM string.
+		/// Creates a key with a PEM string.
 		///
 		/// - Parameters:
-		///		- pemString: 		PEM-encoded public key string
+		///		- pemString: 		PEM-encoded key string
+		///		- isPublic:			True the key is public, false otherwise.
 		///
-		/// - Returns:				New `PublicKey` instance.
+		/// - Returns:				New `Key` instance.
 		///
-		public convenience init(withPEM pemString: String) throws {
+		public convenience init(withPEM pemString: String, isPublic: Bool) throws {
 			
 			let base64String = try CryptorRSA.base64String(for: pemString)
 			
-			try self.init(withBase64: base64String)
+			try self.init(withBase64: base64String, isPublic: isPublic)
 		}
 		
 		///
-		/// Creates a public key with a PEM file.
+		/// Creates a key with a PEM file.
 		///
 		/// - Parameters:
-		///   - pemName: 			Name of the PEM file
-		///   - bundle: 			Bundle in which to look for the PEM file. Defaults to the main bundle.
+		/// 	- pemName: 			Name of the PEM file
+		/// 	- bundle: 			Bundle in which to look for the PEM file. Defaults to the main bundle.
+		///		- isPublic:			True the key is public, false otherwise.
 		///
-		/// - Returns:				New `PublicKey` instance.
+		/// - Returns:				New `Key` instance.
 		///
-		public convenience init(withPEMNamed pemName: String, in bundle: Bundle = Bundle.main) throws {
+		public convenience init(withPEMNamed pemName: String, in bundle: Bundle = Bundle.main, isPublic: Bool) throws {
 			
 			guard let path = bundle.path(forResource: pemName, ofType: "pem") else {
 				
-				throw CryptorRSA.Error(code: CryptorRSA.ERR_INIT_PK, reason: "Couldn't find a PEM file named '\(pemName)'")
+				throw Error(code: ERR_INIT_PK, reason: "Couldn't find a PEM file named '\(pemName)'")
 			}
 			
 			let keyString = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 			
-			try self.init(withPEM: keyString)
+			try self.init(withPEM: keyString, isPublic: isPublic)
 		}
 		
 		///
-		/// Creates a private key with a DER file.
+		/// Creates a key with a DER file.
 		///
 		/// - Parameters:
-		///   - derName: 			Name of the DER file
-		///   - bundle: 			Bundle in which to look for the DER file. Defaults to the main bundle.
+		/// 	- derName: 			Name of the DER file
+		/// 	- bundle: 			Bundle in which to look for the DER file. Defaults to the main bundle.
+		///		- isPublic:			True the key is public, false otherwise.
 		///
-		/// - Returns:				New `PublicKey` instance.
+		/// - Returns:				New `Key` instance.
 		///
-		public convenience init(withDERNamed derName: String, in bundle: Bundle = Bundle.main) throws {
+		public convenience init(withDERNamed derName: String, in bundle: Bundle = Bundle.main, isPublic: Bool) throws {
 			
 			guard let path = bundle.path(forResource: derName, ofType: "der") else {
 				
-				throw CryptorRSA.Error(code: CryptorRSA.ERR_INIT_PK, reason: "Couldn't find a DER file named '\(derName)'")
-			}
-			let data = try Data(contentsOf: URL(fileURLWithPath: path))
-			try self.init(with: data)
-		}
-
-		///
-		/// Deinitialize
-		///
-		deinit {
-			try! CryptorRSA.removeKey(with: tag)
-		}
-		
-	}
-	
-	/// MARK: -
-	
-	///
-	/// Private Key Handling
-	///
-	public class PrivateKey: NSObject, RSAKey {
-		
-		// MARK: Properties
-		
-		let reference: SecKey
-		let tag: String
-		
-		// MARK: Initializers
-		
-		///
-		/// Creates a private key with a RSA public key data.
-		///
-		/// - Parameters:
-		///		- data:		 		Private key data
-		///
-		/// - Returns:				New `PrivateKey` instance.
-		///
-		required public init(with data: Data) throws {
-			
-			tag = UUID().uuidString
-			
-			reference = try CryptorRSA.addKey(using: data, isPublic: false, taggedWith: tag)
-		}
-		
-		///
-		/// Creates a private key with a base64-encoded string.
-		///
-		/// - Parameters:
-		///		- base64String: 	Base64-encoded private key data
-		///
-		/// - Returns:				New `PrivateKey` instance.
-		///
-		public convenience init(withBase64 base64String: String) throws {
-			
-			guard let data = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
-				
-				throw CryptorRSA.Error(code: CryptorRSA.ERR_INIT_PK, reason: "Couldn't decode base 64 string")
-			}
-			
-			try self.init(with: data)
-		}
-		
-		///
-		/// Creates a private key with a PEM string.
-		///
-		/// - Parameters:
-		///		- pemString: 		PEM-encoded private key string
-		///
-		/// - Returns:				New `PrivateKey` instance.
-		///
-		public convenience init(withPEM pemString: String) throws {
-			
-			let base64String = try CryptorRSA.base64String(for: pemString)
-			
-			try self.init(withBase64: base64String)
-		}
-		
-		///
-		/// Creates a private key with a PEM file.
-		///
-		/// - Parameters:
-		///   - pemName: 			Name of the PEM file
-		///   - bundle: 			Bundle in which to look for the PEM file. Defaults to the main bundle.
-		///
-		/// - Returns:				New `PrivateKey` instance.
-		///
-		public convenience init(withPEMNamed pemName: String, in bundle: Bundle = Bundle.main) throws {
-			
-			guard let path = bundle.path(forResource: pemName, ofType: "pem") else {
-				
-				throw CryptorRSA.Error(code: CryptorRSA.ERR_INIT_PK, reason: "Couldn't find a PEM file named '\(pemName)'")
-			}
-			
-			let keyString = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-			
-			try self.init(withPEM: keyString)
-		}
-		
-		///
-		/// Creates a private key with a DER file.
-		///
-		/// - Parameters:
-		///   - derName: 			Name of the DER file
-		///   - bundle: 			Bundle in which to look for the DER file. Defaults to the main bundle.
-		///
-		/// - Returns:				New `PrivateKey` instance.
-		///
-		public convenience init(withDERNamed derName: String, in bundle: Bundle = Bundle.main) throws {
-			
-			guard let path = bundle.path(forResource: derName, ofType: "der") else {
-				
-				throw CryptorRSA.Error(code: CryptorRSA.ERR_INIT_PK, reason: "Couldn't find a DER file named '\(derName)'")
+				throw Error(code: ERR_INIT_PK, reason: "Couldn't find a DER file named '\(derName)'")
 			}
 			
 			let data = try Data(contentsOf: URL(fileURLWithPath: path))
-			try self.init(with: data)
-		}
-		
-		///
-		/// Deinitialize
-		///
-		deinit {
 			
-			try! CryptorRSA.removeKey(with: tag)
+			try self.init(with: data, isPublic: isPublic)
 		}
-	}
 
+	}
 }

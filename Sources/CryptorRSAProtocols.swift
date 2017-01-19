@@ -21,19 +21,7 @@
 
 import Foundation
 
-///
-/// RSAKey Protocol
-///
-public protocol RSAKey {
-	
-	///
-	/// Create an RSAKey with data.
-	///
-	/// - Parameters:
-	///		- data:				`Data` containing the key data.
-	///
-	init(with data: Data) throws
-}
+// MARK: -
 
 ///
 /// RSA Message Protocol
@@ -47,11 +35,29 @@ public protocol RSAMessage {
 	var base64String: String { get }
 	
 	///
-	/// Initialize an RSAMessage
+	/// Create an Message with data.
 	///
 	/// - Parameters:
 	///		- data:				`Data` containing the message data.
+	///		- isEncrypted:		True if *data* is encrypted, false if *data* is plaintext.
 	///
-	init(data: Data)
+	init(with data: Data, isEncrypted: Bool)
+}
+
+// MARK: -
+
+///
+/// RSA Key Protocol
+///
+public protocol RSAKey {
+	
+	///
+	/// Initialize an RSAKey
+	///
+	/// - Parameters:
+	///		- data:				`Data` containing the key data.
+	///		- isPublic:			True the key is public, false otherwise.
+	///
+	init(with data: Data, isPublic: Bool) throws
 }
 

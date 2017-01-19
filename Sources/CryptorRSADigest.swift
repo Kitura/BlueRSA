@@ -27,21 +27,19 @@
 
 import Foundation
 
+// MARK: -- RSA Digest Extension for Data
+
+///
+/// Digest Handling Extension
+///
 public extension Data {
+	
+	// MARK: Enums
 	
 	///
 	/// Enumerates available Digest algorithms
 	///
 	public enum Algorithm {
-		
-		/// Message Digest 2 See: http://en.wikipedia.org/wiki/MD2_(cryptography)
-		case md2
-		
-		/// Message Digest 4
-		case md4
-		
-		/// Message Digest 5
-		case md5
 		
 		/// Secure Hash Algorithm 1
 		case sha1
@@ -65,15 +63,6 @@ public extension Data {
 				
 				switch self {
 					
-				case .md2:
-					fatalError("MD2 digest not supported by OpenSSL")
-					
-				case .md4:
-					return CC_LONG(MD4_DIGEST_LENGTH)
-					
-				case .md5:
-					return CC_LONG(MD5_DIGEST_LENGTH)
-					
 				case .sha1:
 					return CC_LONG(SHA_DIGEST_LENGTH)
 					
@@ -95,15 +84,6 @@ public extension Data {
 
 				switch self {
 				
-				case .md2:
-					return CC_LONG(CC_MD2_DIGEST_LENGTH)
-					
-				case .md4:
-					return CC_LONG(CC_MD4_DIGEST_LENGTH)
-					
-				case .md5:
-					return CC_LONG(CC_MD5_DIGEST_LENGTH)
-					
 				case .sha1:
 					return CC_LONG(CC_SHA1_DIGEST_LENGTH)
 					
@@ -124,21 +104,60 @@ public extension Data {
 			#endif
 		}
 		
+		#if !os(Linux)
+			
+			public var alogrithmForDigest: SecKeyAlgorithm {
+					
+				switch self {
+						
+				case .sha1:
+					return .rsaSignatureDigestPKCS1v15SHA1
+						
+				case .sha224:
+					return .rsaSignatureDigestPKCS1v15SHA224
+					
+				case .sha256:
+					return .rsaSignatureDigestPKCS1v15SHA256
+						
+				case .sha384:
+					return .rsaSignatureDigestPKCS1v15SHA384
+						
+				case .sha512:
+					return .rsaSignatureDigestPKCS1v15SHA512
+						
+				}
+			}
+				
+			public var alogrithmForMessage: SecKeyAlgorithm {
+			
+				switch self {
+				
+				case .sha1:
+					return .rsaSignatureMessagePKCS1v15SHA1
+				
+				case .sha224:
+					return .rsaSignatureMessagePKCS1v15SHA224
+				
+				case .sha256:
+					return .rsaSignatureMessagePKCS1v15SHA256
+				
+				case .sha384:
+					return .rsaSignatureMessagePKCS1v15SHA384
+				
+				case .sha512:
+					return .rsaSignatureMessagePKCS1v15SHA512
+				
+			}
+		}
+		
+		#endif
+		
 		/// The platform/alogorithm dependent function to be used.
 		public var engine: (_ data: UnsafeRawPointer, _ len: CC_LONG, _ md: UnsafeMutablePointer<UInt8>) -> UnsafeMutablePointer<UInt8>! {
 			
 			#if os(Linux)
 				
 				switch self {
-					
-				case .md2:
-					fatalError("MD2 digest not supported by OpenSSL")
-					
-				case .md4:
-					return MD4
-					
-				case .md5:
-					return MD5
 					
 				case .sha1:
 					return SHA1
@@ -161,15 +180,6 @@ public extension Data {
 				
 				switch self {
 					
-				case .md2:
-					return CC_MD2
-					
-				case .md4:
-					return CC_MD4
-					
-				case .md5:
-					return CC_MD5
-					
 				case .sha1:
 					return CC_SHA1
 					
@@ -190,6 +200,9 @@ public extension Data {
 			#endif
 		}
 	}
+	
+	
+	// MARK: Functions
 	
 	///
 	/// Return a digest of the data based on the alogorithm selected.

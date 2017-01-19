@@ -21,7 +21,7 @@
 
 import Foundation
 
-// MARK: RSAUtilities
+// MARK: -- RSAUtilities
 
 ///
 /// Various RSA Related Utility Functions
@@ -31,109 +31,34 @@ public extension CryptorRSA {
 	#if !os(Linux)
 	
 	///
-	/// Add a key to the keychain.
+	/// Create a key from key data.
 	///
 	/// - Parameters:
 	///		- keyData:			`Data` representation of the key.
 	///		- isPublic:			True if the key is to be `public`, false otherwise.
-	///		- tag:				The `String` representation of the tag to be used.
 	///
 	///	- Returns:				`SecKey` representation of the key.
 	///
-	static func addKey(using keyData: Data, isPublic: Bool, taggedWith tag: String) throws ->  SecKey {
+	static func createKey(from keyData: Data, isPublic: Bool) throws ->  SecKey {
 		
 		var keyData = keyData
 		
-		guard let tagData = tag.data(using: .utf8) else {
-			
-			throw CryptorRSA.Error(code: CryptorRSA.ERR_ADD_KEY, reason: "Couldn't create tag data for key")
-		}
-		
 		let keyClass = isPublic ? kSecAttrKeyClassPublic : kSecAttrKeyClassPrivate
 		
-		// On iOS 10+, we can use SecKeyCreateWithData without going through the keychain
-		if #available(macOS 10.12, *), #available(iOS 10.0, *), #available(watchOS 3.0, *), #available(tvOS 10.0, *) {
-			
-			let sizeInBits = keyData.count * MemoryLayout<UInt8>.size
-			let keyDict: [CFString: Any] = [
-				kSecAttrKeyType: kSecAttrKeyTypeRSA,
-				kSecAttrKeyClass: keyClass,
-				kSecAttrKeySizeInBits: NSNumber(value: sizeInBits)
-			]
-			
-			guard let key = SecKeyCreateWithData(keyData as CFData, keyDict as CFDictionary, nil) else {
-				
-				throw CryptorRSA.Error(code: CryptorRSA.ERR_ADD_KEY, reason: "Couldn't create key reference from key data")
-			}
-
-			return key
-			
-			// On iOS 9 and earlier, add a persistent version of the key to the system keychain
-		} else {
-			
-			let persistKey = UnsafeMutablePointer<AnyObject?>(mutating: nil)
-			
-			let keyAddDict: [CFString: Any] = [
-				kSecClass: kSecClassKey,
-				kSecAttrApplicationTag: tagData,
-				kSecAttrKeyType: kSecAttrKeyTypeRSA,
-				kSecValueData: keyData,
-				kSecAttrKeyClass: keyClass,
-				kSecReturnPersistentRef: NSNumber(value: true),
-				kSecAttrAccessible: kSecAttrAccessibleWhenUnlocked
-			]
-			
-			var secStatus = SecItemAdd(keyAddDict as CFDictionary, persistKey)
-			if secStatus != noErr && secStatus != errSecDuplicateItem {
-				throw CryptorRSA.Error(code: CryptorRSA.ERR_ADD_KEY, reason: "Provided key couldn't be added to the keychain")
-			}
-			
-			let keyCopyDict: [CFString: Any] = [
-				kSecClass: kSecClassKey,
-				kSecAttrApplicationTag: tagData,
-				kSecAttrKeyType: kSecAttrKeyTypeRSA,
-				kSecAttrKeyClass: keyClass,
-				kSecAttrAccessible: kSecAttrAccessibleWhenUnlocked,
-				kSecReturnRef: NSNumber(value: true),
-				]
-			
-			// Now fetch the SecKeyRef version of the key
-			var keyRef: AnyObject? = nil
-			secStatus = SecItemCopyMatching(keyCopyDict as CFDictionary, &keyRef)
-			
-			guard let unwrappedKeyRef = keyRef else {
-				
-				throw CryptorRSA.Error(code: CryptorRSA.ERR_ADD_KEY, reason: "Couldn't get key reference from the keychain")
-			}
-			
-			return unwrappedKeyRef as! SecKey // swiftlint:disable:this force_cast
-		}
-	}
-	
-	///
-	/// Remove a key from the keychain.
-	///
-	/// - Parameters:
-	///		- tag:				The `String` containing the tag of the key to be removed.
-	///
-	static func removeKey(with tag: String) throws {
-		
-		guard let tagData = tag.data(using: .utf8) else {
-			
-			return
-		}
-		
-		let keyRemoveDict: [CFString: Any] = [
-			kSecClass: kSecClassKey,
+		let sizeInBits = keyData.count * MemoryLayout<UInt8>.size
+		let keyDict: [CFString: Any] = [
 			kSecAttrKeyType: kSecAttrKeyTypeRSA,
-			kSecAttrApplicationTag: tagData,
-			]
+			kSecAttrKeyClass: keyClass,
+			kSecAttrKeySizeInBits: NSNumber(value: sizeInBits)
+		]
 		
-		let status: OSStatus = SecItemDelete(keyRemoveDict as CFDictionary)
-		if status != errSecSuccess {
+		guard let key = SecKeyCreateWithData(keyData as CFData, keyDict as CFDictionary, nil) else {
 			
-			throw CryptorRSA.Error(code: CryptorRSA.ERR_DELETE_KEY, reason: "Unable to remove key from keychain, code: \(status)")
+			throw Error(code: ERR_ADD_KEY, reason: "Couldn't create key reference from key data")
 		}
+		
+		return key
+		
 	}
 	
 	#endif
@@ -153,7 +78,7 @@ public extension CryptorRSA {
 		}
 		
 		guard lines.count != 0 else {
-			throw CryptorRSA.Error(code: CryptorRSA.ERR_BASE64_PEM_DATA, reason: "Couldn't get data from PEM key: no data available after stripping headers.")
+			throw Error(code: ERR_BASE64_PEM_DATA, reason: "Couldn't get data from PEM key: no data available after stripping headers.")
 		}
 		
 		return lines.joined(separator: "")
@@ -174,7 +99,7 @@ public extension CryptorRSA {
 		
 		guard count > 0 else {
 			
-			throw CryptorRSA.Error(code: CryptorRSA.ERR_STRIP_PK_HEADER, reason: "Provided public key is empty")
+			throw Error(code: ERR_STRIP_PK_HEADER, reason: "Provided public key is empty")
 		}
 		
 		var byteArray = [UInt8](repeating: 0, count: count)
@@ -183,7 +108,7 @@ public extension CryptorRSA {
 		var index = 0
 		guard byteArray[index] == 0x30 else {
 			
-			throw CryptorRSA.Error(code: CryptorRSA.ERR_STRIP_PK_HEADER, reason: "Provided key doesn't have a valid ASN.1 structure (first byte should be 0x30 == SEQUENCE)")
+			throw Error(code: ERR_STRIP_PK_HEADER, reason: "Provided key doesn't have a valid ASN.1 structure (first byte should be 0x30 == SEQUENCE)")
 		}
 		
 		index += 1
@@ -204,13 +129,13 @@ public extension CryptorRSA {
 		// 0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01, 0x05, 0x00
 		guard Int(byteArray[index]) == 0x30 else {
 			
-			throw CryptorRSA.Error(code: CryptorRSA.ERR_STRIP_PK_HEADER, reason: "Provided key doesn't have a valid X509 header")
+			throw Error(code: ERR_STRIP_PK_HEADER, reason: "Provided key doesn't have a valid X509 header")
 		}
 		
 		index += 15
 		if byteArray[index] != 0x03 {
 			
-			throw CryptorRSA.Error(code: CryptorRSA.ERR_STRIP_PK_HEADER, reason: "Invalid byte at index \(index - 1) (\(byteArray[index - 1])) for public key header")
+			throw Error(code: ERR_STRIP_PK_HEADER, reason: "Invalid byte at index \(index - 1) (\(byteArray[index - 1])) for public key header")
 		}
 		
 		index += 1
@@ -222,7 +147,7 @@ public extension CryptorRSA {
 		
 		guard byteArray[index] == 0 else {
 			
-			throw CryptorRSA.Error(code: CryptorRSA.ERR_STRIP_PK_HEADER, reason: "Invalid byte at index \(index - 1) (\(byteArray[index - 1])) for public key header")
+			throw Error(code: ERR_STRIP_PK_HEADER, reason: "Invalid byte at index \(index - 1) (\(byteArray[index - 1])) for public key header")
 		}
 		
 		index += 1
@@ -234,10 +159,12 @@ public extension CryptorRSA {
 	}
 }
 
-// MARK: Extensions
+// MARK: -
 
 #if !os(Linux)
 
+	// MARK: -- CFString Extension for Hashing
+	
 	///
 	/// Extension to CFString to make it hashable.
 	///
