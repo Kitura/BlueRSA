@@ -23,6 +23,7 @@ import Foundation
 
 // MARK: -
 
+@available(macOS 10.12, iOS 10.0, *)
 public extension CryptorRSA {
 	
 	// MARK: Constants

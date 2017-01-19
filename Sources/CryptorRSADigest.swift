@@ -106,6 +106,7 @@ public extension Data {
 		
 		#if !os(Linux)
 			
+			@available(macOS 10.12, iOS 10.0, *)
 			public var alogrithmForDigest: SecKeyAlgorithm {
 					
 				switch self {
@@ -128,6 +129,7 @@ public extension Data {
 				}
 			}
 				
+			@available(macOS 10.12, iOS 10.0, *)
 			public var alogrithmForMessage: SecKeyAlgorithm {
 			
 				switch self {

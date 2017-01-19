@@ -26,6 +26,7 @@ import Foundation
 ///
 /// RSA Encryption/Decryption, Signing/Verification
 ///
+@available(macOS 10.12, iOS 10.0, *)
 public class CryptorRSA: RSAMessage {
 	
 	// MARK: -- Properties

@@ -21,11 +21,11 @@ RSA public/private key encryption, private key signing and public key verificati
 * Swift Open Source `swift-3.0.2-RELEASE` toolchain (**Recommended**)
 
 ### iOS
-* iOS 9.0 or higher
+* iOS 10.0 or higher
 
 ### macOS
 
-* macOS 10.11.6 (*El Capitan*) or higher
+* macOS 10.12.0 (*Sierra*) or higher
 * Xcode Version 8.2 (8C38) or higher using one of the above toolchains (*Recommended*)
 
 ### Linux
