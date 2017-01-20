@@ -22,6 +22,7 @@
 import XCTest
 @testable import CryptorRSA
 
+@available(macOS 10.12, iOS 10.0, *)
 class CryptorRSATests: XCTestCase {
 	
 	// MARK: Public Key Tests
