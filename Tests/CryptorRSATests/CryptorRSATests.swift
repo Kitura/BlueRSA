@@ -25,7 +25,11 @@ import XCTest
 @available(macOS 10.12, iOS 10.0, *)
 class CryptorRSATests: XCTestCase {
 	
-	static let useBundles: Bool = false
+	static var useBundles: Bool {
+		
+		let path = CryptorRSATests.bundle.path(forResource: "public", ofType: "der")
+		return path != nil
+	}
 	
 	// MARK: Public Key Tests
 	
