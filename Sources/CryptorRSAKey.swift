@@ -152,6 +152,52 @@ public extension CryptorRSA {
 		///
 		/// - Parameters:
 		/// 	- pemName: 			Name of the PEM file
+		/// 	- path: 			Path where the file is located.
+		///		- isPublic:			True the key is public, false otherwise.
+		///
+		/// - Returns:				New `Key` instance.
+		///
+		public convenience init(withPEMNamed pemName: String, onPath path: String, isPublic: Bool) throws {
+			
+			var fullPath = path.appending(pemName)
+			if !path.hasSuffix(PEM_SUFFIX) {
+				
+				fullPath = fullPath.appending(PEM_SUFFIX)
+			}
+			
+			let keyString = try String(contentsOf: URL(fileURLWithPath: fullPath), encoding: .utf8)
+			
+			try self.init(withPEM: keyString, isPublic: isPublic)
+		}
+		
+		///
+		/// Creates a key with a DER file.
+		///
+		/// - Parameters:
+		/// 	- derName: 			Name of the DER file
+		/// 	- path: 			Path where the file is located.
+		///		- isPublic:			True the key is public, false otherwise.
+		///
+		/// - Returns:				New `Key` instance.
+		///
+		public convenience init(withDERNamed derName: String, onPath path: String, isPublic: Bool) throws {
+			
+			var fullPath = path.appending(derName)
+			if !path.hasSuffix(DER_SUFFIX) {
+				
+				fullPath = path.appending(DER_SUFFIX)
+			}
+
+			let data = try Data(contentsOf: URL(fileURLWithPath: fullPath))
+			
+			try self.init(with: data, isPublic: isPublic)
+		}
+
+		///
+		/// Creates a key with a PEM file.
+		///
+		/// - Parameters:
+		/// 	- pemName: 			Name of the PEM file
 		/// 	- bundle: 			Bundle in which to look for the PEM file. Defaults to the main bundle.
 		///		- isPublic:			True the key is public, false otherwise.
 		///
@@ -159,7 +205,7 @@ public extension CryptorRSA {
 		///
 		public convenience init(withPEMNamed pemName: String, in bundle: Bundle = Bundle.main, isPublic: Bool) throws {
 			
-			guard let path = bundle.path(forResource: pemName, ofType: "pem") else {
+			guard let path = bundle.path(forResource: pemName, ofType: PEM_SUFFIX) else {
 				
 				throw Error(code: ERR_INIT_PK, reason: "Couldn't find a PEM file named '\(pemName)'")
 			}
@@ -181,7 +227,7 @@ public extension CryptorRSA {
 		///
 		public convenience init(withDERNamed derName: String, in bundle: Bundle = Bundle.main, isPublic: Bool) throws {
 			
-			guard let path = bundle.path(forResource: derName, ofType: "der") else {
+			guard let path = bundle.path(forResource: derName, ofType: DER_SUFFIX) else {
 				
 				throw Error(code: ERR_INIT_PK, reason: "Couldn't find a DER file named '\(derName)'")
 			}
@@ -190,6 +236,5 @@ public extension CryptorRSA {
 			
 			try self.init(with: data, isPublic: isPublic)
 		}
-
 	}
 }

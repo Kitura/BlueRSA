@@ -28,6 +28,14 @@ public extension CryptorRSA {
 	
 	// MARK: Constants
 	
+	// MARK: Certificate Suffixes
+	
+	/// PEM Suffix
+	static let PEM_SUFFIX: String						= ".pem"
+	
+	/// DER Suffix
+	static let DER_SUFFIX: String						= ".der"
+	
 	// MARK: PEM Certificate Markers
 	
 	/// PEM Begin Marker

@@ -25,15 +25,25 @@ import XCTest
 @available(macOS 10.12, iOS 10.0, *)
 class CryptorRSATests: XCTestCase {
 	
+	static let useBundles: Bool = false
+	
 	// MARK: Public Key Tests
 	
 	static let bundle = Bundle(for: CryptorRSATests.self)
 	
 	func test_public_initWithData() throws {
 		
-		guard let path = CryptorRSATests.bundle.path(forResource: "public", ofType: "der") else {
+		var path: String
+		if CryptorRSATests.useBundles {
+			guard let bPath = CryptorRSATests.bundle.path(forResource: "public", ofType: "der") else {
 			
-			return XCTFail()
+				return XCTFail()
+			}
+			path = bPath
+			
+		} else {
+			
+			path = "./Tests/CryptorRSATests/Keys/public.der"
 		}
 		
 		let data = try Data(contentsOf: URL(fileURLWithPath: path))
@@ -44,9 +54,17 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_public_initWithBase64String() throws {
 		
-		guard let path = CryptorRSATests.bundle.path(forResource: "public-base64", ofType: "txt") else {
+		var path: String
+		if CryptorRSATests.useBundles {
+			guard let bPath = CryptorRSATests.bundle.path(forResource: "public-base64", ofType: "txt") else {
+				
+				return XCTFail()
+			}
+			path = bPath
 			
-			return XCTFail()
+		} else {
+			
+			path = "./Tests/CryptorRSATests/Keys/public-base64.txt"
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
@@ -58,10 +76,19 @@ class CryptorRSATests: XCTestCase {
 
 	func test_public_initWithBase64StringWhichContainsNewLines() throws {
 		
-		guard let path = CryptorRSATests.bundle.path(forResource: "public-base64-newlines", ofType: "txt") else {
+		var path: String
+		if CryptorRSATests.useBundles {
+			guard let bPath = CryptorRSATests.bundle.path(forResource: "public-base64-newlines", ofType: "txt") else {
+				
+				return XCTFail()
+			}
+			path = bPath
 			
-			return XCTFail()
+		} else {
+			
+			path = "./Tests/CryptorRSATests/Keys/public-base64-newlines.txt"
 		}
+		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 		let publicKey = try? CryptorRSA.Key(withBase64: str, isPublic: true)
 		XCTAssertNotNil(publicKey)
@@ -70,9 +97,17 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_public_initWithPEMString() throws {
 		
-		guard let path = CryptorRSATests.bundle.path(forResource: "public", ofType: "pem") else {
+		var path: String
+		if CryptorRSATests.useBundles {
+			guard let bPath = CryptorRSATests.bundle.path(forResource: "public", ofType: "pem") else {
+				
+				return XCTFail()
+			}
+			path = bPath
 			
-			return XCTFail()
+		} else {
+			
+			path = "./Tests/CryptorRSATests/Keys/public.pem"
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
@@ -83,8 +118,16 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_public_initWithPEMName() throws {
 		
-		let message = try? CryptorRSA.Key(withPEMNamed: "public", in: CryptorRSATests.bundle, isPublic: true)
-		XCTAssertNotNil(message)
+		if CryptorRSATests.useBundles {
+			
+			let message = try? CryptorRSA.Key(withPEMNamed: "public", in: CryptorRSATests.bundle, isPublic: true)
+			XCTAssertNotNil(message)
+		
+		} else {
+			
+			let message = try? CryptorRSA.Key(withPEMNamed: "public", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: true)
+			XCTAssertNotNil(message)
+		}
 	}
 	
 	func test_public_initWithDERName() throws {
@@ -95,9 +138,17 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_public_initWithPEMStringHeaderless() throws {
 		
-		guard let path = CryptorRSATests.bundle.path(forResource: "public-headerless", ofType: "pem") else {
+		var path: String
+		if CryptorRSATests.useBundles {
+			guard let bPath = CryptorRSATests.bundle.path(forResource: "public-headerless", ofType: "pem") else {
+				
+				return XCTFail()
+			}
+			path = bPath
 			
-			return XCTFail()
+		} else {
+			
+			path = "./Tests/CryptorRSATests/Keys/public-headerless.pem"
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
@@ -124,9 +175,17 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_private_initWithPEMString() throws {
 		
-		guard let path = CryptorRSATests.bundle.path(forResource: "private", ofType: "pem") else {
+		var path: String
+		if CryptorRSATests.useBundles {
+			guard let bPath = CryptorRSATests.bundle.path(forResource: "private", ofType: "pem") else {
+				
+				return XCTFail()
+			}
+			path = bPath
 			
-			return XCTFail()
+		} else {
+			
+			path = "./Tests/CryptorRSATests/Keys/private.pem"
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
@@ -137,9 +196,17 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_private_initWithPEMStringHeaderless() throws {
 		
-		guard let path = CryptorRSATests.bundle.path(forResource: "private-headerless", ofType: "pem") else {
+		var path: String
+		if CryptorRSATests.useBundles {
+			guard let bPath = CryptorRSATests.bundle.path(forResource: "private-headerless", ofType: "pem") else {
+				
+				return XCTFail()
+			}
+			path = bPath
 			
-			return XCTFail()
+		} else {
+			
+			path = "./Tests/CryptorRSATests/Keys/private-headerless.pem"
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
@@ -150,8 +217,17 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_private_initWithPEMName() throws {
 		
-		let message = try? CryptorRSA.Key(withPEMNamed: "private", in: CryptorRSATests.bundle, isPublic: false)
-		XCTAssertNotNil(message)
+		if CryptorRSATests.useBundles {
+			
+			let message = try? CryptorRSA.Key(withPEMNamed: "private", in: CryptorRSATests.bundle, isPublic: false)
+			XCTAssertNotNil(message)
+			
+		} else {
+			
+			let message = try? CryptorRSA.Key(withPEMNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: false)
+			XCTAssertNotNil(message)
+		}
+		
 	}
 	
 	func test_private_initWithDERName() throws {
@@ -168,21 +244,46 @@ class CryptorRSATests: XCTestCase {
 	
 	static public func pemKeyString(name: String) -> String {
 		
-		let pubPath = bundle.path(forResource: name, ofType: "pem")!
-		return (try! NSString(contentsOfFile: pubPath, encoding: String.Encoding.utf8.rawValue)) as String
+		if useBundles {
+			
+			let pubPath = bundle.path(forResource: name, ofType: "pem")!
+			return (try! NSString(contentsOfFile: pubPath, encoding: String.Encoding.utf8.rawValue)) as String
+		
+		} else {
+			
+			let pubPath = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".pem"))
+			return (try! NSString(contentsOfFile: pubPath, encoding: String.Encoding.utf8.rawValue)) as String
+		}
 	}
 	
 	static public func derKeyData(name: String) -> Data {
 		
-		let pubPath  = bundle.path(forResource: name, ofType: "der")!
-		return (try! Data(contentsOf: URL(fileURLWithPath: pubPath)))
+		if useBundles {
+			
+			let pubPath  = bundle.path(forResource: name, ofType: "der")!
+			return (try! Data(contentsOf: URL(fileURLWithPath: pubPath)))
+		
+		} else {
+			
+			let pubPath = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".der"))
+			return (try! Data(contentsOf: URL(fileURLWithPath: pubPath)))
+		}
 	}
 	
 	static public func publicKey(name: String) throws -> CryptorRSA.Key {
 		
-		guard let path = bundle.path(forResource: name, ofType: "pem") else {
+		var path: String
+		if useBundles {
+			guard let bPath = bundle.path(forResource: name, ofType: "pem") else {
+				
+				throw TestError(description: "Couldn't load key for provided path")
+			}
+			path = bPath
 			
-			throw TestError(description: "Couldn't load key for provided path")
+		} else {
+			
+			path = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".pem"))
+
 		}
 		
 		let pemString = try String(contentsOf: URL(fileURLWithPath: path))
@@ -191,13 +292,22 @@ class CryptorRSATests: XCTestCase {
 	
 	static public func privateKey(name: String) throws -> CryptorRSA.Key {
 		
-		guard let path = bundle.path(forResource: name, ofType: "pem") else {
+		var path: String
+		if useBundles {
+			guard let bPath = bundle.path(forResource: name, ofType: "pem") else {
+				
+				throw TestError(description: "Couldn't load key for provided path")
+			}
+			path = bPath
 			
-			throw TestError(description: "Couldn't load key for provided path")
+		} else {
+			
+			path = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".pem"))
+			
 		}
 		
 		let pemString = try String(contentsOf: URL(fileURLWithPath: path))
-		return try CryptorRSA.Key(withPEM: pemString, isPublic: true)
+		return try CryptorRSA.Key(withPEM: pemString, isPublic: false)
 	}
 	
 	static public func randomData(count: Int) -> Data {
