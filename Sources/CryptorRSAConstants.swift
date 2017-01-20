@@ -44,4 +44,20 @@ public extension CryptorRSA {
 	/// PK End Marker
 	static let PK_END_MARKER: String					= "-----END PUBLIC KEY-----"
 	
+	// MARK: Private Key Markers
+	
+	/// SK Begin Marker
+	static let SK_BEGIN_MARKER: String					= "-----BEGIN RSA PRIVATE KEY-----"
+	
+	/// SK End Marker
+	static let SK_END_MARKER: String					= "-----END RSA PRIVATE KEY-----"
+	
+	// MARK: Generic Key Markers
+	
+	/// Generic Begin Marker
+	static let GENERIC_BEGIN_MARKER: String				= "-----BEGIN"
+	
+	/// Generic End Marker
+	static let GENERIC_END_MARKER: String				= "-----END"
+	
 }

@@ -36,7 +36,7 @@ public extension CryptorRSA {
 		/// Regular expression for the PK using the begin and end markers.
 		static let publicKeyRegex: NSRegularExpression? = {
 			
-			let publicKeyRegex = "(\(CryptorRSA.PK_BEGIN_MARKER).+?\(CryptorRSA.PK_END_MARKER)"
+			let publicKeyRegex = "(\(CryptorRSA.PK_BEGIN_MARKER).+?\(CryptorRSA.PK_END_MARKER))"
 			return try? NSRegularExpression(pattern: publicKeyRegex, options: .dotMatchesLineSeparators)
 		}()
 		
@@ -61,7 +61,7 @@ public extension CryptorRSA {
 		///
 		/// - Returns: 				An array of `Key` objects containing just public keys.
 		///
-		public static func publicKeys(pemEncoded pemString: String) -> [Key] {
+		public static func publicKeys(withPEM pemString: String) -> [Key] {
 			
 			// If our regexp isn't valid, or the input string is empty, we can't move forward…
 			guard let publicKeyRegexp = publicKeyRegex, pemString.characters.count > 0 else {

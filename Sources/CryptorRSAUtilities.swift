@@ -75,7 +75,7 @@ public extension CryptorRSA {
 	static func base64String(for pemString: String) throws -> String {
 		
 		let lines = pemString.components(separatedBy: "\n").filter { line in
-			return !line.hasPrefix(CryptorRSA.PEM_BEGIN_MARKER) && !line.hasPrefix(CryptorRSA.PEM_END_MARKER)
+			return !line.hasPrefix(CryptorRSA.GENERIC_BEGIN_MARKER) && !line.hasPrefix(CryptorRSA.GENERIC_END_MARKER)
 		}
 		
 		guard lines.count != 0 else {
