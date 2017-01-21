@@ -240,6 +240,53 @@ class CryptorRSATests: XCTestCase {
 		//XCTAssertNotNil(message)
 	}
 	
+	// MARK: Encyption/Decryption Tests
+	
+	let publicKey: CryptorRSA.Key = try! CryptorRSATests.publicKey(name: "public")
+	let privateKey: CryptorRSA.Key = try! CryptorRSATests.privateKey(name: "private")
+	
+	func test_simpleEncryption() throws {
+		
+		let str = "Plain Text"
+		let plainText = try CryptorRSA(with: str, using: .utf8)
+		
+		let encrypted = try plainText.encrypted(with: publicKey, algorithm: .sha1)
+		XCTAssertNotNil(encrypted)
+		let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: .sha1)
+		XCTAssertNotNil(decrypted)
+		let decryptedString = try decrypted!.string(using: .utf8)
+		XCTAssertEqual(decryptedString, str)
+	}
+	
+	func test_longStringEncryption() throws {
+		
+		let str = [String](repeating: "a", count: 9999).joined(separator: "")
+		let plainText = try CryptorRSA(with: str, using: .utf8)
+		
+		let encrypted = try plainText.encrypted(with: publicKey, algorithm: .sha1)
+		XCTAssertNotNil(encrypted)
+		let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: .sha1)
+		XCTAssertNotNil(decrypted)
+		let decryptedString = try decrypted!.string(using: .utf8)
+		XCTAssertEqual(decryptedString, str)
+	}
+	
+	func test_randomByteEncryption() throws {
+		
+		let data = CryptorRSATests.randomData(count: 2048)
+		let plainData = CryptorRSA(with: data, isEncrypted: false)
+		
+		let encrypted = try plainData.encrypted(with: publicKey, algorithm: .sha1)
+		XCTAssertNotNil(encrypted)
+		let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: .sha1)
+		XCTAssertNotNil(decrypted)
+		XCTAssertEqual(decrypted!.data, data)
+	}
+	
+	// MARK: Signing/Verification Tests
+	
+	
+	
 	// MARK: Test Utilities
 	
 	struct TestError: Error {
@@ -323,7 +370,9 @@ class CryptorRSATests: XCTestCase {
 		}
 		return data
 	}
-
+	
+	// MARK: Test Lists
+	
 
 	static var allTests : [(String, (CryptorRSATests) -> () throws -> Void)] {
         return [
@@ -340,6 +389,9 @@ class CryptorRSATests: XCTestCase {
             ("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
             ("test_private_initWithPEMName", test_private_initWithPEMName),
             ("test_private_initWithDERName", test_private_initWithDERName),
+            ("test_simpleEncryption", test_simpleEncryption),
+            ("test_longStringEncryption", test_longStringEncryption),
+            ("test_randomByteEncryption", test_randomByteEncryption),
         ]
     }
 }
