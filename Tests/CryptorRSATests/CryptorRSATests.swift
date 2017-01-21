@@ -247,40 +247,76 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_simpleEncryption() throws {
 		
-		let str = "Plain Text"
-		let plainText = try CryptorRSA(with: str, using: .utf8)
+		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
+		                                              (.sha224, ".sha224"),
+		                                              (.sha256, ".sha256"),
+		                                              (.sha384, ".sha384"),
+		                                              /*(.sha512, ".sha512")*/]
+		// Test all the algorithms available...
+		//	Note: .sha522 appears to be broken internally on Apple platforms.
+		for (algorithm, name) in algorithms {
 		
-		let encrypted = try plainText.encrypted(with: publicKey, algorithm: .sha1)
-		XCTAssertNotNil(encrypted)
-		let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: .sha1)
-		XCTAssertNotNil(decrypted)
-		let decryptedString = try decrypted!.string(using: .utf8)
-		XCTAssertEqual(decryptedString, str)
+			print("Testing algorithm: \(name)")
+			let str = "Plain Text"
+			let plainText = try CryptorRSA(with: str, using: .utf8)
+		
+			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
+			XCTAssertNotNil(encrypted)
+			let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: algorithm)
+			XCTAssertNotNil(decrypted)
+			let decryptedString = try decrypted!.string(using: .utf8)
+			XCTAssertEqual(decryptedString, str)
+			print("Test of algorithm: \(name) succeeded")
+		}
 	}
 	
 	func test_longStringEncryption() throws {
 		
-		let str = [String](repeating: "a", count: 9999).joined(separator: "")
-		let plainText = try CryptorRSA(with: str, using: .utf8)
+		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
+		                                              (.sha224, ".sha224"),
+		                                              (.sha256, ".sha256"),
+		                                              (.sha384, ".sha384"),
+		                                              /*(.sha512, ".sha512")*/]
+		// Test all the algorithms available...
+		//	Note: .sha522 appears to be broken internally on Apple platforms.
+		for (algorithm, name) in algorithms {
+			
+			print("Testing algorithm: \(name)")
+			let str = [String](repeating: "a", count: 9999).joined(separator: "")
+			let plainText = try CryptorRSA(with: str, using: .utf8)
 		
-		let encrypted = try plainText.encrypted(with: publicKey, algorithm: .sha1)
-		XCTAssertNotNil(encrypted)
-		let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: .sha1)
-		XCTAssertNotNil(decrypted)
-		let decryptedString = try decrypted!.string(using: .utf8)
-		XCTAssertEqual(decryptedString, str)
+			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
+			XCTAssertNotNil(encrypted)
+			let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: algorithm)
+			XCTAssertNotNil(decrypted)
+			let decryptedString = try decrypted!.string(using: .utf8)
+			XCTAssertEqual(decryptedString, str)
+			print("Test of algorithm: \(name) succeeded")
+		}
 	}
 	
 	func test_randomByteEncryption() throws {
 		
-		let data = CryptorRSATests.randomData(count: 2048)
-		let plainData = CryptorRSA(with: data, isEncrypted: false)
+		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
+		                                              (.sha224, ".sha224"),
+		                                              (.sha256, ".sha256"),
+		                                              (.sha384, ".sha384"),
+		                                              /*(.sha512, ".sha512")*/]
+		// Test all the algorithms available...
+		//	Note: .sha522 appears to be broken internally on Apple platforms.
+		for (algorithm, name) in algorithms {
+			
+			print("Testing algorithm: \(name)")
+			let data = CryptorRSATests.randomData(count: 2048)
+			let plainData = CryptorRSA(with: data, isEncrypted: false)
 		
-		let encrypted = try plainData.encrypted(with: publicKey, algorithm: .sha1)
-		XCTAssertNotNil(encrypted)
-		let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: .sha1)
-		XCTAssertNotNil(decrypted)
-		XCTAssertEqual(decrypted!.data, data)
+			let encrypted = try plainData.encrypted(with: publicKey, algorithm: algorithm)
+			XCTAssertNotNil(encrypted)
+			let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: algorithm)
+			XCTAssertNotNil(decrypted)
+			XCTAssertEqual(decrypted!.data, data)
+			print("Test of algorithm: \(name) succeeded")
+		}
 	}
 	
 	// MARK: Signing/Verification Tests
