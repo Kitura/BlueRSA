@@ -108,9 +108,9 @@ public class CryptorRSA: RSAMessage {
 	///		- key:				The `Key` **Note:** Must be a public key.
 	///		- algorithm:		The algorithm to use (`Data.Algorithm`).
 	///
-	///	- Returns:				A new optional `Data` containing the encrypted data.
+	///	- Returns:				A new optional `CryptorRSA` containing the encrypted data.
 	///
-	public func encrypted(with key: Key, algorithm: Data.Algorithm) throws -> Data? {
+	public func encrypted(with key: Key, algorithm: Data.Algorithm) throws -> CryptorRSA? {
 		
 		// Must be plaintext...
 		guard self.isEncrypted == false else {
@@ -125,7 +125,7 @@ public class CryptorRSA: RSAMessage {
 		}
 		
 		var response: Unmanaged<CFError>? = nil
-		let eData = SecKeyCreateEncryptedData(key.reference, algorithm.alogrithmForMessage, self.data as CFData, &response)
+		let eData = SecKeyCreateEncryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
 		if response != nil {
 			
 			guard let error = response?.takeRetainedValue() as? Swift.Error else {
@@ -136,7 +136,7 @@ public class CryptorRSA: RSAMessage {
 			throw Error(code: CryptorRSA.ERR_ENCRYTION_FAILED, reason: "Encryption failed with error: \(error)")
 		}
 		
-		return eData as? Data
+		return CryptorRSA(with: eData as! Data, isEncrypted: true)
 	}
 	
 	///
@@ -146,9 +146,9 @@ public class CryptorRSA: RSAMessage {
 	///		- key:				The `Key` **Note:** Must be a private key.
 	///		- algorithm:		The algorithm to use (`Data.Algorithm`).
 	///
-	///	- Returns:				A new optional `Data` containing the decrypted data.
+	///	- Returns:				A new optional `CryptorRSA` containing the decrypted data.
 	///
-	public func decrypted(with key: Key, algorithm: Data.Algorithm) throws -> Data? {
+	public func decrypted(with key: Key, algorithm: Data.Algorithm) throws -> CryptorRSA? {
 		
 		// Must be plaintext...
 		guard self.isEncrypted else {
@@ -163,7 +163,7 @@ public class CryptorRSA: RSAMessage {
 		}
 		
 		var response: Unmanaged<CFError>? = nil
-		let pData = SecKeyCreateDecryptedData(key.reference, algorithm.alogrithmForMessage, self.data as CFData, &response)
+		let pData = SecKeyCreateDecryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
 		if response != nil {
 			
 			guard let error = response?.takeRetainedValue() as? Swift.Error else {
@@ -174,7 +174,7 @@ public class CryptorRSA: RSAMessage {
 			throw Error(code: CryptorRSA.ERR_ENCRYTION_FAILED, reason: "Decryption failed with error: \(error)")
 		}
 		
-		return pData as? Data
+		return CryptorRSA(with: pData as! Data, isEncrypted: false)
 	}
 	
 

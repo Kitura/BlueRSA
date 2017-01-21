@@ -130,24 +130,24 @@ public extension Data {
 			}
 				
 			@available(macOS 10.12, iOS 10.0, *)
-			public var alogrithmForMessage: SecKeyAlgorithm {
+			public var alogrithmForEncryption: SecKeyAlgorithm {
 			
 				switch self {
 				
 				case .sha1:
-					return .rsaSignatureMessagePKCS1v15SHA1
+					return .rsaEncryptionOAEPSHA1AESGCM
 				
 				case .sha224:
-					return .rsaSignatureMessagePKCS1v15SHA224
+					return .rsaEncryptionOAEPSHA224AESGCM
 				
 				case .sha256:
-					return .rsaSignatureMessagePKCS1v15SHA256
+					return .rsaEncryptionOAEPSHA256AESGCM
 				
 				case .sha384:
-					return .rsaSignatureMessagePKCS1v15SHA384
+					return .rsaEncryptionOAEPSHA384AESGCM
 				
 				case .sha512:
-					return .rsaSignatureMessagePKCS1v15SHA512
+					return .rsaEncryptionOAEPSHA512AESGCM
 				
 			}
 		}
