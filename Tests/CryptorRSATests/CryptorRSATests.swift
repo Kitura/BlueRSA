@@ -253,12 +253,12 @@ class CryptorRSATests: XCTestCase {
 		                                              (.sha384, ".sha384"),
 		                                              /*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
-		//	Note: .sha522 appears to be broken internally on Apple platforms.
+		//	Note: .sha512 appears to be broken internally on Apple platforms.
 		for (algorithm, name) in algorithms {
 		
 			print("Testing algorithm: \(name)")
 			let str = "Plain Text"
-			let plainText = try CryptorRSA(with: str, using: .utf8)
+			let plainText = try RSAPlaintextData(with: str, using: .utf8)
 		
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
@@ -278,12 +278,12 @@ class CryptorRSATests: XCTestCase {
 		                                              (.sha384, ".sha384"),
 		                                              /*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
-		//	Note: .sha522 appears to be broken internally on Apple platforms.
+		//	Note: .sha512 appears to be broken internally on Apple platforms.
 		for (algorithm, name) in algorithms {
 			
 			print("Testing algorithm: \(name)")
 			let str = [String](repeating: "a", count: 9999).joined(separator: "")
-			let plainText = try CryptorRSA(with: str, using: .utf8)
+			let plainText = try RSAPlaintextData(with: str, using: .utf8)
 		
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
@@ -303,12 +303,12 @@ class CryptorRSATests: XCTestCase {
 		                                              (.sha384, ".sha384"),
 		                                              /*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
-		//	Note: .sha522 appears to be broken internally on Apple platforms.
+		//	Note: .sha512 appears to be broken internally on Apple platforms.
 		for (algorithm, name) in algorithms {
 			
 			print("Testing algorithm: \(name)")
 			let data = CryptorRSATests.randomData(count: 2048)
-			let plainData = CryptorRSA(with: data, isEncrypted: false)
+			let plainData = RSAPlaintextData(with: data, isEncrypted: false)
 		
 			let encrypted = try plainData.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
@@ -321,7 +321,48 @@ class CryptorRSATests: XCTestCase {
 	
 	// MARK: Signing/Verification Tests
 	
+	func test_signVerifyAllDigestTypes() throws {
+		
+		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
+		                                              (.sha224, ".sha224"),
+		                                              (.sha256, ".sha256"),
+		                                              (.sha384, ".sha384"),
+		                                              (.sha512, ".sha512")]
+		// Test all the algorithms available...
+		for (algorithm, name) in algorithms {
+			
+			print("Testing algorithm: \(name)")
+			let data = CryptorRSATests.randomData(count: 8192)
+			let message = RSAPlaintextData(with: data, isEncrypted: false)
+			let signature = try message.signed(with: privateKey, algorithm: algorithm)
+			XCTAssertNotNil(signature)
+			let verificationResult = try message.verify(with: publicKey, signature: signature!.data, algorithm: algorithm)
+			XCTAssertTrue(verificationResult)
+			print("Test of algorithm: \(name) succeeded")
+		}
+	}
 	
+	func test_signVerifyBase64() throws {
+		
+		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
+		                                              (.sha224, ".sha224"),
+		                                              (.sha256, ".sha256"),
+		                                              (.sha384, ".sha384"),
+		                                              (.sha512, ".sha512")]
+		// Test all the algorithms available...
+		for (algorithm, name) in algorithms {
+			
+			print("Testing algorithm: \(name)")
+			let data = CryptorRSATests.randomData(count: 8192)
+			let message = RSAPlaintextData(with: data, isEncrypted: false)
+			let signature = try message.signed(with: privateKey, algorithm: algorithm)
+			XCTAssertNotNil(signature)
+			XCTAssertEqual(signature!.base64String, signature!.data.base64EncodedString())
+			let verificationResult = try message.verify(with: publicKey, signature: signature!.data, algorithm: algorithm)
+			XCTAssertTrue(verificationResult)
+			print("Test of algorithm: \(name) succeeded")
+		}
+	}
 	
 	// MARK: Test Utilities
 	
@@ -428,6 +469,8 @@ class CryptorRSATests: XCTestCase {
             ("test_simpleEncryption", test_simpleEncryption),
             ("test_longStringEncryption", test_longStringEncryption),
             ("test_randomByteEncryption", test_randomByteEncryption),
+            ("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
+            ("test_signVerifyBase64", test_signVerifyBase64),
         ]
     }
 }
