@@ -23,272 +23,292 @@ import Foundation
 
 // MARK: -
 
+// MARK: -- Type Aliases
+
+/// A CryptorRSA.RSAData containing encrypted data.
+public typealias RSAEncryptedData 	= CryptorRSA.RSAData
+
+/// A CryptorRSA.RSAData containing decrypted data.
+public typealias RSAPlaintextData 	= CryptorRSA.RSAData
+
+/// A CryptorRSA.RSAData containing signed data.
+public typealias RSASignedData		= CryptorRSA.RSAData
+
+// MARK: -
+
 ///
 /// RSA Encryption/Decryption, Signing/Verification
 ///
 @available(macOS 10.12, iOS 10.0, *)
-public class CryptorRSA: RSAMessage {
+public class CryptorRSA {
 	
-	// MARK: -- Properties
-	
-	/// Data of the message
-	public let data: Data
-	
-	/// True if constructed with encrypted data
-	public internal(set) var isEncrypted: Bool = false
-	
-	/// Base64-encoded string of the message data
-	public var base64String: String {
+	///
+	/// RSA Data Object: Allows for RSA Encryption/Decryption, Signing/Verification and various utility functions.
+	///
+	public class RSAData: RSAMessage {
 		
-		return data.base64EncodedString()
-	}
-	
-	// MARK: -- Initializers
-	
-	///
-	/// Initialize an RSAMessage
-	///
-	/// - Parameters:
-	///		- data:				`Data` containing the key data.
-	///		- isEncrypted:		True if *data* is encrypted, false if *data* is plaintext.
-	///
-	/// - Returns:				Newly initialized `CryptorRSA`.
-	///
-	public required init(with data: Data, isEncrypted: Bool) {
+		// MARK: -- Properties
 		
-		self.data = data
-		self.isEncrypted = isEncrypted
-	}
-	
-	///
-	/// Creates a message with a encrypted base64-encoded string.
-	///
-	/// - Parameters:
- 	///		- base64String: 	Base64-encoded data of an encrypted message
-	///
-	/// - Returns:				Newly initialized `CryptorRSA`.
-	///
-	public convenience init(withBase64 base64String: String) throws {
+		/// Data of the message
+		public let data: Data
 		
-		guard let data = Data(base64Encoded: base64String) else {
+		/// True if constructed with encrypted data
+		public internal(set) var isEncrypted: Bool = false
+		
+		/// Base64-encoded string of the message data
+		public var base64String: String {
 			
-			throw Error(code: CryptorRSA.ERR_BASE64_PEM_DATA, reason: "Couldn't convert base 64 encoded string ")
-		}
-		self.init(with: data, isEncrypted: true)
-	}
-	
-	///
-	/// Creates a message from a plaintext string, with the specified encoding.
-	///
-	/// - Parameters:
-	///   - string: 			String value of the plaintext message
-	///   - encoding: 			Encoding to use to generate the clear data
-	///
-	/// - Returns:				Newly initialized `CryptorRSA`.
-	///
-	public convenience init(with string: String, using encoding: String.Encoding) throws {
-		
-		guard let data = string.data(using: encoding) else {
-			
-			throw Error(code: CryptorRSA.ERR_STRING_ENCODING, reason: "Couldn't convert string to data using specified encoding")
+			return data.base64EncodedString()
 		}
 		
-		self.init(with: data, isEncrypted: false)
-	}
-	
-	
-	// MARK: -- Functions
-	
-	// MARK: --- Encrypt/Decrypt
-	
-	///
-	/// Encrypt the data.
-	///
-	/// - Parameters:
-	///		- key:				The `Key` **Note:** Must be a public key.
-	///		- algorithm:		The algorithm to use (`Data.Algorithm`).
-	///
-	///	- Returns:				A new optional `CryptorRSA` containing the encrypted data.
-	///
-	public func encrypted(with key: Key, algorithm: Data.Algorithm) throws -> CryptorRSA? {
+		// MARK: -- Initializers
 		
-		// Must be plaintext...
-		guard self.isEncrypted == false else {
+		///
+		/// Initialize a new RSAData object.
+		///
+		/// - Parameters:
+		///		- data:				`Data` containing the key data.
+		///		- isEncrypted:		True if *data* is encrypted, false if *data* is plaintext.
+		///
+		/// - Returns:				Newly initialized `RSAData`.
+		///
+		public required init(with data: Data, isEncrypted: Bool) {
 			
-			throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
+			self.data = data
+			self.isEncrypted = isEncrypted
 		}
 		
-		// Key must be public...
-		guard key.isPublic else {
+		///
+		/// Creates a message with a encrypted base64-encoded string.
+		///
+		/// - Parameters:
+	 	///		- base64String: 	Base64-encoded data of an encrypted message
+		///
+		/// - Returns:				Newly initialized `RSAData`.
+		///
+		public convenience init(withBase64 base64String: String) throws {
 			
-			throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not public")
-		}
-		
-		var response: Unmanaged<CFError>? = nil
-		let eData = SecKeyCreateEncryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
-		if response != nil {
-			
-			guard let error = response?.takeRetainedValue() as? Swift.Error else {
+			guard let data = Data(base64Encoded: base64String) else {
 				
-				throw Error(code: CryptorRSA.ERR_ENCRYTION_FAILED, reason: "Encryption failed. Unable to determine error.")
+				throw Error(code: CryptorRSA.ERR_BASE64_PEM_DATA, reason: "Couldn't convert base 64 encoded string ")
 			}
 			
-			throw Error(code: CryptorRSA.ERR_ENCRYTION_FAILED, reason: "Encryption failed with error: \(error)")
+			self.init(with: data, isEncrypted: true)
 		}
 		
-		return CryptorRSA(with: eData as! Data, isEncrypted: true)
-	}
-	
-	///
-	/// Decrypt the data.
-	///
-	/// - Parameters:
-	///		- key:				The `Key` **Note:** Must be a private key.
-	///		- algorithm:		The algorithm to use (`Data.Algorithm`).
-	///
-	///	- Returns:				A new optional `CryptorRSA` containing the decrypted data.
-	///
-	public func decrypted(with key: Key, algorithm: Data.Algorithm) throws -> CryptorRSA? {
-		
-		// Must be plaintext...
-		guard self.isEncrypted else {
+		///
+		/// Creates a message from a plaintext string, with the specified encoding.
+		///
+		/// - Parameters:
+		///   - string: 			String value of the plaintext message
+		///   - encoding: 			Encoding to use to generate the clear data
+		///
+		/// - Returns:				Newly initialized `RSAData`.
+		///
+		public convenience init(with string: String, using encoding: String.Encoding) throws {
 			
-			throw Error(code: CryptorRSA.ERR_NOT_ENCRYTPED, reason: "Data is plaintext")
-		}
-		
-		// Key must be private...
-		guard key.isPublic == false else {
-			
-			throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not private")
-		}
-		
-		var response: Unmanaged<CFError>? = nil
-		let pData = SecKeyCreateDecryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
-		if response != nil {
-			
-			guard let error = response?.takeRetainedValue() as? Swift.Error else {
+			guard let data = string.data(using: encoding) else {
 				
-				throw Error(code: CryptorRSA.ERR_ENCRYTION_FAILED, reason: "Decryption failed. Unable to determine error.")
+				throw Error(code: CryptorRSA.ERR_STRING_ENCODING, reason: "Couldn't convert string to data using specified encoding")
 			}
 			
-			throw Error(code: CryptorRSA.ERR_ENCRYTION_FAILED, reason: "Decryption failed with error: \(error)")
+			self.init(with: data, isEncrypted: false)
 		}
 		
-		return CryptorRSA(with: pData as! Data, isEncrypted: false)
-	}
-	
-
-	// MARK: --- Sign/Verification
-	
-	///
-	/// Sign the data
-	///
-	/// - Parameters:
-	///		- key:				The `Key` **Note:** Must be a private key.
-	///		- algorithm:		The algorithm to use (`Data.Algorithm`).
-	///
-	///	- Returns:				A new optional `Data` containing the digital signature.
-	///
-	public func signed(with key: Key, algorithm: Data.Algorithm) throws -> Data? {
 		
-		// Must be plaintext...
-		guard self.isEncrypted == false else {
-			
-			throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
-		}
+		// MARK: -- Functions
 		
-		// Key must be private...
-		guard key.isPublic == false else {
-			
-			throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "Supplied key is not private")
-		}
+		// MARK: --- Encrypt/Decrypt
 		
-		var response: Unmanaged<CFError>? = nil
-		let sData = SecKeyCreateSignature(key.reference, algorithm.alogrithmForDigest, self.data as CFData, &response)
-		if response != nil {
+		///
+		/// Encrypt the data.
+		///
+		/// - Parameters:
+		///		- key:				The `Key` **Note:** Must be a public key.
+		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
+		///
+		///	- Returns:				A new optional `RSAEncryptedData` containing the encrypted data.
+		///
+		public func encrypted(with key: Key, algorithm: Data.Algorithm) throws -> RSAEncryptedData? {
 			
-			guard let error = response?.takeRetainedValue() as? Swift.Error else {
+			// Must be plaintext...
+			guard self.isEncrypted == false else {
 				
-				throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed. Unable to determine error.")
+				throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
 			}
 			
-			throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed with error: \(error)")
-		}
-		
-		return sData as? Data
-	}
-	
-	///
-	/// Sign the data
-	///
-	/// - Parameters:
-	///		- key:				The `Key` **Note:** Must be a public key.
-	///		- signature:		The `Data` containing the signature to verify against.
-	///		- algorithm:		The algorithm to use (`Data.Algorithm`).
-	///
-	///	- Returns:				True if verification is successful, false otherwise
-	///
-	public func verify(with key: Key, signature: Data, algorithm: Data.Algorithm) throws -> Bool {
-		
-		// Must be plaintext...
-		guard self.isEncrypted == false else {
-			
-			throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
-		}
-		
-		// Key must be public...
-		guard key.isPublic else {
-			
-			throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "Supplied key is not public")
-		}
-		
-		var response: Unmanaged<CFError>? = nil
-		let result = SecKeyVerifySignature(key.reference, algorithm.alogrithmForDigest, self.data as CFData, signature as CFData, &response)
-		if response != nil {
-			
-			guard let error = response?.takeRetainedValue() as? Swift.Error else {
+			// Key must be public...
+			guard key.isPublic else {
 				
-				throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Verification failed. Unable to determine error.")
+				throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not public")
 			}
 			
-			throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Verification failed with error: \(error)")
-		}
-		
-		return result
-	}
-	
-
-	// MARK: --- Utility
-	
-	///
-	/// Retrieve a digest of the data using the specified algorithm.
-	///
-	/// - Parameters:
-	///		- algorithm:		Algoririthm to use.
- 	///
-	///	- Returns:				`Data` containing the digest.
-	///
-	public func digest(using algorithm: Data.Algorithm) throws -> Data {
-		
-		return try self.data.digest(using: algorithm)
-	}
-	
-	///
-	/// String representation of message in specified string encoding.
-	///
-	/// - Parameters:
- 	///		- encoding: 		Encoding to use during the string conversion
-	///
-	/// - Returns: 				String representation of the message
-	///
-	public func string(using encoding: String.Encoding) throws -> String {
-		
-		guard let str = String(data: data, encoding: encoding) else {
+			var response: Unmanaged<CFError>? = nil
+			let eData = SecKeyCreateEncryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
+			if response != nil {
+				
+				guard let error = response?.takeRetainedValue() as? Swift.Error else {
+					
+					throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed. Unable to determine error.")
+				}
+				
+				throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed with error: \(error)")
+			}
 			
-			throw Error(code: CryptorRSA.ERR_STRING_ENCODING, reason: "Couldn't convert data to string representation")
+			return RSAData(with: eData as! Data, isEncrypted: true)
 		}
 		
-		return str
+		///
+		/// Decrypt the data.
+		///
+		/// - Parameters:
+		///		- key:				The `Key` **Note:** Must be a private key.
+		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
+		///
+		///	- Returns:				A new optional `RSADecryptedData` containing the decrypted data.
+		///
+		public func decrypted(with key: Key, algorithm: Data.Algorithm) throws -> RSAPlaintextData? {
+			
+			// Must be plaintext...
+			guard self.isEncrypted else {
+				
+				throw Error(code: CryptorRSA.ERR_NOT_ENCRYPTED, reason: "Data is plaintext")
+			}
+			
+			// Key must be private...
+			guard key.isPublic == false else {
+				
+				throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not private")
+			}
+			
+			var response: Unmanaged<CFError>? = nil
+			let pData = SecKeyCreateDecryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
+			if response != nil {
+				
+				guard let error = response?.takeRetainedValue() as? Swift.Error else {
+					
+					throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed. Unable to determine error.")
+				}
+				
+				throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed with error: \(error)")
+			}
+			
+			return RSAData(with: pData as! Data, isEncrypted: false)
+		}
+		
+		
+		// MARK: --- Sign/Verification
+		
+		///
+		/// Sign the data
+		///
+		/// - Parameters:
+		///		- key:				The `Key` **Note:** Must be a private key.
+		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
+		///
+		///	- Returns:				A new optional `RSASignedData` containing the digital signature.
+		///
+		public func signed(with key: Key, algorithm: Data.Algorithm) throws -> RSASignedData? {
+			
+			// Must be plaintext...
+			guard self.isEncrypted == false else {
+				
+				throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
+			}
+			
+			// Key must be private...
+			guard key.isPublic == false else {
+				
+				throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "Supplied key is not private")
+			}
+			
+			var response: Unmanaged<CFError>? = nil
+			let sData = SecKeyCreateSignature(key.reference, algorithm.alogrithmForSignature, self.data as CFData, &response)
+			if response != nil {
+				
+				guard let error = response?.takeRetainedValue() as? Swift.Error else {
+					
+					throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed. Unable to determine error.")
+				}
+				
+				throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed with error: \(error)")
+			}
+			
+			return RSAData(with: sData as! Data, isEncrypted: false)
+		}
+		
+		///
+		/// Sign the data
+		///
+		/// - Parameters:
+		///		- key:				The `Key` **Note:** Must be a public key.
+		///		- signature:		The `Data` containing the signature to verify against.
+		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
+		///
+		///	- Returns:				True if verification is successful, false otherwise
+		///
+		public func verify(with key: Key, signature: Data, algorithm: Data.Algorithm) throws -> Bool {
+			
+			// Must be plaintext...
+			guard self.isEncrypted == false else {
+				
+				throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
+			}
+			
+			// Key must be public...
+			guard key.isPublic else {
+				
+				throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "Supplied key is not public")
+			}
+			
+			var response: Unmanaged<CFError>? = nil
+			let result = SecKeyVerifySignature(key.reference, algorithm.alogrithmForSignature, self.data as CFData, signature as CFData, &response)
+			if response != nil {
+				
+				guard let error = response?.takeRetainedValue() as? Swift.Error else {
+					
+					throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Verification failed. Unable to determine error.")
+				}
+				
+				throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Verification failed with error: \(error)")
+			}
+			
+			return result
+		}
+		
+		// MARK: --- Utility
+		
+		///
+		/// Retrieve a digest of the data using the specified algorithm.
+		///
+		/// - Parameters:
+		///		- algorithm:		Algoririthm to use.
+ 		///
+		///	- Returns:				`Data` containing the digest.
+		///
+		public func digest(using algorithm: Data.Algorithm) throws -> Data {
+			
+			return try self.data.digest(using: algorithm)
+		}
+		
+		///
+		/// String representation of message in specified string encoding.
+		///
+		/// - Parameters:
+	 	///		- encoding: 		Encoding to use during the string conversion
+		///
+		/// - Returns: 				String representation of the message
+		///
+		public func string(using encoding: String.Encoding) throws -> String {
+			
+			guard let str = String(data: data, encoding: encoding) else {
+				
+				throw Error(code: CryptorRSA.ERR_STRING_ENCODING, reason: "Couldn't convert data to string representation")
+			}
+			
+			return str
+		}
+		
 	}
 	
 }
