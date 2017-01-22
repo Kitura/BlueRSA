@@ -107,24 +107,24 @@ public extension Data {
 		#if !os(Linux)
 			
 			@available(macOS 10.12, iOS 10.0, *)
-			public var alogrithmForDigest: SecKeyAlgorithm {
+			public var alogrithmForSignature: SecKeyAlgorithm {
 					
 				switch self {
 						
 				case .sha1:
-					return .rsaSignatureDigestPKCS1v15SHA1
+					return .rsaSignatureMessagePKCS1v15SHA1
 						
 				case .sha224:
-					return .rsaSignatureDigestPKCS1v15SHA224
+					return .rsaSignatureMessagePKCS1v15SHA224
 					
 				case .sha256:
-					return .rsaSignatureDigestPKCS1v15SHA256
+					return .rsaSignatureMessagePKCS1v15SHA256
 						
 				case .sha384:
-					return .rsaSignatureDigestPKCS1v15SHA384
+					return .rsaSignatureMessagePKCS1v15SHA384
 						
 				case .sha512:
-					return .rsaSignatureDigestPKCS1v15SHA512
+					return .rsaSignatureMessagePKCS1v15SHA512
 						
 				}
 			}
