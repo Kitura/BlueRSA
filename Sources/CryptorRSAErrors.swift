@@ -42,8 +42,8 @@ public extension CryptorRSA {
 	public static let ERR_STRING_ENCODING				= -9994
 	public static let ERR_KEY_NOT_PUBLIC				= -9993
 	public static let ERR_KEY_NOT_PRIVATE				= -9992
-	public static let ERR_NOT_ENCRYTPED					= -9991
-	public static let ERR_ENCRYTION_FAILED				= -9990
+	public static let ERR_NOT_ENCRYPTED					= -9991
+	public static let ERR_ENCRYPTION_FAILED				= -9990
 	public static let ERR_NOT_PLAINTEXT					= -9989
 	public static let ERR_DECRYPTION_FAILED				= -9998
 	public static let ERR_SIGNING_FAILED				= -9987
