@@ -23,6 +23,16 @@ import Foundation
 
 // MARK: -
 
+// MARK: -- Type Aliases
+
+/// A CryptorRSA.RSAKey containing public key data.
+public typealias RSAPublicKey	= CryptorRSA.RSAKey
+
+/// A CryptorRSA.RSAKey containing private key data.
+public typealias RSAPrivateKey	= CryptorRSA.RSAKey
+
+// MARK: -
+
 @available(macOS 10.12, iOS 10.0, *)
 public extension CryptorRSA {
 	
