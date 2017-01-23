@@ -45,7 +45,7 @@ public class CryptorRSA {
 	///
 	/// RSA Data Object: Allows for RSA Encryption/Decryption, Signing/Verification and various utility functions.
 	///
-	public class RSAData: RSAMessage {
+	public class RSAData: DataContainer {
 		
 		// MARK: -- Properties
 		
@@ -124,12 +124,12 @@ public class CryptorRSA {
 		/// Encrypt the data.
 		///
 		/// - Parameters:
-		///		- key:				The `Key` **Note:** Must be a public key.
+		///		- key:				The `RSAKey` **Note:** Must be a public key.
 		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
 		///
 		///	- Returns:				A new optional `RSAEncryptedData` containing the encrypted data.
 		///
-		public func encrypted(with key: Key, algorithm: Data.Algorithm) throws -> RSAEncryptedData? {
+		public func encrypted(with key: RSAKey, algorithm: Data.Algorithm) throws -> RSAEncryptedData? {
 			
 			// Must be plaintext...
 			guard self.isEncrypted == false else {
@@ -162,12 +162,12 @@ public class CryptorRSA {
 		/// Decrypt the data.
 		///
 		/// - Parameters:
-		///		- key:				The `Key` **Note:** Must be a private key.
+		///		- key:				The `RSAKey` **Note:** Must be a private key.
 		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
 		///
 		///	- Returns:				A new optional `RSADecryptedData` containing the decrypted data.
 		///
-		public func decrypted(with key: Key, algorithm: Data.Algorithm) throws -> RSAPlaintextData? {
+		public func decrypted(with key: RSAKey, algorithm: Data.Algorithm) throws -> RSAPlaintextData? {
 			
 			// Must be plaintext...
 			guard self.isEncrypted else {
@@ -203,12 +203,12 @@ public class CryptorRSA {
 		/// Sign the data
 		///
 		/// - Parameters:
-		///		- key:				The `Key` **Note:** Must be a private key.
+		///		- key:				The `RSAKey` **Note:** Must be a private key.
 		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
 		///
 		///	- Returns:				A new optional `RSASignedData` containing the digital signature.
 		///
-		public func signed(with key: Key, algorithm: Data.Algorithm) throws -> RSASignedData? {
+		public func signed(with key: RSAKey, algorithm: Data.Algorithm) throws -> RSASignedData? {
 			
 			// Must be plaintext...
 			guard self.isEncrypted == false else {
@@ -241,13 +241,13 @@ public class CryptorRSA {
 		/// Sign the data
 		///
 		/// - Parameters:
-		///		- key:				The `Key` **Note:** Must be a public key.
+		///		- key:				The `RSAKey` **Note:** Must be a public key.
 		///		- signature:		The `Data` containing the signature to verify against.
 		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
 		///
 		///	- Returns:				True if verification is successful, false otherwise
 		///
-		public func verify(with key: Key, signature: Data, algorithm: Data.Algorithm) throws -> Bool {
+		public func verify(with key: RSAKey, signature: Data, algorithm: Data.Algorithm) throws -> Bool {
 			
 			// Must be plaintext...
 			guard self.isEncrypted == false else {
