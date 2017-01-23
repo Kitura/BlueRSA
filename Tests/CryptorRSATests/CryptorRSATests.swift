@@ -420,7 +420,7 @@ class CryptorRSATests: XCTestCase {
 		}
 	}
 	
-	static public func publicKey(name: String) throws -> CryptorRSA.RSAKey {
+	static public func publicKey(name: String) throws -> RSAPublicKey {
 		
 		var path: String
 		if useBundles {
@@ -440,7 +440,7 @@ class CryptorRSATests: XCTestCase {
 		return try CryptorRSA.RSAKey(withPEM: pemString, isPublic: true)
 	}
 	
-	static public func privateKey(name: String) throws -> CryptorRSA.RSAKey {
+	static public func privateKey(name: String) throws -> RSAPrivateKey {
 		
 		var path: String
 		if useBundles {
