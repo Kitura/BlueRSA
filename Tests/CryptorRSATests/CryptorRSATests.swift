@@ -51,7 +51,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let data = try Data(contentsOf: URL(fileURLWithPath: path))
-		let publicKey = try? RSAPublicKey(with: data, isPublic: true)
+		let publicKey = try? CryptorRSA.createPublicKey(with: data)
 		XCTAssertNotNil(publicKey)
 		XCTAssertTrue(publicKey!.isPublic)
 	}
@@ -72,7 +72,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let publicKey = try? RSAPublicKey(withBase64: str, isPublic: true)
+		let publicKey = try? CryptorRSA.createPublicKey(withBase64: str)
 		XCTAssertNotNil(publicKey)
 		XCTAssertTrue(publicKey!.isPublic)
 	}
@@ -94,7 +94,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let publicKey = try? RSAPublicKey(withBase64: str, isPublic: true)
+		let publicKey = try? CryptorRSA.createPublicKey(withBase64: str)
 		XCTAssertNotNil(publicKey)
 		XCTAssertTrue(publicKey!.isPublic)
 	}
@@ -115,7 +115,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let publicKey = try? RSAPublicKey(withPEM: str, isPublic: true)
+		let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
 		XCTAssertNotNil(publicKey)
 		XCTAssertTrue(publicKey!.isPublic)
 	}
@@ -124,12 +124,12 @@ class CryptorRSATests: XCTestCase {
 		
 		if CryptorRSATests.useBundles {
 			
-			let publicKey = try? RSAPublicKey(withPEMNamed: "public", in: CryptorRSATests.bundle, isPublic: true)
+			let publicKey = try? CryptorRSA.createPublicKey(withPEMNamed: "public", in: CryptorRSATests.bundle)
 			XCTAssertNotNil(publicKey)
 		
 		} else {
 			
-			let publicKey = try? RSAPublicKey(withPEMNamed: "public", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: true)
+			let publicKey = try? CryptorRSA.createPublicKey(withPEMNamed: "public", onPath: "./Tests/CryptorRSATests/Keys/")
 			XCTAssertNotNil(publicKey)
 		}
 	}
@@ -138,12 +138,12 @@ class CryptorRSATests: XCTestCase {
 		
 		if CryptorRSATests.useBundles {
 			
-			let publicKey = try? RSAPublicKey(withDERNamed: "public", in: CryptorRSATests.bundle, isPublic: true)
+			let publicKey = try? CryptorRSA.createPublicKey(withDERNamed: "public", in: CryptorRSATests.bundle)
 			XCTAssertNotNil(publicKey)
 			
 		} else {
 			
-			let publicKey = try? RSAPublicKey(withDERNamed: "public", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: true)
+			let publicKey = try? CryptorRSA.createPublicKey(withDERNamed: "public", onPath: "./Tests/CryptorRSATests/Keys/")
 			XCTAssertNotNil(publicKey)
 		}
 		
@@ -165,7 +165,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let publicKey = try? RSAPublicKey(withPEM: str, isPublic: true)
+		let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
 		XCTAssertNotNil(publicKey)
 		XCTAssertTrue(publicKey!.isPublic)
 	}
@@ -173,7 +173,7 @@ class CryptorRSATests: XCTestCase {
 	func test_publicKeysFromComplexPEMFileWorksCorrectly() {
 		
 		let input = CryptorRSATests.pemKeyString(name: "multiple-keys-testcase")
-		let keys = CryptorRSA.RSAKey.publicKeys(withPEM: input)
+		let keys = CryptorRSA.PublicKey.publicKeys(withPEM: input)
 		XCTAssertEqual(keys.count, 9)
 		
 		for publicKey in keys {
@@ -183,7 +183,7 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_publicKeysFromEmptyPEMFileReturnsEmptyArray() {
 		
-		let keys = CryptorRSA.RSAKey.publicKeys(withPEM: "")
+		let keys = CryptorRSA.PublicKey.publicKeys(withPEM: "")
 		XCTAssertEqual(keys.count, 0)
 	}
 	
@@ -206,7 +206,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let privateKey = try? RSAPrivateKey(withPEM: str, isPublic: false)
+		let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str)
 		XCTAssertNotNil(privateKey)
 		XCTAssertFalse(privateKey!.isPublic)
 	}
@@ -227,7 +227,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let privateKey = try? RSAPrivateKey(withPEM: str, isPublic: false)
+		let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str)
 		XCTAssertNotNil(privateKey)
 		XCTAssertFalse(privateKey!.isPublic)
 	}
@@ -236,12 +236,12 @@ class CryptorRSATests: XCTestCase {
 		
 		if CryptorRSATests.useBundles {
 			
-			let privateKey = try? RSAPrivateKey(withPEMNamed: "private", in: CryptorRSATests.bundle, isPublic: false)
+			let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", in: CryptorRSATests.bundle)
 			XCTAssertNotNil(privateKey)
 			
 		} else {
 			
-			let privateKey = try? RSAPrivateKey(withPEMNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: false)
+			let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/")
 			XCTAssertNotNil(privateKey)
 		}
 		
@@ -251,12 +251,12 @@ class CryptorRSATests: XCTestCase {
 		
 		if CryptorRSATests.useBundles {
 			
-			let privateKey = try? RSAPrivateKey(withDERNamed: "private", in: CryptorRSATests.bundle, isPublic: false)
+			let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", in: CryptorRSATests.bundle)
 			XCTAssertNotNil(privateKey)
 			
 		} else {
 			
-			let privateKey = try? RSAPrivateKey(withDERNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: false)
+			let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/")
 			XCTAssertNotNil(privateKey)
 		}
 		
@@ -264,8 +264,8 @@ class CryptorRSATests: XCTestCase {
 	
 	// MARK: Encyption/Decryption Tests
 	
-	let publicKey: RSAPublicKey = try! CryptorRSATests.publicKey(name: "public")
-	let privateKey: RSAPrivateKey = try! CryptorRSATests.privateKey(name: "private")
+	let publicKey: CryptorRSA.PublicKey = try! CryptorRSATests.publicKey(name: "public")
+	let privateKey: CryptorRSA.PrivateKey = try! CryptorRSATests.privateKey(name: "private")
 	
 	func test_simpleEncryption() throws {
 		
@@ -280,7 +280,7 @@ class CryptorRSATests: XCTestCase {
 		
 			print("Testing algorithm: \(name)")
 			let str = "Plain Text"
-			let plainText = try RSAPlaintextData(with: str, using: .utf8)
+			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
 		
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
@@ -305,7 +305,7 @@ class CryptorRSATests: XCTestCase {
 			
 			print("Testing algorithm: \(name)")
 			let str = [String](repeating: "a", count: 9999).joined(separator: "")
-			let plainText = try RSAPlaintextData(with: str, using: .utf8)
+			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
 		
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
@@ -330,7 +330,7 @@ class CryptorRSATests: XCTestCase {
 			
 			print("Testing algorithm: \(name)")
 			let data = CryptorRSATests.randomData(count: 2048)
-			let plainData = RSAPlaintextData(with: data, isEncrypted: false)
+			let plainData = CryptorRSA.createPlaintext(with: data)
 		
 			let encrypted = try plainData.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
@@ -355,7 +355,7 @@ class CryptorRSATests: XCTestCase {
 			
 			print("Testing algorithm: \(name)")
 			let data = CryptorRSATests.randomData(count: 8192)
-			let message = RSAPlaintextData(with: data, isEncrypted: false)
+			let message = CryptorRSA.createPlaintext(with: data)
 			let signature = try message.signed(with: privateKey, algorithm: algorithm)
 			XCTAssertNotNil(signature)
 			let verificationResult = try message.verify(with: publicKey, signature: signature!.data, algorithm: algorithm)
@@ -376,7 +376,7 @@ class CryptorRSATests: XCTestCase {
 			
 			print("Testing algorithm: \(name)")
 			let data = CryptorRSATests.randomData(count: 8192)
-			let message = RSAPlaintextData(with: data, isEncrypted: false)
+			let message = CryptorRSA.createPlaintext(with: data)
 			let signature = try message.signed(with: privateKey, algorithm: algorithm)
 			XCTAssertNotNil(signature)
 			XCTAssertEqual(signature!.base64String, signature!.data.base64EncodedString())
@@ -420,7 +420,7 @@ class CryptorRSATests: XCTestCase {
 		}
 	}
 	
-	static public func publicKey(name: String) throws -> RSAPublicKey {
+	static public func publicKey(name: String) throws -> CryptorRSA.PublicKey {
 		
 		var path: String
 		if useBundles {
@@ -437,10 +437,10 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let pemString = try String(contentsOf: URL(fileURLWithPath: path))
-		return try CryptorRSA.RSAKey(withPEM: pemString, isPublic: true)
+		return try CryptorRSA.createPublicKey(withPEM: pemString)
 	}
 	
-	static public func privateKey(name: String) throws -> RSAPrivateKey {
+	static public func privateKey(name: String) throws -> CryptorRSA.PrivateKey {
 		
 		var path: String
 		if useBundles {
@@ -457,7 +457,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let pemString = try String(contentsOf: URL(fileURLWithPath: path))
-		return try CryptorRSA.RSAKey(withPEM: pemString, isPublic: false)
+		return try CryptorRSA.createPrivateKey(withPEM: pemString)
 	}
 	
 	static public func randomData(count: Int) -> Data {

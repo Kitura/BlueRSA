@@ -23,17 +23,6 @@ import Foundation
 
 // MARK: -
 
-// MARK: -- Type Aliases
-
-/// A CryptorRSA.RSAData containing encrypted data.
-public typealias RSAEncryptedData 	= CryptorRSA.RSAData
-
-/// A CryptorRSA.RSAData containing decrypted data.
-public typealias RSAPlaintextData 	= CryptorRSA.RSAData
-
-/// A CryptorRSA.RSAData containing signed data.
-public typealias RSASignedData		= CryptorRSA.RSAData
-
 // MARK: -
 
 ///
@@ -42,10 +31,78 @@ public typealias RSASignedData		= CryptorRSA.RSAData
 @available(macOS 10.12, iOS 10.0, *)
 public class CryptorRSA {
 	
+	// MARK: Class Functions
+	
+	///
+	/// Create a plaintext data container.
+	///
+	/// - Parameters:
+	///		- data:				`Data` containing the key data.
+	///
+	/// - Returns:				Newly initialized `PlaintextData`.
+	///
+	public class func createPlaintext(with data: Data) -> PlaintextData {
+		
+		return PlaintextData(with: data)
+	}
+	
+	///
+	/// Creates a message from a plaintext string, with the specified encoding.
+	///
+	/// - Parameters:
+	///   - string: 			String value of the plaintext message
+	///   - encoding: 			Encoding to use to generate the clear data
+	///
+	/// - Returns:				Newly initialized `PlaintextData`.
+	///
+	public class func createPlaintext(with string: String, using encoding: String.Encoding) throws -> PlaintextData {
+		
+		return try PlaintextData(with: string, using: encoding)
+	}
+	
+	///
+	/// Create an encrypted data container.
+	///
+	/// - Parameters:
+	///		- data:				`Data` containing the encrypted data.
+	///
+	/// - Returns:				Newly initialized `EncryptedData`.
+	///
+	public class func createEncrypted(with data: Data) -> EncryptedData {
+		
+		return EncryptedData(with: data)
+	}
+	
+	///
+	/// Creates a message with a encrypted base64-encoded string.
+	///
+	/// - Parameters:
+	///		- base64String: 	Base64-encoded data of an encrypted message
+	///
+	/// - Returns:				Newly initialized `EncryptedData`.
+	///
+	public class func createEncrypted(with base64String: String) throws -> EncryptedData {
+		
+		return try EncryptedData(withBase64: base64String)
+	}
+	
+	///
+	/// Create an signed data container.
+	///
+	/// - Parameters:
+	///		- data:				`Data` containing the signed data.
+	///
+	/// - Returns:				Newly initialized `SignedData`.
+	///
+	public class func createSigned(with data: Data) -> SignedData {
+		
+		return SignedData(with: data)
+	}
+	
 	///
 	/// RSA Data Object: Allows for RSA Encryption/Decryption, Signing/Verification and various utility functions.
 	///
-	public class RSAData: DataContainer {
+	public class RSAData {
 		
 		// MARK: -- Properties
 		
@@ -60,40 +117,41 @@ public class CryptorRSA {
 			
 			return data.base64EncodedString()
 		}
-		
+
 		// MARK: -- Initializers
 		
 		///
 		/// Initialize a new RSAData object.
 		///
 		/// - Parameters:
-		///		- data:				`Data` containing the key data.
+		///		- data:				`Data` containing the data.
 		///		- isEncrypted:		True if *data* is encrypted, false if *data* is plaintext.
 		///
 		/// - Returns:				Newly initialized `RSAData`.
 		///
-		public required init(with data: Data, isEncrypted: Bool) {
+		internal init(with data: Data, isEncrypted: Bool) {
 			
 			self.data = data
 			self.isEncrypted = isEncrypted
 		}
 		
 		///
-		/// Creates a message with a encrypted base64-encoded string.
+		/// Creates a RSAData with a encrypted base64-encoded string.
 		///
 		/// - Parameters:
 	 	///		- base64String: 	Base64-encoded data of an encrypted message
 		///
 		/// - Returns:				Newly initialized `RSAData`.
 		///
-		public convenience init(withBase64 base64String: String) throws {
+		internal init(withBase64 base64String: String) throws {
 			
 			guard let data = Data(base64Encoded: base64String) else {
 				
 				throw Error(code: CryptorRSA.ERR_BASE64_PEM_DATA, reason: "Couldn't convert base 64 encoded string ")
 			}
 			
-			self.init(with: data, isEncrypted: true)
+			self.data = data
+			self.isEncrypted = true
 		}
 		
 		///
@@ -105,14 +163,15 @@ public class CryptorRSA {
 		///
 		/// - Returns:				Newly initialized `RSAData`.
 		///
-		public convenience init(with string: String, using encoding: String.Encoding) throws {
+		internal init(with string: String, using encoding: String.Encoding) throws {
 			
 			guard let data = string.data(using: encoding) else {
 				
 				throw Error(code: CryptorRSA.ERR_STRING_ENCODING, reason: "Couldn't convert string to data using specified encoding")
 			}
 			
-			self.init(with: data, isEncrypted: false)
+			self.data = data
+			self.isEncrypted = false
 		}
 		
 		
@@ -124,12 +183,12 @@ public class CryptorRSA {
 		/// Encrypt the data.
 		///
 		/// - Parameters:
-		///		- key:				The `RSAKey` **Note:** Must be a public key.
+		///		- key:				The `PublicKey`
 		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
 		///
-		///	- Returns:				A new optional `RSAEncryptedData` containing the encrypted data.
+		///	- Returns:				A new optional `EncryptedData` containing the encrypted data.
 		///
-		public func encrypted(with key: RSAKey, algorithm: Data.Algorithm) throws -> RSAEncryptedData? {
+		public func encrypted(with key: PublicKey, algorithm: Data.Algorithm) throws ->EncryptedData? {
 			
 			// Must be plaintext...
 			guard self.isEncrypted == false else {
@@ -155,19 +214,19 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed with error: \(error)")
 			}
 			
-			return RSAData(with: eData as! Data, isEncrypted: true)
+			return EncryptedData(with: eData as! Data)
 		}
 		
 		///
 		/// Decrypt the data.
 		///
 		/// - Parameters:
-		///		- key:				The `RSAKey` **Note:** Must be a private key.
+		///		- key:				The `PrivateKey`
 		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
 		///
-		///	- Returns:				A new optional `RSADecryptedData` containing the decrypted data.
+		///	- Returns:				A new optional `PlaintextData` containing the decrypted data.
 		///
-		public func decrypted(with key: RSAKey, algorithm: Data.Algorithm) throws -> RSAPlaintextData? {
+		public func decrypted(with key: PrivateKey, algorithm: Data.Algorithm) throws -> PlaintextData? {
 			
 			// Must be plaintext...
 			guard self.isEncrypted else {
@@ -193,7 +252,7 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed with error: \(error)")
 			}
 			
-			return RSAData(with: pData as! Data, isEncrypted: false)
+			return PlaintextData(with: pData as! Data)
 		}
 		
 		
@@ -203,12 +262,12 @@ public class CryptorRSA {
 		/// Sign the data
 		///
 		/// - Parameters:
-		///		- key:				The `RSAKey` **Note:** Must be a private key.
+		///		- key:				The `PrivateKey`.
 		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
 		///
-		///	- Returns:				A new optional `RSASignedData` containing the digital signature.
+		///	- Returns:				A new optional `SignedData` containing the digital signature.
 		///
-		public func signed(with key: RSAKey, algorithm: Data.Algorithm) throws -> RSASignedData? {
+		public func signed(with key: PrivateKey, algorithm: Data.Algorithm) throws -> SignedData? {
 			
 			// Must be plaintext...
 			guard self.isEncrypted == false else {
@@ -234,20 +293,20 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed with error: \(error)")
 			}
 			
-			return RSAData(with: sData as! Data, isEncrypted: false)
+			return SignedData(with: sData as! Data)
 		}
 		
 		///
-		/// Sign the data
+		/// Verify the signature
 		///
 		/// - Parameters:
-		///		- key:				The `RSAKey` **Note:** Must be a public key.
+		///		- key:				The `PublicKey`.
 		///		- signature:		The `Data` containing the signature to verify against.
 		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
 		///
 		///	- Returns:				True if verification is successful, false otherwise
 		///
-		public func verify(with key: RSAKey, signature: Data, algorithm: Data.Algorithm) throws -> Bool {
+		public func verify(with key: PublicKey, signature: Data, algorithm: Data.Algorithm) throws -> Bool {
 			
 			// Must be plaintext...
 			guard self.isEncrypted == false else {
@@ -307,6 +366,94 @@ public class CryptorRSA {
 			}
 			
 			return str
+		}
+		
+	}
+	
+	// MARK: -
+	
+	public class PlaintextData: RSAData {
+		
+		// MARK: Initializers
+		
+		///
+		/// Initialize a new PlaintextData object.
+		///
+		/// - Parameters:
+		///		- data:				`Data` containing the data.
+		///
+		/// - Returns:				Newly initialized `PlaintextData`.
+		///
+		internal init(with data: Data) {
+
+			super.init(with: data, isEncrypted: false)
+		}
+		
+		///
+		/// Creates a message from a plaintext string, with the specified encoding.
+		///
+		/// - Parameters:
+		///   - string: 			String value of the plaintext message
+		///   - encoding: 			Encoding to use to generate the clear data
+		///
+		/// - Returns:				Newly initialized `RSAData`.
+		///
+		internal override init(with string: String, using encoding: String.Encoding) throws {
+		
+			try super.init(with: string, using: encoding)
+		}
+	}
+	
+	// MARK: -
+	
+	public class EncryptedData: RSAData {
+		
+		// MARK: Initializers
+		
+		///
+		/// Initialize a new EncryptedData object.
+		///
+		/// - Parameters:
+		///		- data:				`Data` containing the data.
+		///
+		/// - Returns:				Newly initialized EncryptedData`.
+		///
+		internal init(with data: Data) {
+			
+			super.init(with: data, isEncrypted: true)
+		}
+		
+		///
+		/// Creates a RSAData with a encrypted base64-encoded string.
+		///
+		/// - Parameters:
+		///		- base64String: 	Base64-encoded data of an encrypted message
+		///
+		/// - Returns:				Newly initialized `RSAData`.
+		///
+		internal override init(withBase64 base64String: String) throws {
+		
+			try super.init(withBase64: base64String)
+		}
+	}
+	
+	// MARK: -
+	
+	public class SignedData: RSAData {
+		
+		// MARK: -- Initializers
+		
+		///
+		/// Initialize a new SignedData object.
+		///
+		/// - Parameters:
+		///		- data:				`Data` containing the data.
+		///
+		/// - Returns:				Newly initialized `SignedData`.
+		///
+		internal init(with data: Data) {
+			
+			super.init(with: data, isEncrypted: true)
 		}
 		
 	}
