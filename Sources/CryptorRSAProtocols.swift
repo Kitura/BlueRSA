@@ -26,7 +26,7 @@ import Foundation
 ///
 /// RSA Message Protocol
 ///
-public protocol RSAMessage {
+public protocol DataContainer {
 	
 	/// `Data` containing the message.
 	var data: Data { get }
@@ -49,7 +49,7 @@ public protocol RSAMessage {
 ///
 /// RSA Key Protocol
 ///
-public protocol RSAKey {
+public protocol KeyDataContainer {
 	
 	///
 	/// Initialize an RSAKey
