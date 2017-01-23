@@ -27,9 +27,9 @@ import Foundation
 public extension CryptorRSA {
 	
 	///
-	/// Key Handling
+	/// RSA Key Creation and Handling
 	///
-	public class Key: RSAKey {
+	public class RSAKey: KeyDataContainer {
 		
 		/// MARK: Statics
 		
@@ -59,9 +59,9 @@ public extension CryptorRSA {
 		/// - Parameters:
 		///		- pemString: 		The string to use to parse out values
 		///
-		/// - Returns: 				An array of `Key` objects containing just public keys.
+		/// - Returns: 				An array of `RSAKey` objects containing just public keys.
 		///
-		public static func publicKeys(withPEM pemString: String) -> [Key] {
+		public static func publicKeys(withPEM pemString: String) -> [RSAKey] {
 			
 			// If our regexp isn't valid, or the input string is empty, we can't move forward…
 			guard let publicKeyRegexp = publicKeyRegex, pemString.characters.count > 0 else {
@@ -79,7 +79,7 @@ public extension CryptorRSA {
 				range: all
 			)
 			
-			let keys = matches.flatMap { result -> Key? in
+			let keys = matches.flatMap { result -> RSAKey? in
 				let match = result.rangeAt(1)
 				let start = pemString.characters.index(pemString.startIndex, offsetBy: match.location)
 				let end = pemString.characters.index(start, offsetBy: match.length)
@@ -88,7 +88,7 @@ public extension CryptorRSA {
 				
 				let thisKey = pemString[range]
 				
-				return try? Key(withPEM: thisKey, isPublic: true)
+				return try? RSAKey(withPEM: thisKey, isPublic: true)
 			}
 			
 			return keys
@@ -103,7 +103,7 @@ public extension CryptorRSA {
 		///		- data: 			Key data
 		///		- isPublic:			True the key is public, false otherwise.
 		///
-		/// - Returns:				New `Key` instance.
+		/// - Returns:				New `RSAKey` instance.
 		///
 		public required init(with data: Data, isPublic: Bool) throws {
 			
@@ -119,7 +119,7 @@ public extension CryptorRSA {
 		///		- base64String: 	Base64-encoded key data
 		///		- isPublic:			True the key is public, false otherwise.
 		///
-		/// - Returns:				New `Key` instance.
+		/// - Returns:				New `RSAKey` instance.
 		///
 		public convenience init(withBase64 base64String: String, isPublic: Bool) throws {
 			
@@ -138,7 +138,7 @@ public extension CryptorRSA {
 		///		- pemString: 		PEM-encoded key string
 		///		- isPublic:			True the key is public, false otherwise.
 		///
-		/// - Returns:				New `Key` instance.
+		/// - Returns:				New `RSAKey` instance.
 		///
 		public convenience init(withPEM pemString: String, isPublic: Bool) throws {
 			
@@ -155,7 +155,7 @@ public extension CryptorRSA {
 		/// 	- path: 			Path where the file is located.
 		///		- isPublic:			True the key is public, false otherwise.
 		///
-		/// - Returns:				New `Key` instance.
+		/// - Returns:				New `RSAKey` instance.
 		///
 		public convenience init(withPEMNamed pemName: String, onPath path: String, isPublic: Bool) throws {
 			
@@ -178,14 +178,14 @@ public extension CryptorRSA {
 		/// 	- path: 			Path where the file is located.
 		///		- isPublic:			True the key is public, false otherwise.
 		///
-		/// - Returns:				New `Key` instance.
+		/// - Returns:				New `RSAKey` instance.
 		///
 		public convenience init(withDERNamed derName: String, onPath path: String, isPublic: Bool) throws {
 			
 			var fullPath = path.appending(derName)
 			if !path.hasSuffix(DER_SUFFIX) {
 				
-				fullPath = path.appending(DER_SUFFIX)
+				fullPath = fullPath.appending(DER_SUFFIX)
 			}
 
 			let data = try Data(contentsOf: URL(fileURLWithPath: fullPath))
@@ -201,7 +201,7 @@ public extension CryptorRSA {
 		/// 	- bundle: 			Bundle in which to look for the PEM file. Defaults to the main bundle.
 		///		- isPublic:			True the key is public, false otherwise.
 		///
-		/// - Returns:				New `Key` instance.
+		/// - Returns:				New `RSAKey` instance.
 		///
 		public convenience init(withPEMNamed pemName: String, in bundle: Bundle = Bundle.main, isPublic: Bool) throws {
 			
@@ -223,7 +223,7 @@ public extension CryptorRSA {
 		/// 	- bundle: 			Bundle in which to look for the DER file. Defaults to the main bundle.
 		///		- isPublic:			True the key is public, false otherwise.
 		///
-		/// - Returns:				New `Key` instance.
+		/// - Returns:				New `RSAKey` instance.
 		///
 		public convenience init(withDERNamed derName: String, in bundle: Bundle = Bundle.main, isPublic: Bool) throws {
 			
