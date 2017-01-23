@@ -51,7 +51,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let data = try Data(contentsOf: URL(fileURLWithPath: path))
-		let publicKey = try? CryptorRSA.RSAKey(with: data, isPublic: true)
+		let publicKey = try? RSAPublicKey(with: data, isPublic: true)
 		XCTAssertNotNil(publicKey)
 		XCTAssertTrue(publicKey!.isPublic)
 	}
@@ -72,7 +72,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let publicKey = try? CryptorRSA.RSAKey(withBase64: str, isPublic: true)
+		let publicKey = try? RSAPublicKey(withBase64: str, isPublic: true)
 		XCTAssertNotNil(publicKey)
 		XCTAssertTrue(publicKey!.isPublic)
 	}
@@ -94,7 +94,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let publicKey = try? CryptorRSA.RSAKey(withBase64: str, isPublic: true)
+		let publicKey = try? RSAPublicKey(withBase64: str, isPublic: true)
 		XCTAssertNotNil(publicKey)
 		XCTAssertTrue(publicKey!.isPublic)
 	}
@@ -115,7 +115,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let publicKey = try? CryptorRSA.RSAKey(withPEM: str, isPublic: true)
+		let publicKey = try? RSAPublicKey(withPEM: str, isPublic: true)
 		XCTAssertNotNil(publicKey)
 		XCTAssertTrue(publicKey!.isPublic)
 	}
@@ -124,13 +124,13 @@ class CryptorRSATests: XCTestCase {
 		
 		if CryptorRSATests.useBundles {
 			
-			let message = try? CryptorRSA.RSAKey(withPEMNamed: "public", in: CryptorRSATests.bundle, isPublic: true)
-			XCTAssertNotNil(message)
+			let publicKey = try? RSAPublicKey(withPEMNamed: "public", in: CryptorRSATests.bundle, isPublic: true)
+			XCTAssertNotNil(publicKey)
 		
 		} else {
 			
-			let message = try? CryptorRSA.RSAKey(withPEMNamed: "public", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: true)
-			XCTAssertNotNil(message)
+			let publicKey = try? RSAPublicKey(withPEMNamed: "public", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: true)
+			XCTAssertNotNil(publicKey)
 		}
 	}
 	
@@ -138,13 +138,13 @@ class CryptorRSATests: XCTestCase {
 		
 		if CryptorRSATests.useBundles {
 			
-			let message = try? CryptorRSA.RSAKey(withDERNamed: "public", in: CryptorRSATests.bundle, isPublic: true)
-			XCTAssertNotNil(message)
+			let publicKey = try? RSAPublicKey(withDERNamed: "public", in: CryptorRSATests.bundle, isPublic: true)
+			XCTAssertNotNil(publicKey)
 			
 		} else {
 			
-			let message = try? CryptorRSA.RSAKey(withDERNamed: "public", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: true)
-			XCTAssertNotNil(message)
+			let publicKey = try? RSAPublicKey(withDERNamed: "public", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: true)
+			XCTAssertNotNil(publicKey)
 		}
 		
 	}
@@ -165,7 +165,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let publicKey = try? CryptorRSA.RSAKey(withPEM: str, isPublic: true)
+		let publicKey = try? RSAPublicKey(withPEM: str, isPublic: true)
 		XCTAssertNotNil(publicKey)
 		XCTAssertTrue(publicKey!.isPublic)
 	}
@@ -175,6 +175,10 @@ class CryptorRSATests: XCTestCase {
 		let input = CryptorRSATests.pemKeyString(name: "multiple-keys-testcase")
 		let keys = CryptorRSA.RSAKey.publicKeys(withPEM: input)
 		XCTAssertEqual(keys.count, 9)
+		
+		for publicKey in keys {
+			XCTAssertTrue(publicKey.isPublic)
+		}
 	}
 	
 	func test_publicKeysFromEmptyPEMFileReturnsEmptyArray() {
@@ -202,7 +206,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let privateKey = try? CryptorRSA.RSAKey(withPEM: str, isPublic: false)
+		let privateKey = try? RSAPrivateKey(withPEM: str, isPublic: false)
 		XCTAssertNotNil(privateKey)
 		XCTAssertFalse(privateKey!.isPublic)
 	}
@@ -223,7 +227,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let privateKey = try? CryptorRSA.RSAKey(withPEM: str, isPublic: false)
+		let privateKey = try? RSAPrivateKey(withPEM: str, isPublic: false)
 		XCTAssertNotNil(privateKey)
 		XCTAssertFalse(privateKey!.isPublic)
 	}
@@ -232,13 +236,13 @@ class CryptorRSATests: XCTestCase {
 		
 		if CryptorRSATests.useBundles {
 			
-			let message = try? CryptorRSA.RSAKey(withPEMNamed: "private", in: CryptorRSATests.bundle, isPublic: false)
-			XCTAssertNotNil(message)
+			let privateKey = try? RSAPrivateKey(withPEMNamed: "private", in: CryptorRSATests.bundle, isPublic: false)
+			XCTAssertNotNil(privateKey)
 			
 		} else {
 			
-			let message = try? CryptorRSA.RSAKey(withPEMNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: false)
-			XCTAssertNotNil(message)
+			let privateKey = try? RSAPrivateKey(withPEMNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: false)
+			XCTAssertNotNil(privateKey)
 		}
 		
 	}
@@ -247,21 +251,21 @@ class CryptorRSATests: XCTestCase {
 		
 		if CryptorRSATests.useBundles {
 			
-			let message = try? CryptorRSA.RSAKey(withDERNamed: "private", in: CryptorRSATests.bundle, isPublic: false)
-			XCTAssertNotNil(message)
+			let privateKey = try? RSAPrivateKey(withDERNamed: "private", in: CryptorRSATests.bundle, isPublic: false)
+			XCTAssertNotNil(privateKey)
 			
 		} else {
 			
-			let message = try? CryptorRSA.RSAKey(withDERNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: false)
-			XCTAssertNotNil(message)
+			let privateKey = try? RSAPrivateKey(withDERNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/", isPublic: false)
+			XCTAssertNotNil(privateKey)
 		}
 		
 	}
 	
 	// MARK: Encyption/Decryption Tests
 	
-	let publicKey: CryptorRSA.RSAKey = try! CryptorRSATests.publicKey(name: "public")
-	let privateKey: CryptorRSA.RSAKey = try! CryptorRSATests.privateKey(name: "private")
+	let publicKey: RSAPublicKey = try! CryptorRSATests.publicKey(name: "public")
+	let privateKey: RSAPrivateKey = try! CryptorRSATests.privateKey(name: "private")
 	
 	func test_simpleEncryption() throws {
 		
