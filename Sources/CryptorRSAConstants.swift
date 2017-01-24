@@ -30,6 +30,9 @@ public extension CryptorRSA {
 	
 	// MARK: Certificate Suffixes
 	
+	/// X509 Certificate Extension
+	static let CER_SUFFIX: String						= ".cer"
+	
 	/// PEM Suffix
 	static let PEM_SUFFIX: String						= ".pem"
 	

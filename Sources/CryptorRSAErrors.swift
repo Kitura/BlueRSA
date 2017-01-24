@@ -49,6 +49,9 @@ public extension CryptorRSA {
 	public static let ERR_DECRYPTION_FAILED				= -9997
 	public static let ERR_SIGNING_FAILED				= -9986
 	public static let ERR_VERIFICATION_FAILED			= -9985
+	public static let ERR_CREATE_CERT_FAILED			= -9984
+	public static let ERR_EXTRACT_PUBLIC_KEY_FAILED		= -9983
+	public static let ERR_EXTRACT_PRIVATE_KEY_FAILED	= -9983
 	
 	// MARK: -- Error
 	

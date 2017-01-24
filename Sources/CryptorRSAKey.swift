@@ -26,6 +26,18 @@ import Foundation
 @available(macOS 10.12, iOS 10.0, *)
 public extension CryptorRSA {
 	
+	// MARK: Type Aliases
+	
+	#if os(Linux)
+	
+		typealias NativeKey = RSA
+	
+	#else
+	
+		typealias NativeKey = SecKey
+	
+	#endif
+	
 	// MARK: Class Functions
 	
 	// MARK: -- Public Key Creation
@@ -121,6 +133,49 @@ public extension CryptorRSA {
 	}
 	
 	///
+	/// Creates a public key by extracting it from a certificate.
+	///
+	/// - Parameters:
+	/// 	- certName:			Name of the certificate file.
+	/// 	- path: 			Path where the file is located.
+	///
+	/// - Returns:				New `PublicKey` instance.
+	///
+	public class func createPublicKey(extractingFrom certName: String, onPath path: String) throws -> PublicKey {
+		
+		var fullPath = path.appending(certName)
+		if !path.hasSuffix(CER_SUFFIX) {
+			
+			fullPath = fullPath.appending(CER_SUFFIX)
+		}
+		
+		// Import the data from the file...
+		let tmp = try String(contentsOf: URL(fileURLWithPath: fullPath))
+		let base64 = try CryptorRSA.base64String(for: tmp)
+		let data = Data(base64Encoded: base64)!
+		
+		// Create a certificate from the data...
+		let certificateData = SecCertificateCreateWithData(nil, data as CFData)
+		guard let certData = certificateData else {
+			
+			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data.")
+		}
+		
+		// Now extract the public key from it...
+		var key: SecKey? = nil
+		let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
+			
+			SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
+		}
+		if status != errSecSuccess || key == nil {
+			
+			throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
+		}
+		
+		return PublicKey(with: key!)
+	}
+	
+	///
 	/// Creates a key with a PEM file.
 	///
 	/// - Parameters:
@@ -160,6 +215,48 @@ public extension CryptorRSA {
 		let data = try Data(contentsOf: URL(fileURLWithPath: path))
 		
 		return try PublicKey(with: data)
+	}
+	
+	///
+	/// Creates a public key by extracting it from a certificate.
+	///
+	/// - Parameters:
+	/// 	- certName:			Name of the certificate file.
+	/// 	- bundle: 			Bundle in which to look for the DER file. Defaults to the main bundle.
+	///
+	/// - Returns:				New `PublicKey` instance.
+	///
+	public class func createPublicKey(extractingFrom certName: String, in bundle: Bundle = Bundle.main) throws -> PublicKey {
+		
+		guard let path = bundle.path(forResource: certName, ofType: CER_SUFFIX) else {
+			
+			throw Error(code: ERR_INIT_PK, reason: "Couldn't find a certificate file named '\(certName)'")
+		}
+		
+		// Import the data from the file...
+		let tmp = try String(contentsOf: URL(fileURLWithPath: path))
+		let base64 = try CryptorRSA.base64String(for: tmp)
+		let data = Data(base64Encoded: base64)!
+		
+		// Create a certificate from the data...
+		let certificateData = SecCertificateCreateWithData(nil, data as CFData)
+		guard let certData = certificateData else {
+			
+			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data.")
+		}
+		
+		// Now extract the public key from it...
+		var key: SecKey? = nil
+		let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
+			
+			SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
+		}
+		if status != errSecSuccess || key == nil {
+			
+			throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
+		}
+		
+		return PublicKey(with: key!)
 	}
 
 	// MARK: -- Private Key Creation
@@ -318,7 +415,7 @@ public extension CryptorRSA {
 		// MARK: Properties
 		
 		/// The stored key
-		internal let reference: SecKey
+		internal let reference: NativeKey
 		
 		/// Represents the type of key data contained.
 		public internal(set) var type: KeyType = .publicType
@@ -341,6 +438,20 @@ public extension CryptorRSA {
 			reference = try CryptorRSA.createKey(from: data, type: type)
 		}
 		
+		///
+		/// Create a key using a native key.
+		///
+		/// - Parameters:
+		///		- nativeKey:		Native key representation.
+		///		- type:				Type of key.
+		///
+		/// - Returns:				New `RSAKey` instance.
+		///
+		internal init(with nativeKey: NativeKey, type: KeyType) {
+			
+			self.type = type
+			self.reference = nativeKey
+		}
 	}
 	
 	// MARK: -
@@ -413,11 +524,24 @@ public extension CryptorRSA {
 		/// - Parameters:
 		///		- data: 			Key data
 		///
-		/// - Returns:				New `RSAKey` instance.
+		/// - Returns:				New `PublicKey` instance.
 		///
 		public init(with data: Data) throws {
 			
 			try super.init(with: data, type: .publicType)
+		}
+	
+		///
+		/// Create a key using a native key.
+		///
+		/// - Parameters:
+		///		- nativeKey:		Native key representation.
+		///
+		/// - Returns:				New `PublicKey` instance.
+		///
+		public init(with nativeKey: NativeKey) {
+
+			super.init(with: nativeKey, type: .publicType)
 		}
 	}
 
@@ -436,11 +560,24 @@ public extension CryptorRSA {
 		/// - Parameters:
 		///		- data: 			Key data
 		///
-		/// - Returns:				New `RSAKey` instance.
+		/// - Returns:				New `PrivateKey` instance.
 		///
 		public init(with data: Data) throws {
 			
 			try super.init(with: data, type: .privateType)
+		}
+		
+		///
+		/// Create a key using a native key.
+		///
+		/// - Parameters:
+		///		- nativeKey:		Native key representation.
+		///
+		/// - Returns:				New `PrivateKey` instance.
+		///
+		public init(with nativeKey: NativeKey) {
+			
+			super.init(with: nativeKey, type: .privateType)
 		}
 	}
 }
