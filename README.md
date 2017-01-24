@@ -95,17 +95,17 @@ BlueRSA supports the following *major* data types:
 
 ### Key Handling
 
-* `BlueRSA` provides seven (7) initializers each for creating public and private keys from data. They are as follows (where *createXXXX* is either `createPublicKey` or `createPrivateKey` depending on what you're trying to create:
+`BlueRSA` provides seven (7) functions each for creating public and private keys from data. They are as follows (where *createXXXX* is either `createPublicKey` or `createPrivateKey` depending on what you're trying to create):
 
-	- `CryptorRSA.createXXXX(with data: Data) throws` - This creates either a private or public key containing the data provided. *It is assumed that the data being provided is in the proper format.*
-	- `CryptorRSA.createXXXX(withBase64 base64String: String) throws` - This creates either a private or public key using the `Base64 encoded String` provided.
-	- `CryptorRSA.createXXXX(withPEM pemString: String) throws` - This creates either a private or public key using the `PEM encoded String` provided.
-	- `CryptorRSA.createXXXX(withPEMNamed pemName: String, onPath path: String) throws` - This creates either a private or public key using the `PEM encoded file` pointed at by the `pemName` and located on the path specified by `path` provided.
-	- `CryptorRSA.createXXXX(withDERNamed derName: String, onPath path: String) throws` - This creates either a private or public key using the `DER encoded file` pointed at by the `derName` and located on the path specified by `path` provided.
-	- `CryptorRSA.createXXXX(withPEMNamed pemName: String, in bundle: Bundle = Bundle.main) throws` - This creates either a private or public key using the `PEM encoded file` pointed at by the `pemName` and located in the `Bundle` specified by `bundle` provided. By default this API will look in the `main` bundle.
-	- `CryptorRSA.createXXXX(withDERNamed derName: String, in bundle: Bundle = Bundle.main) throws` - This creates either a private or public key using the `DER encoded file` pointed at by the `derName` and located in the `Bundle` specified by `bundle` provided. By default this API will look in the `main` bundle.
+- `CryptorRSA.createXXXX(with data: Data) throws` - This creates either a private or public key containing the data provided. *It is assumed that the data being provided is in the proper format.*
+- `CryptorRSA.createXXXX(withBase64 base64String: String) throws` - This creates either a private or public key using the `Base64 encoded String` provided.
+- `CryptorRSA.createXXXX(withPEM pemString: String) throws` - This creates either a private or public key using the `PEM encoded String` provided.
+- `CryptorRSA.createXXXX(withPEMNamed pemName: String, onPath path: String) throws` - This creates either a private or public key using the `PEM encoded file` pointed at by the `pemName` and located on the path specified by `path` provided.
+- `CryptorRSA.createXXXX(withDERNamed derName: String, onPath path: String) throws` - This creates either a private or public key using the `DER encoded file` pointed at by the `derName` and located on the path specified by `path` provided.
+- `CryptorRSA.createXXXX(withPEMNamed pemName: String, in bundle: Bundle = Bundle.main) throws` - This creates either a private or public key using the `PEM encoded file` pointed at by the `pemName` and located in the `Bundle` specified by `bundle` provided. By default this API will look in the `main` bundle.
+- `CryptorRSA.createXXXX(withDERNamed derName: String, in bundle: Bundle = Bundle.main) throws` - This creates either a private or public key using the `DER encoded file` pointed at by the `derName` and located in the `Bundle` specified by `bundle` provided. By default this API will look in the `main` bundle.
 
-* Example
+**Example**
 
 The following example illustrates creating a public key given PEM encoded file located on a certain path. *Note: Exception handling omitted for brevity.
 
