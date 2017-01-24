@@ -53,7 +53,7 @@ class CryptorRSATests: XCTestCase {
 		let data = try Data(contentsOf: URL(fileURLWithPath: path))
 		let publicKey = try? CryptorRSA.createPublicKey(with: data)
 		XCTAssertNotNil(publicKey)
-		XCTAssertTrue(publicKey!.isPublic)
+		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 	
 	func test_public_initWithBase64String() throws {
@@ -74,7 +74,7 @@ class CryptorRSATests: XCTestCase {
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 		let publicKey = try? CryptorRSA.createPublicKey(withBase64: str)
 		XCTAssertNotNil(publicKey)
-		XCTAssertTrue(publicKey!.isPublic)
+		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 	
 
@@ -96,7 +96,7 @@ class CryptorRSATests: XCTestCase {
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 		let publicKey = try? CryptorRSA.createPublicKey(withBase64: str)
 		XCTAssertNotNil(publicKey)
-		XCTAssertTrue(publicKey!.isPublic)
+		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 	
 	func test_public_initWithPEMString() throws {
@@ -117,7 +117,7 @@ class CryptorRSATests: XCTestCase {
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 		let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
 		XCTAssertNotNil(publicKey)
-		XCTAssertTrue(publicKey!.isPublic)
+		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 	
 	func test_public_initWithPEMName() throws {
@@ -167,7 +167,7 @@ class CryptorRSATests: XCTestCase {
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 		let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
 		XCTAssertNotNil(publicKey)
-		XCTAssertTrue(publicKey!.isPublic)
+		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 	
 	func test_publicKeysFromComplexPEMFileWorksCorrectly() {
@@ -177,7 +177,7 @@ class CryptorRSATests: XCTestCase {
 		XCTAssertEqual(keys.count, 9)
 		
 		for publicKey in keys {
-			XCTAssertTrue(publicKey.isPublic)
+			XCTAssertTrue(publicKey.type == .publicType)
 		}
 	}
 	
@@ -208,7 +208,7 @@ class CryptorRSATests: XCTestCase {
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 		let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str)
 		XCTAssertNotNil(privateKey)
-		XCTAssertFalse(privateKey!.isPublic)
+		XCTAssertTrue(privateKey!.type == .privateType)
 	}
 	
 	func test_private_initWithPEMStringHeaderless() throws {
@@ -229,7 +229,7 @@ class CryptorRSATests: XCTestCase {
 		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 		let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str)
 		XCTAssertNotNil(privateKey)
-		XCTAssertFalse(privateKey!.isPublic)
+		XCTAssertTrue(privateKey!.type == .privateType)
 	}
 	
 	func test_private_initWithPEMName() throws {
@@ -358,7 +358,7 @@ class CryptorRSATests: XCTestCase {
 			let message = CryptorRSA.createPlaintext(with: data)
 			let signature = try message.signed(with: privateKey, algorithm: algorithm)
 			XCTAssertNotNil(signature)
-			let verificationResult = try message.verify(with: publicKey, signature: signature!.data, algorithm: algorithm)
+			let verificationResult = try message.verify(with: publicKey, signature: signature!, algorithm: algorithm)
 			XCTAssertTrue(verificationResult)
 			print("Test of algorithm: \(name) succeeded")
 		}
@@ -380,7 +380,7 @@ class CryptorRSATests: XCTestCase {
 			let signature = try message.signed(with: privateKey, algorithm: algorithm)
 			XCTAssertNotNil(signature)
 			XCTAssertEqual(signature!.base64String, signature!.data.base64EncodedString())
-			let verificationResult = try message.verify(with: publicKey, signature: signature!.data, algorithm: algorithm)
+			let verificationResult = try message.verify(with: publicKey, signature: signature!, algorithm: algorithm)
 			XCTAssertTrue(verificationResult)
 			print("Test of algorithm: \(name) succeeded")
 		}
