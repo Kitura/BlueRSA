@@ -103,13 +103,13 @@ BlueRSA supports the following *major* data types:
 - `CryptorRSA.createXXXX(withPEM pemString: String) throws` - This creates either a private or public key using the `PEM encoded String` provided.
 - `CryptorRSA.createXXXX(withPEMNamed pemName: String, onPath path: String) throws` - This creates either a private or public key using the `PEM encoded file` pointed at by the `pemName` and located on the path specified by `path` provided.
 - `CryptorRSA.createXXXX(withDERNamed derName: String, onPath path: String) throws` - This creates either a private or public key using the `DER encoded file` pointed at by the `derName` and located on the path specified by `path` provided.
-- `CryptorRSA.createXXXX(withPEMNamed pemName: String, in bundle: Bundle = Bundle.main) throws` - This creates either a private or public key using the `PEM encoded file` pointed at by the `pemName` and located in the `Bundle` specified by `bundle` provided. By default this API will look in the `main` bundle. **Note: Apple Platforms Only **
-- `CryptorRSA.createXXXX(withDERNamed derName: String, in bundle: Bundle = Bundle.main) throws` - This creates either a private or public key using the `DER encoded file` pointed at by the `derName` and located in the `Bundle` specified by `bundle` provided. By default this API will look in the `main` bundle. **Note: Apple Platforms Only **
+- `CryptorRSA.createXXXX(withPEMNamed pemName: String, in bundle: Bundle = Bundle.main) throws` - This creates either a private or public key using the `PEM encoded file` pointed at by the `pemName` and located in the `Bundle` specified by `bundle` provided. By default this API will look in the `main` bundle. **Note: Apple Platforms Only**
+- `CryptorRSA.createXXXX(withDERNamed derName: String, in bundle: Bundle = Bundle.main) throws` - This creates either a private or public key using the `DER encoded file` pointed at by the `derName` and located in the `Bundle` specified by `bundle` provided. By default this API will look in the `main` bundle. **Note: Apple Platforms Only**
 
 Additionally, there are two APIs for creating a *public key* by extracting the key from a PEM formatted certificate:  They are:
 
 - `CryptorRSA.createPublicKey(extractingFrom certName: String, onPath path: String) throws` - This creates either a public key by extracting from the `PEM encoded certificate` pointed at by the `certName` and located on the path specified by `path` provided.
-- `CryptorRSA.createPublicKey(extractingFrom certName: String, in bundle: Bundle = Bundle.main) throws` - This creates either a private or public key using the `PEM encoded certificate` pointed at by the `derName` and located in the `Bundle` specified by `bundle` provided. By default this API will look in the `main` bundle. **Note: Apple Platforms Only **
+- `CryptorRSA.createPublicKey(extractingFrom certName: String, in bundle: Bundle = Bundle.main) throws` - This creates either a private or public key using the `PEM encoded certificate` pointed at by the `derName` and located in the `Bundle` specified by `bundle` provided. By default this API will look in the `main` bundle. **Note: Apple Platforms Only**
 
 
 **Example**
