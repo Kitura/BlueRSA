@@ -76,6 +76,7 @@ To include BlueRSA in a project using Carthage, add a line to your `Cartfile` wi
 ### Before starting
 
 The first you need to do is import the CryptorRSA framework.  This is done by the following:
+
 ```
 import CryptorRSA
 ```
@@ -95,7 +96,7 @@ BlueRSA supports the following *major* data types:
 
 ### Key Handling
 
-`BlueRSA` provides seven (7) functions each for creating public and private keys from data. They are as follows (where *createXXXX* is either `createPublicKey` or `createPrivateKey` depending on what you're trying to create):
+**BlueRSA** provides seven (7) functions each for creating public and private keys from data. They are as follows (where *createXXXX* is either `createPublicKey` or `createPrivateKey` depending on what you're trying to create):
 
 - `CryptorRSA.createXXXX(with data: Data) throws` - This creates either a private or public key containing the data provided. *It is assumed that the data being provided is in the proper format.*
 - `CryptorRSA.createXXXX(withBase64 base64String: String) throws` - This creates either a private or public key using the `Base64 encoded String` provided.
@@ -128,8 +129,159 @@ let publicKey = try CryptorRSA.createPublicKey(withPEMNamed: keyName, onPath: ke
 
 ### Data Encryption and Decryption Handling
 
-TBD
+**BlueRSA** provides functions for the creation of each of the three (3) data handling types:
 
-### Signing and Verification Handling
+**Plaintext Data Handling and Signing**
 
-TBD
+There are two class level functions for creating a `PlaintextData` object. These are:
+
+- `CryptorRSA.createPlaintext(with data: Data) -> PlaintextData` - This function creates a `PlaintextData` containing the specified `data`.
+- `CryptorRSA.createPlaintext(with string: String, using encoding: String.Encoding) throws -> PlaintextData` - This function creates a `PlaintextData` object using the `string` encoded with the specified `encoding` as the data.
+
+Once the `PlaintextData` object is created, there are two instance functions that can be used to manipulate the contained data.  These are:
+
+- `encrypted(with key: PublicKey, algorithm: Data.Algorithm) throws -> EncryptedData?` - This function allows you to encrypt containing data using the private `key` and `algorithm` specified.  This function returns an optional `EncryptedData` object containing the encryped data.
+- `signed(with key: PrivateKey, algorithm: Data.Algorithm) throws -> SignedData?` - This function allows you to sign the contained data using the private `key` and `algorithm` specified.  This function returns an optional `SignedData` object containing the signature of the signed data.
+
+**Example**
+
+- *Encryption*: **Note:** Exception handling omitted for brevity.
+
+```
+import Foundation
+import CryptorRSA
+
+...
+
+let keyName = ...
+let keyPath = ...
+
+let myData: Data = <... Data to be encrypted ...>
+
+let publicKey = try CryptorRSA.createPublicKey(withPEMNamed: keyName, onPath: keyPath)
+let myPlaintext = CryptorRSA.createPlaintext(with: myData)
+let encryptedData = try myPlaintext.encrypt(with: publicKey, algorithm: .sha1)
+
+...
+
+< Do something with the encrypted data...>
+
+```
+
+- *Signing*: **Note:** Exception handling omitted for brevity.
+
+```
+import Foundation
+import CryptorRSA
+
+...
+
+let keyName = ...
+let keyPath = ...
+
+let myData: Data = <... Data to be signed ...>
+
+let privateKey = try CryptorRSA.createPrivateKey(withPEMNamed: keyName, onPath: keyPath)
+let myPlaintext = CryptorRSA.createPlaintext(with: myData)
+let signedData = try myPlaintext.signed(with: privateKey, algorithm: .sha1)
+
+...
+
+< Do something with the signed data...>
+
+```
+**Encrypted Data Handling**
+
+There are two class level functions for creating a `EncryptedData` object. These are:
+
+- `CryptorRSA.createEncrypted(with data: Data) -> EncryptedData` - This function creates a `EncryptedData` containing the specified encrypted `data`.
+- `CryptorRSA.createEncrypted(with base64String: String) throws -> EncryptedData` - This function creates a `EncrpytedData` using the *Base64* representation of already encrypted data.
+
+Once the `EncryptedData` object is created, there is an instance function that can be used to decrypt the enclosed data:
+
+- `decrypted(with key: PrivateKey, algorithm: Data.Algorithm) throws -> DecryptedData?` - This function allows you to decrypt containing data using the public `key` and `algorithm` specified.  This function returns an optional `DecryptedData` object containing the encryped data.
+
+**Example**
+
+- *Decryption*: **Note**: Exception handling omitted for brevity.
+
+```
+import Foundation
+import CryptorRSA
+
+...
+
+let keyName = ...
+let keyPath = ...
+let publicKey = try CryptorRSA.createPublicKey(withPEMNamed: keyName, onPath: keyPath)
+
+let pkeyName = ...
+let pkeyPath = ...
+let privateKey = try CryptorRSA.createPrivateKey(withPEMNamed: pkeyName, onPath: pkeyPath)
+
+let myData: Data = <... Data to be encrypted ...>
+
+let myPlaintext = CryptorRSA.createPlaintext(with: myData)
+let encryptedData = try myPlaintext.encrypt(with: publicKey, algorithm: .sha1)
+
+let decryptedData = try encryptedData.decrypt(with: privateKey, algorithm: .sha1)
+
+...
+
+< Do something with the decrypted data...>
+
+
+```
+
+
+### Signature Verification Handling
+
+There is a single class level function that can be used to create a `SignedData` object. It is:
+
+- `CryptorRSA.createSigned(with data: Data) -> SignedData` - This function creates a `SignedData` containing the specified signed `data`.
+
+Once created or obtained, there is an instance function which can be used to verify the signature contained therein:
+
+- `CryptorRSA.verify(with key: PublicKey, signature: SignedData, algorithm: Data.Algorithm) throws -> Bool` - This function is used to verify, using the public `key` and `algorithm`, the `signature`.  Returns true if the signature is valid, false otherwise.
+
+- *Verifying*: **Note:** Exception handling omitted for brevity.
+
+```
+import Foundation
+import CryptorRSA
+
+...
+
+let keyName = ...
+let keyPath = ...
+let publicKey = try CryptorRSA.createPublicKey(withPEMNamed: keyName, onPath: keyPath)
+
+let pkeyName = ...
+let pkeyPath = ...
+let privateKey = try CryptorRSA.createPrivateKey(withPEMNamed: pkeyName, onPath: pkeyPath)
+
+let myData: Data = <... Data to be signed ...>
+
+let myPlaintext = CryptorRSA.createPlaintext(with: myData)
+let signedData = try myPlaintext.signed(with: privateKey, algorithm: .sha1)
+
+if signedData.verify(with: publicKey, signature: signedData, algorithm: .sha1) {
+
+	print("Signature verified")
+
+} else {
+
+	print("Signature Verification Failed")
+}
+
+```
+
+### Data Type Utility Functions
+
+All three of the data handling types have two common utility instance functions.  These are:
+
+- `digest(using algorithm: Data.Algorithm) throws -> Data` - This function returns a `Data` object containing a digest constructed using the specified `algorithm`.
+- `string(using encoding: String.Encoding) throws -> String` - This functions returns a `String` representation of the data using the specified `encoding`.
+
+
+
