@@ -187,6 +187,21 @@ class CryptorRSATests: XCTestCase {
 		XCTAssertEqual(keys.count, 0)
 	}
 	
+	func test_public_initWithCertificateName() throws {
+		
+		if CryptorRSATests.useBundles {
+			
+			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging", in: CryptorRSATests.bundle)
+			XCTAssertNotNil(publicKey)
+			
+		} else {
+			
+			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging", onPath: "./Tests/CryptorRSATests/Keys/")
+			XCTAssertNotNil(publicKey)
+		}
+		
+	}
+	
 	
 	// MARK: Private Key Tests
 	
