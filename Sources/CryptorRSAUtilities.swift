@@ -36,15 +36,15 @@ public extension CryptorRSA {
 	///
 	/// - Parameters:
 	///		- keyData:			`Data` representation of the key.
-	///		- isPublic:			True if the key is to be `public`, false otherwise.
+	///		- type:				Type of key data.
 	///
 	///	- Returns:				`SecKey` representation of the key.
 	///
-	static func createKey(from keyData: Data, isPublic: Bool) throws ->  SecKey {
+	static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  SecKey {
 		
 		var keyData = keyData
 		
-		let keyClass = isPublic ? kSecAttrKeyClassPublic : kSecAttrKeyClassPrivate
+		let keyClass = type == .publicType ? kSecAttrKeyClassPublic : kSecAttrKeyClassPrivate
 		
 		let sizeInBits = keyData.count * MemoryLayout<UInt8>.size
 		let keyDict: [CFString: Any] = [

@@ -104,13 +104,28 @@ public class CryptorRSA {
 	///
 	public class RSAData {
 		
+		// MARK: Enums
+		
+		/// Denotes the type of data this represents.
+		public enum DataType {
+			
+			/// Plaintext
+			case plaintextType
+			
+			/// Encrypted
+			case encryptedType
+			
+			/// Signed
+			case signedType
+		}
+		
 		// MARK: -- Properties
 		
 		/// Data of the message
 		public let data: Data
 		
-		/// True if constructed with encrypted data
-		public internal(set) var isEncrypted: Bool = false
+		/// Represents the type of data contained.
+		public internal(set) var type: DataType = .plaintextType
 		
 		/// Base64-encoded string of the message data
 		public var base64String: String {
@@ -125,14 +140,14 @@ public class CryptorRSA {
 		///
 		/// - Parameters:
 		///		- data:				`Data` containing the data.
-		///		- isEncrypted:		True if *data* is encrypted, false if *data* is plaintext.
+		///		- type:				Type of data contained.
 		///
 		/// - Returns:				Newly initialized `RSAData`.
 		///
-		internal init(with data: Data, isEncrypted: Bool) {
+		internal init(with data: Data, type: DataType) {
 			
 			self.data = data
-			self.isEncrypted = isEncrypted
+			self.type = type
 		}
 		
 		///
@@ -151,7 +166,7 @@ public class CryptorRSA {
 			}
 			
 			self.data = data
-			self.isEncrypted = true
+			self.type = .encryptedType
 		}
 		
 		///
@@ -171,7 +186,7 @@ public class CryptorRSA {
 			}
 			
 			self.data = data
-			self.isEncrypted = false
+			self.type = .plaintextType
 		}
 		
 		
@@ -188,16 +203,16 @@ public class CryptorRSA {
 		///
 		///	- Returns:				A new optional `EncryptedData` containing the encrypted data.
 		///
-		public func encrypted(with key: PublicKey, algorithm: Data.Algorithm) throws ->EncryptedData? {
+		public func encrypted(with key: PublicKey, algorithm: Data.Algorithm) throws -> EncryptedData? {
 			
 			// Must be plaintext...
-			guard self.isEncrypted == false else {
+			guard self.type == .plaintextType else {
 				
 				throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
 			}
 			
 			// Key must be public...
-			guard key.isPublic else {
+			guard key.type == .publicType else {
 				
 				throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not public")
 			}
@@ -228,14 +243,14 @@ public class CryptorRSA {
 		///
 		public func decrypted(with key: PrivateKey, algorithm: Data.Algorithm) throws -> PlaintextData? {
 			
-			// Must be plaintext...
-			guard self.isEncrypted else {
+			// Must be encrypted...
+			guard self.type == .encryptedType else {
 				
 				throw Error(code: CryptorRSA.ERR_NOT_ENCRYPTED, reason: "Data is plaintext")
 			}
 			
 			// Key must be private...
-			guard key.isPublic == false else {
+			guard key.type == .privateType else {
 				
 				throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not private")
 			}
@@ -270,13 +285,13 @@ public class CryptorRSA {
 		public func signed(with key: PrivateKey, algorithm: Data.Algorithm) throws -> SignedData? {
 			
 			// Must be plaintext...
-			guard self.isEncrypted == false else {
+			guard self.type == .plaintextType else {
 				
 				throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
 			}
 			
 			// Key must be private...
-			guard key.isPublic == false else {
+			guard key.type == .privateType else {
 				
 				throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "Supplied key is not private")
 			}
@@ -301,27 +316,32 @@ public class CryptorRSA {
 		///
 		/// - Parameters:
 		///		- key:				The `PublicKey`.
-		///		- signature:		The `Data` containing the signature to verify against.
+		///		- signature:		The `SignedData` containing the signature to verify against.
 		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
 		///
 		///	- Returns:				True if verification is successful, false otherwise
 		///
-		public func verify(with key: PublicKey, signature: Data, algorithm: Data.Algorithm) throws -> Bool {
+		public func verify(with key: PublicKey, signature: SignedData, algorithm: Data.Algorithm) throws -> Bool {
 			
 			// Must be plaintext...
-			guard self.isEncrypted == false else {
+			guard self.type == .plaintextType else {
 				
 				throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
 			}
 			
 			// Key must be public...
-			guard key.isPublic else {
+			guard key.type == .publicType else {
 				
 				throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "Supplied key is not public")
 			}
+			// Signature must be signed data...
+			guard signature.type == .signedType else {
+				
+				throw Error(code: CryptorRSA.ERR_NOT_SIGNED_DATA, reason: "Supplied signature is not of signed data type")
+			}
 			
 			var response: Unmanaged<CFError>? = nil
-			let result = SecKeyVerifySignature(key.reference, algorithm.alogrithmForSignature, self.data as CFData, signature as CFData, &response)
+			let result = SecKeyVerifySignature(key.reference, algorithm.alogrithmForSignature, self.data as CFData, signature.data as CFData, &response)
 			if response != nil {
 				
 				guard let error = response?.takeRetainedValue() as? Swift.Error else {
@@ -372,6 +392,9 @@ public class CryptorRSA {
 	
 	// MARK: -
 	
+	///
+	/// Plaintext Data - Represents data not encrypted or signed.
+	///
 	public class PlaintextData: RSAData {
 		
 		// MARK: Initializers
@@ -386,7 +409,7 @@ public class CryptorRSA {
 		///
 		internal init(with data: Data) {
 
-			super.init(with: data, isEncrypted: false)
+			super.init(with: data, type: .plaintextType)
 		}
 		
 		///
@@ -406,6 +429,9 @@ public class CryptorRSA {
 	
 	// MARK: -
 	
+	///
+	/// Encrypted Data - Represents data encrypted.
+	///
 	public class EncryptedData: RSAData {
 		
 		// MARK: Initializers
@@ -420,7 +446,7 @@ public class CryptorRSA {
 		///
 		internal init(with data: Data) {
 			
-			super.init(with: data, isEncrypted: true)
+			super.init(with: data, type: .encryptedType)
 		}
 		
 		///
@@ -439,6 +465,9 @@ public class CryptorRSA {
 	
 	// MARK: -
 	
+	///
+	/// Signed Data - Represents data that is signed.
+	///
 	public class SignedData: RSAData {
 		
 		// MARK: -- Initializers
@@ -453,7 +482,7 @@ public class CryptorRSA {
 		///
 		internal init(with data: Data) {
 			
-			super.init(with: data, isEncrypted: true)
+			super.init(with: data, type: .signedType)
 		}
 		
 	}

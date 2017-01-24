@@ -303,13 +303,25 @@ public extension CryptorRSA {
 	///
 	public class RSAKey {
 		
+		// MARK: Enums
+		
+		/// Denotes the type of key this represents.
+		public enum KeyType {
+			
+			/// Public
+			case publicType
+			
+			/// Private
+			case privateType
+		}
+		
 		// MARK: Properties
 		
 		/// The stored key
 		internal let reference: SecKey
 		
-		/// True if the key is public, false if private.
-		public internal(set) var isPublic: Bool = true
+		/// Represents the type of key data contained.
+		public internal(set) var type: KeyType = .publicType
 		
 		// MARK: Initializers
 		
@@ -317,22 +329,25 @@ public extension CryptorRSA {
 		/// Create a key using key data.
 		///
 		/// - Parameters:
-		///		- data: 			Key data
-		///		- isPublic:			True the key is public, false otherwise.
+		///		- data: 			Key data.
+		///		- type:				Type of key data.
 		///
 		/// - Returns:				New `RSAKey` instance.
 		///
-		internal init(with data: Data, isPublic: Bool) throws {
+		internal init(with data: Data, type: KeyType) throws {
 			
-			self.isPublic = isPublic
+			self.type = type
 			let data = try CryptorRSA.stripPublicKeyHeader(for: data)
-			reference = try CryptorRSA.createKey(from: data, isPublic: isPublic)
+			reference = try CryptorRSA.createKey(from: data, type: type)
 		}
 		
 	}
 	
 	// MARK: -
 	
+	///
+	/// Public Key - Represents public key data.
+	///
 	public class PublicKey: RSAKey {
 		
 		/// MARK: Statics
@@ -402,12 +417,15 @@ public extension CryptorRSA {
 		///
 		public init(with data: Data) throws {
 			
-			try super.init(with: data, isPublic: true)
+			try super.init(with: data, type: .publicType)
 		}
 	}
 
 	// MARK: -
 	
+	///
+	/// Private Key - Represents private key data.
+	///
 	public class PrivateKey: RSAKey {
 		
 		// MARK: -- Initializers
@@ -422,7 +440,7 @@ public extension CryptorRSA {
 		///
 		public init(with data: Data) throws {
 			
-			try super.init(with: data, isPublic: false)
+			try super.init(with: data, type: .privateType)
 		}
 	}
 }
