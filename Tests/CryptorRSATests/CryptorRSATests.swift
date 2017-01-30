@@ -56,6 +56,27 @@ class CryptorRSATests: XCTestCase {
 		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 	
+	func test_public_initWithCertData() throws {
+		
+		var path: String
+		if CryptorRSATests.useBundles {
+			guard let bPath = CryptorRSATests.bundle.path(forResource: "staging", ofType: "cer") else {
+				
+				return XCTFail()
+			}
+			path = bPath
+			
+		} else {
+			
+			path = "./Tests/CryptorRSATests/Keys/staging.cer"
+		}
+		
+		let data = try Data(contentsOf: URL(fileURLWithPath: path))
+		let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: data)
+		XCTAssertNotNil(publicKey)
+		XCTAssertTrue(publicKey!.type == .publicType)
+	}
+	
 	func test_public_initWithBase64String() throws {
 		
 		var path: String

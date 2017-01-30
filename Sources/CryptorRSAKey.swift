@@ -56,6 +56,30 @@ public extension CryptorRSA {
 	}
 
 	///
+	/// Creates a public key by extracting it from a certificate.
+	///
+	/// - Parameters:
+	/// 	- data:				`Data` representing the certificate.
+	///
+	/// - Returns:				New `PublicKey` instance.
+	///
+	public class func createPublicKey(extractingFrom data: Data) throws -> PublicKey {
+		
+		// Extact the data as a base64 string...
+		let str = String(data: data, encoding: .utf8)
+		guard let tmp = str else {
+			
+			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data, incorrect format.")
+		}
+		
+		let base64 = try CryptorRSA.base64String(for: tmp)
+		let data = Data(base64Encoded: base64)!
+		
+		// Call the internal function to finish up...
+		return try CryptorRSA.createPublicKey(data: data)
+	}
+	
+	///
 	/// Creates a key with a base64-encoded string.
 	///
 	/// - Parameters:
@@ -154,25 +178,8 @@ public extension CryptorRSA {
 		let base64 = try CryptorRSA.base64String(for: tmp)
 		let data = Data(base64Encoded: base64)!
 		
-		// Create a certificate from the data...
-		let certificateData = SecCertificateCreateWithData(nil, data as CFData)
-		guard let certData = certificateData else {
-			
-			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data.")
-		}
-		
-		// Now extract the public key from it...
-		var key: SecKey? = nil
-		let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
-			
-			SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
-		}
-		if status != errSecSuccess || key == nil {
-			
-			throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
-		}
-		
-		return PublicKey(with: key!)
+		// Call the internal function to finish up...
+		return try CryptorRSA.createPublicKey(data: data)
 	}
 	
 	///
@@ -237,6 +244,20 @@ public extension CryptorRSA {
 		let tmp = try String(contentsOf: URL(fileURLWithPath: path))
 		let base64 = try CryptorRSA.base64String(for: tmp)
 		let data = Data(base64Encoded: base64)!
+		
+		// Call the internal function to finish up...
+		return try CryptorRSA.createPublicKey(data: data)
+	}
+	
+	///
+	/// Creates a public key by extracting it certificate data.
+	///
+	/// - Parameters:
+	/// 	- data:				`Data` representing the certificate.
+	///
+	/// - Returns:				New `PublicKey` instance.
+	///
+	internal class func createPublicKey(data: Data) throws -> PublicKey {
 		
 		// Create a certificate from the data...
 		let certificateData = SecCertificateCreateWithData(nil, data as CFData)
