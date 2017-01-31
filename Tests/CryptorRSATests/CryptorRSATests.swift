@@ -77,6 +77,27 @@ class CryptorRSATests: XCTestCase {
 		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 	
+	func test_public_initWithCertData2() throws {
+		
+		var path: String
+		if CryptorRSATests.useBundles {
+			guard let bPath = CryptorRSATests.bundle.path(forResource: "staging2", ofType: "cer") else {
+				
+				return XCTFail()
+			}
+			path = bPath
+			
+		} else {
+			
+			path = "./Tests/CryptorRSATests/Keys/staging2.cer"
+		}
+		
+		let data = try Data(contentsOf: URL(fileURLWithPath: path))
+		let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: data)
+		XCTAssertNotNil(publicKey)
+		XCTAssertTrue(publicKey!.type == .publicType)
+	}
+	
 	func test_public_initWithBase64String() throws {
 		
 		var path: String
@@ -218,6 +239,21 @@ class CryptorRSATests: XCTestCase {
 		} else {
 			
 			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging", onPath: "./Tests/CryptorRSATests/Keys/")
+			XCTAssertNotNil(publicKey)
+		}
+		
+	}
+	
+	func test_public_initWithCertificateName2() throws {
+		
+		if CryptorRSATests.useBundles {
+			
+			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging2", in: CryptorRSATests.bundle)
+			XCTAssertNotNil(publicKey)
+			
+		} else {
+			
+			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging2", onPath: "./Tests/CryptorRSATests/Keys/")
 			XCTAssertNotNil(publicKey)
 		}
 		
@@ -512,6 +548,8 @@ class CryptorRSATests: XCTestCase {
 	static var allTests : [(String, (CryptorRSATests) -> () throws -> Void)] {
         return [
             ("test_public_initWithData", test_public_initWithData),
+            ("test_public_initWithCertData", test_public_initWithCertData),
+            ("test_public_initWithCertData2", test_public_initWithCertData2),
             ("test_public_initWithBase64String", test_public_initWithBase64String),
             ("test_public_initWithBase64StringWhichContainsNewLines", test_public_initWithBase64StringWhichContainsNewLines),
             ("test_public_initWithPEMString", test_public_initWithPEMString),
@@ -520,6 +558,8 @@ class CryptorRSATests: XCTestCase {
             ("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless),
             ("test_publicKeysFromComplexPEMFileWorksCorrectly", test_publicKeysFromComplexPEMFileWorksCorrectly),
             ("test_publicKeysFromEmptyPEMFileReturnsEmptyArray", test_publicKeysFromEmptyPEMFileReturnsEmptyArray),
+            ("test_public_initWithCertificateName", test_public_initWithCertificateName),
+            ("test_public_initWithCertificateName2", test_public_initWithCertificateName2),
             ("test_private_initWithPEMString", test_private_initWithPEMString),
             ("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
             ("test_private_initWithPEMName", test_private_initWithPEMName),

@@ -74,13 +74,18 @@ public extension CryptorRSA {
 	///
 	static func base64String(for pemString: String) throws -> String {
 		
-		let lines = pemString.components(separatedBy: "\n").filter { line in
+		// Filter looking for new lines...
+		var lines = pemString.components(separatedBy: "\n").filter { line in
 			return !line.hasPrefix(CryptorRSA.GENERIC_BEGIN_MARKER) && !line.hasPrefix(CryptorRSA.GENERIC_END_MARKER)
 		}
 		
+		// No lines, no data...
 		guard lines.count != 0 else {
 			throw Error(code: ERR_BASE64_PEM_DATA, reason: "Couldn't get data from PEM key: no data available after stripping headers.")
 		}
+		
+		// Strip off any carriage returns...
+		lines = lines.map { $0.replacingOccurrences(of: "\r", with: "") }
 		
 		return lines.joined(separator: "")
 	}
