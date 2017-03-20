@@ -221,7 +221,7 @@ public class CryptorRSA {
 			let eData = SecKeyCreateEncryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
 			if response != nil {
 				
-				guard let error = response?.takeRetainedValue() as? Swift.Error else {
+				guard let error = response?.takeRetainedValue() else {
 					
 					throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed. Unable to determine error.")
 				}
@@ -229,7 +229,7 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed with error: \(error)")
 			}
 			
-			return EncryptedData(with: eData as! Data)
+			return EncryptedData(with: eData! as Data)
 		}
 		
 		///
@@ -259,7 +259,7 @@ public class CryptorRSA {
 			let pData = SecKeyCreateDecryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
 			if response != nil {
 				
-				guard let error = response?.takeRetainedValue() as? Swift.Error else {
+				guard let error = response?.takeRetainedValue() else {
 					
 					throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed. Unable to determine error.")
 				}
@@ -267,7 +267,7 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed with error: \(error)")
 			}
 			
-			return PlaintextData(with: pData as! Data)
+			return PlaintextData(with: pData! as Data)
 		}
 		
 		
@@ -300,7 +300,7 @@ public class CryptorRSA {
 			let sData = SecKeyCreateSignature(key.reference, algorithm.alogrithmForSignature, self.data as CFData, &response)
 			if response != nil {
 				
-				guard let error = response?.takeRetainedValue() as? Swift.Error else {
+				guard let error = response?.takeRetainedValue() else {
 					
 					throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed. Unable to determine error.")
 				}
@@ -308,7 +308,7 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed with error: \(error)")
 			}
 			
-			return SignedData(with: sData as! Data)
+			return SignedData(with: sData! as Data)
 		}
 		
 		///
@@ -344,7 +344,7 @@ public class CryptorRSA {
 			let result = SecKeyVerifySignature(key.reference, algorithm.alogrithmForSignature, self.data as CFData, signature.data as CFData, &response)
 			if response != nil {
 				
-				guard let error = response?.takeRetainedValue() as? Swift.Error else {
+				guard let error = response?.takeRetainedValue() else {
 					
 					throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Verification failed. Unable to determine error.")
 				}
