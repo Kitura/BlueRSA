@@ -8,11 +8,11 @@
 # BlueRSA
 
 ## Overview
-RSA public/private key encryption, private key signing and public key verification in Swift using the Swift Package Manager. Works on iOS, macOS, and Linux.
+Swift cross-platform RSA wrapper library for RSA encryption and signing. Works on supported Apple platforms (using Security framework).  Linux (using OpenSSL) to come.
 
 ## Contents
 
-* CryptorRSA: Utility functions for RSA encryption and signing.
+* CryptorRSA: Utility functions for RSA encryption and signing. Pure Swift
 
 ## Prerequisites
 
