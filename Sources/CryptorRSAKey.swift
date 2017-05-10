@@ -270,7 +270,7 @@ public extension CryptorRSA {
 		}
 
 		// Now extract the public key from it...
-		var key: SecKey? = nil
+		var key: NativeKey? = nil
 		let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
 
 			SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
