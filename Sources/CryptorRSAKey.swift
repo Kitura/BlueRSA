@@ -519,9 +519,17 @@ public extension CryptorRSA {
 				length: pemString.characters.count
 			)
 
+			//let matchingOptions = NSRegularExpression.MatchingOptions(rawValue: 0)
+
+			#if os(Linux)
+				let matchingOptions = NSMatchingOptions(rawValue: 0)   //???????????
+			#else
+				let matchingOptions = NSRegularExpression.MatchingOptions(rawValue: 0)
+			#endif
+
 			let matches = publicKeyRegexp.matches(
 				in: pemString,
-				options: NSRegularExpression.MatchingOptions(rawValue: 0),
+				options: matchingOptions,
 				range: all
 			)
 
