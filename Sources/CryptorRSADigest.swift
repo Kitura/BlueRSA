@@ -167,7 +167,7 @@ public extension Data {
 				case .sha224:
 					return SHA224
 
-				case .sha356:
+				case .sha256:
 					return SHA256
 
 				case .sha384:
