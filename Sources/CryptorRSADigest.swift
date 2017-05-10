@@ -69,7 +69,7 @@ public extension Data {
 				case .sha224:
 					return CC_LONG(SHA224_DIGEST_LENGTH)
 
-				case .sha356:
+				case .sha256:
 					return CC_LONG(SHA256_DIGEST_LENGTH)
 
 				case .sha384:
