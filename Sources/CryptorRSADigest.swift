@@ -162,20 +162,24 @@ public extension Data {
 				switch self {
 
 				case .sha1:
-					return SHA1
+					//return SHA1
+					return OPENSSL_SHA1
 
 				case .sha224:
-					return SHA224
+					//return SHA224
+					return OPENSSL_SHA224
 
 				case .sha256:
-					return SHA256
+					//return SHA256
+					return OPENSSL_SHA256
 
 				case .sha384:
-					return SHA384
+					//return SHA384
+					return OPENSSL_SHA384
 
 				case .sha512:
-					return SHA512
-
+					//return SHA512
+					return OPENSSL_SHA512
 				}
 
 			#else
