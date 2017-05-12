@@ -4,6 +4,7 @@
 //https://memset.wordpress.com/2010/10/06/using-sha1-function/
 //https://www.openssl.org/docs/man1.0.2/crypto/sha.html
 //https://developer.apple.com/legacy/library/documentation/Darwin/Reference/ManPages/man3/CC_SHA1.3cc.html
+//http://stackoverflow.com/questions/41034539/export-public-key-and-private-key-from-ec-key-openssl-into-seckeyref/42682760
 
 import OpenSSL
 

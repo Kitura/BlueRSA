@@ -21,6 +21,9 @@
 
 import Foundation
 import CoreFoundation
+#if os(Linux)
+import OpenSSL
+#endif
 
 // MARK: -
 
@@ -219,7 +222,13 @@ public class CryptorRSA {
 			}
 
 			var response: Unmanaged<CFError>? = nil
+
+			#if os(Linux)
+			RSA_public_encrypt(1,1,1,1,1)
+			#else
 			let eData = SecKeyCreateEncryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
+			#endif
+
 			if response != nil {
 
 				guard let error = response?.takeRetainedValue() else {
@@ -257,7 +266,13 @@ public class CryptorRSA {
 			}
 
 			var response: Unmanaged<CFError>? = nil
+
+			#if os(Linux)
+			RSA_public_decrypt(1,1,1,1,1)
+			#else
 			let pData = SecKeyCreateDecryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
+			#endif
+
 			if response != nil {
 
 				guard let error = response?.takeRetainedValue() else {
@@ -298,7 +313,13 @@ public class CryptorRSA {
 			}
 
 			var response: Unmanaged<CFError>? = nil
+
+			#if os(Linux)
+			RSA_sign(1,1,1,1,1,1)
+			#else
 			let sData = SecKeyCreateSignature(key.reference, algorithm.alogrithmForSignature, self.data as CFData, &response)
+			#endif
+
 			if response != nil {
 
 				guard let error = response?.takeRetainedValue() else {
@@ -342,7 +363,13 @@ public class CryptorRSA {
 			}
 
 			var response: Unmanaged<CFError>? = nil
+
+			#if os(Linux)
+			RSA_verify(1,1,1,1,1)
+			#else
 			let result = SecKeyVerifySignature(key.reference, algorithm.alogrithmForSignature, self.data as CFData, signature.data as CFData, &response)
+			#endif
+
 			if response != nil {
 
 				guard let error = response?.takeRetainedValue() else {
