@@ -534,7 +534,13 @@ public extension CryptorRSA {
 			)
 
 			let keys = matches.flatMap { result -> PublicKey? in
+
+				#if os(Linux)
+				let match = result.range(at: 1)
+				#else
 				let match = result.rangeAt(1)
+				#endif
+
 				let start = pemString.characters.index(pemString.startIndex, offsetBy: match.location)
 				let end = pemString.characters.index(start, offsetBy: match.length)
 

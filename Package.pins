@@ -1,12 +1,5 @@
 {
-  "autoPin": true,
-  "pins": [
-    {
-      "package": "OpenSSL",
-      "reason": null,
-      "repositoryURL": "https://github.com/IBM-Swift/OpenSSL.git",
-      "version": "0.3.1"
-    }
-  ],
+  "autoPin": false,
+  "pins": [],
   "version": 1
 }
