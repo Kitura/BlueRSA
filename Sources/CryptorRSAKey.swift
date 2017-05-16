@@ -19,6 +19,12 @@
 // 	limitations under the License.
 //
 
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+	import CommonCrypto
+#elseif os(Linux)
+	import OpenSSL
+#endif
+
 import Foundation
 
 // MARK: -
@@ -30,7 +36,7 @@ public extension CryptorRSA {
 	
 	#if os(Linux)
 	
-		typealias NativeKey = UnsafeRawPointer
+		typealias NativeKey = UnsafeMutablePointer<RSA>
 	
 	#else
 	
