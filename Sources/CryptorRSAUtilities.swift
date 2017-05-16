@@ -37,6 +37,9 @@ public extension CryptorRSA {
 	
 #if os(Linux)
 	
+	/// Both the private and public key PEM read function take exactly the same parameters.  This alias makes is easier to reference and use in code.
+	typealias RSAKeyReader = ((UnsafeMutablePointer<BIO>?, UnsafeMutablePointer<UnsafeMutablePointer<RSA>?>?, (@convention(c) (UnsafeMutablePointer<Int8>?, Int32, Int32, UnsafeMutableRawPointer?) -> Int32)?, UnsafeMutableRawPointer?) -> UnsafeMutablePointer<RSA>!)
+	
 	///
 	/// Create a key from key data.
 	///
@@ -60,7 +63,7 @@ public extension CryptorRSA {
 	
 		BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL)
 	
-		let keyReader: ((UnsafeMutablePointer<BIO>?, UnsafeMutablePointer<UnsafeMutablePointer<RSA>?>?, (@convention(c) (UnsafeMutablePointer<Int8>?, Int32, Int32, UnsafeMutableRawPointer?) -> Int32)?, UnsafeMutableRawPointer?) -> UnsafeMutablePointer<RSA>!) = type == .publicType ? PEM_read_bio_RSA_PUBKEY : PEM_read_bio_RSAPrivateKey
+		let keyReader: RSAKeyReader = type == .publicType ? PEM_read_bio_RSA_PUBKEY : PEM_read_bio_RSAPrivateKey
 
 		let key = keyReader(bio, nil, nil, nil)
 		
