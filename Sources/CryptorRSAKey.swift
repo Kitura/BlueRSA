@@ -30,7 +30,7 @@ public extension CryptorRSA {
 	
 	#if os(Linux)
 	
-		typealias NativeKey = RSA
+		typealias NativeKey = UnsafeRawPointer
 	
 	#else
 	
@@ -259,25 +259,33 @@ public extension CryptorRSA {
 	///
 	internal class func createPublicKey(data: Data) throws -> PublicKey {
 		
-		// Create a certificate from the data...
-		let certificateData = SecCertificateCreateWithData(nil, data as CFData)
-		guard let certData = certificateData else {
+		#if os(Linux)
 			
-			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data.")
-		}
+			throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
+			
+		#else
 		
-		// Now extract the public key from it...
-		var key: SecKey? = nil
-		let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
+			// Create a certificate from the data...
+			let certificateData = SecCertificateCreateWithData(nil, data as CFData)
+			guard let certData = certificateData else {
 			
-			SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
-		}
-		if status != errSecSuccess || key == nil {
-			
-			throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
-		}
+				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data.")
+			}
 		
-		return PublicKey(with: key!)
+			// Now extract the public key from it...
+			var key: SecKey? = nil
+			let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
+				
+				SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
+			}
+			if status != errSecSuccess || key == nil {
+			
+				throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
+			}
+			
+			return PublicKey(with: key!)
+		
+		#endif
 	}
 
 	// MARK: -- Private Key Creation
@@ -516,14 +524,27 @@ public extension CryptorRSA {
 				length: pemString.characters.count
 			)
 			
-			let matches = publicKeyRegexp.matches(
-				in: pemString,
-				options: NSRegularExpression.MatchingOptions(rawValue: 0),
-				range: all
-			)
+			#if os(Linux)
+				let matches = publicKeyRegexp.matches(
+					in: pemString,
+					options: NSMatchingOptions(rawValue: 0),
+					range: all
+				)
+			#else
+				let matches = publicKeyRegexp.matches(
+					in: pemString,
+					options: NSRegularExpression.MatchingOptions(rawValue: 0),
+					range: all
+				)
+			#endif
 			
 			let keys = matches.flatMap { result -> PublicKey? in
-				let match = result.rangeAt(1)
+				
+				#if os(Linux)
+					let match = result.range(at: 1)
+				#else
+					let match = result.rangeAt(1)
+				#endif
 				let start = pemString.characters.index(pemString.startIndex, offsetBy: match.location)
 				let end = pemString.characters.index(start, offsetBy: match.length)
 				

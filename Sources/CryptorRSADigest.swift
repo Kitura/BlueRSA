@@ -22,7 +22,7 @@
 	import CommonCrypto
 #elseif os(Linux)
 	import OpenSSL
-	typealias CC_LONG = size_t
+	public typealias CC_LONG = size_t
 #endif
 
 import Foundation
@@ -69,7 +69,7 @@ public extension Data {
 				case .sha224:
 					return CC_LONG(SHA224_DIGEST_LENGTH)
 					
-				case .sha356:
+				case .sha256:
 					return CC_LONG(SHA256_DIGEST_LENGTH)
 					
 				case .sha384:
@@ -155,10 +155,10 @@ public extension Data {
 		#endif
 		
 		/// The platform/alogorithm dependent function to be used.
-		public var engine: (_ data: UnsafeRawPointer, _ len: CC_LONG, _ md: UnsafeMutablePointer<UInt8>) -> UnsafeMutablePointer<UInt8>! {
+		/// (UnsafePointer<UInt8>!, Int, UnsafeMutablePointer<UInt8>!) -> UnsafeMutablePointer<UInt8>!
+		#if os(Linux)
+			public var engine: (_ data: UnsafePointer<UInt8>, _ len: CC_LONG, _ md: UnsafeMutablePointer<UInt8>) -> UnsafeMutablePointer<UInt8>! {
 			
-			#if os(Linux)
-				
 				switch self {
 					
 				case .sha1:
@@ -167,7 +167,7 @@ public extension Data {
 				case .sha224:
 					return SHA224
 					
-				case .sha356:
+				case .sha256:
 					return SHA256
 					
 				case .sha384:
@@ -177,9 +177,12 @@ public extension Data {
 					return SHA512
 					
 				}
-				
-			#else
-				
+			}
+		
+		#else
+		
+			public var engine: (_ data: UnsafeRawPointer, _ len: CC_LONG, _ md: UnsafeMutablePointer<UInt8>) -> UnsafeMutablePointer<UInt8>! {
+			
 				switch self {
 					
 				case .sha1:
@@ -198,9 +201,9 @@ public extension Data {
 					return CC_SHA512
 					
 				}
-				
-			#endif
 		}
+		
+		#endif
 	}
 	
 	

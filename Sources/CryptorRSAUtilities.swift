@@ -29,7 +29,7 @@ import Foundation
 @available(macOS 10.12, iOS 10.0, *)
 public extension CryptorRSA {
 	
-	#if !os(Linux)
+#if os(Linux)
 	
 	///
 	/// Create a key from key data.
@@ -40,7 +40,23 @@ public extension CryptorRSA {
 	///
 	///	- Returns:				`SecKey` representation of the key.
 	///
-	static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  SecKey {
+	static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  NativeKey {
+	
+		throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
+	}
+	
+#else
+	
+	///
+	/// Create a key from key data.
+	///
+	/// - Parameters:
+	///		- keyData:			`Data` representation of the key.
+	///		- type:				Type of key data.
+	///
+	///	- Returns:				`SecKey` representation of the key.
+	///
+	static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  NativeKey {
 		
 		var keyData = keyData
 		
@@ -62,7 +78,7 @@ public extension CryptorRSA {
 		
 	}
 	
-	#endif
+#endif
 
 	///
 	/// Get the Base64 representation of a PEM encoded string after stripping off the PEM markers.
@@ -108,8 +124,7 @@ public extension CryptorRSA {
 			throw Error(code: ERR_STRIP_PK_HEADER, reason: "Provided public key is empty")
 		}
 		
-		var byteArray = [UInt8](repeating: 0, count: count)
-		(keyData as NSData).getBytes(&byteArray, length: keyData.count)
+		var byteArray = [UInt8](keyData)
 		
 		var index = 0
 		guard byteArray[index] == 0x30 else {
