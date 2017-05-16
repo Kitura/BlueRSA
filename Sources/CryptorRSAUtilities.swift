@@ -19,6 +19,12 @@
 // 	limitations under the License.
 //
 
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+	import CommonCrypto
+#elseif os(Linux)
+	import OpenSSL
+#endif
+
 import Foundation
 
 // MARK: -- RSAUtilities
@@ -38,11 +44,32 @@ public extension CryptorRSA {
 	///		- keyData:			`Data` representation of the key.
 	///		- type:				Type of key data.
 	///
-	///	- Returns:				`SecKey` representation of the key.
+	///	- Returns:				`RSA` representation of the key.
 	///
 	static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  NativeKey {
+		
+		let keyData = keyData
 	
-		throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
+		let bio = BIO_new(BIO_s_mem())
+	
+		keyData.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
+			
+			BIO_write(bio, buffer, Int32(keyData.count))
+			return
+		}
+	
+		BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL)
+	
+		let keyReader: ((UnsafeMutablePointer<BIO>?, UnsafeMutablePointer<UnsafeMutablePointer<RSA>?>?, (@convention(c) (UnsafeMutablePointer<Int8>?, Int32, Int32, UnsafeMutableRawPointer?) -> Int32)?, UnsafeMutableRawPointer?) -> UnsafeMutablePointer<RSA>!) = type == .publicType ? PEM_read_bio_RSA_PUBKEY : PEM_read_bio_RSAPrivateKey
+
+		let key = keyReader(bio, nil, nil, nil)
+		
+		if key == nil {
+				
+			throw Error(code: ERR_ADD_KEY, reason: "Couldn't create key reference from key data")
+		}
+
+		return key!
 	}
 	
 #else
