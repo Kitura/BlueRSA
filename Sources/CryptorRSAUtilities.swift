@@ -53,26 +53,64 @@ public extension CryptorRSA {
 		
 		let keyData = keyData
 	
+		// Create a memory BIO...
 		let bio = BIO_new(BIO_s_mem())
+		
+		defer {
+			BIO_free(bio)
+		}
 	
+		// Move the key data to it...
 		keyData.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
 			
 			BIO_write(bio, buffer, Int32(keyData.count))
+	
+			// The below is equivalent of BIO_flush...
+			BIO_ctrl(bio, BIO_CTRL_FLUSH, 0, nil)
+	
 			return
 		}
 	
+		// It's base64 data...
 		BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL)
 	
+		// Get the right function depending on the type of key...
 		let keyReader: RSAKeyReader = type == .publicType ? PEM_read_bio_RSA_PUBKEY : PEM_read_bio_RSAPrivateKey
 
+		// Read the key in...
 		let key = keyReader(bio, nil, nil, nil)
 		
 		if key == nil {
 				
 			throw Error(code: ERR_ADD_KEY, reason: "Couldn't create key reference from key data")
 		}
-
+		
 		return key!
+	}
+	
+	///
+	/// Convert DER data to PEM data.
+	///
+	///	- Parameters:
+	///		- derData:			`Data` in DER format.
+	///		- type:				Type of key data.
+	///
+	///	- Returns:				PEM `Data` representation.
+	///
+	static func convertDerToPem(from derData: Data, type: CryptorRSA.RSAKey.KeyType) -> Data {
+		
+		// First convert the DER data to a base64 string...
+		let base64String = derData.base64EncodedString()
+		
+		// Append the appropriate header and footer depending on whether the key is public or private...
+		if type == .publicType {
+			
+			return (CryptorRSA.PK_BEGIN_MARKER + "\n" + base64String + "\n" + CryptorRSA.PK_END_MARKER).data(using: .utf8)!
+		
+		} else {
+			
+			return (CryptorRSA.SK_BEGIN_MARKER + "\n" + base64String + "\n" + CryptorRSA.SK_END_MARKER).data(using: .utf8)!
+		}
 	}
 	
 #else
