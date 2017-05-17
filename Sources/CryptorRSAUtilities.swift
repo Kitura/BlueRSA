@@ -81,8 +81,13 @@ public extension CryptorRSA {
 		let key = keyReader(bio, nil, nil, nil)
 		
 		if key == nil {
+	
+			let source = "Couldn't create key reference from key data"
+			if let reason = CryptorRSA.getLastError(source: source) {
 				
-			throw Error(code: ERR_ADD_KEY, reason: "Couldn't create key reference from key data")
+				throw Error(code: ERR_ADD_KEY, reason: reason)
+			}
+			throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
 		}
 		
 		return key!
@@ -111,6 +116,34 @@ public extension CryptorRSA {
 			
 			return (CryptorRSA.SK_BEGIN_MARKER + "\n" + base64String + "\n" + CryptorRSA.SK_END_MARKER).data(using: .utf8)!
 		}
+	}
+	
+	///
+	/// Retrieve the OpenSSL error and text.
+	///
+	/// - Parameters:
+	///		- source: 			The string describing the error.
+	///
+	///	- Returns:				`String` containing the error or `nil` if no error found.
+	///
+	static func getLastError(source: String) -> String? {
+	
+		var errorString: String
+
+		let errorCode = Int32(ERR_get_error())
+	
+		if errorCode == 0 {
+			return nil
+		}
+
+		if let errorStr = ERR_reason_error_string(UInt(errorCode)) {
+			errorString = String(validatingUTF8: errorStr)!
+		} else {
+			errorString = "Could not determine error reason."
+		}
+		
+		let reason = "ERROR: \(source), code: \(errorCode), reason: \(errorString)"
+		return reason
 	}
 	
 #else
