@@ -106,15 +106,21 @@ public extension CryptorRSA {
 		
 		// First convert the DER data to a base64 string...
 		let base64String = derData.base64EncodedString()
+	
+		// Split the string into strings of length 65...
+		let lines = base64String.split(to: 65)
 		
-		// Append the appropriate header and footer depending on whether the key is public or private...
+		// Join those lines with a new line...
+		let joinedLines = lines.joined(separator: "\n")
+		
+		// Add the appropriate header and footer depending on whether the key is public or private...
 		if type == .publicType {
 			
-			return (CryptorRSA.PK_BEGIN_MARKER + "\n" + base64String + "\n" + CryptorRSA.PK_END_MARKER).data(using: .utf8)!
+			return (CryptorRSA.PK_BEGIN_MARKER + "\n" + joinedLines + "\n" + CryptorRSA.PK_END_MARKER).data(using: .utf8)!
 		
 		} else {
 			
-			return (CryptorRSA.SK_BEGIN_MARKER + "\n" + base64String + "\n" + CryptorRSA.SK_END_MARKER).data(using: .utf8)!
+			return (CryptorRSA.SK_BEGIN_MARKER + "\n" + joinedLines + "\n" + CryptorRSA.SK_END_MARKER).data(using: .utf8)!
 		}
 	}
 	
@@ -279,7 +285,46 @@ public extension CryptorRSA {
 		
 		return data
 	}
+	
 }
+
+extension String {
+	
+	///
+	/// Split a string to a specified length.
+	///
+	///	- Parameters:
+	///		- length:				Length of each split string.
+	///
+	///	- Returns:					`[String]` containing each string.
+	///
+	func split(to length: Int) -> [String] {
+		
+		var result = [String]()
+		var collectedCharacters = [Character]()
+		collectedCharacters.reserveCapacity(length)
+		var count = 0
+		
+		for character in self.characters {
+			collectedCharacters.append(character)
+			count += 1
+			if (count == length) {
+				// Reached the desired length
+				count = 0
+				result.append(String(collectedCharacters))
+				collectedCharacters.removeAll(keepingCapacity: true)
+			}
+		}
+		
+		// Append the remainder
+		if !collectedCharacters.isEmpty {
+			result.append(String(collectedCharacters))
+		}
+		
+		return result
+	}
+}
+
 
 // MARK: -
 
