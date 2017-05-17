@@ -267,7 +267,8 @@ public extension CryptorRSA {
 		
 		#if os(Linux)
 			
-			throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
+			let key = try CryptorRSA.createKey(from: data, type: .publicType)
+			return PublicKey(with: key)
 			
 		#else
 		
