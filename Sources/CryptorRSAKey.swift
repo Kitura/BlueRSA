@@ -97,7 +97,7 @@ public extension CryptorRSA {
 		
 		guard let data = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
 			
-			throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base 64 string")
+			throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string")
 		}
 		
 		return try PublicKey(with: data)
@@ -157,7 +157,13 @@ public extension CryptorRSA {
 			fullPath = fullPath.appending(DER_SUFFIX)
 		}
 		
-		let data = try Data(contentsOf: URL(fileURLWithPath: fullPath))
+		let dataIn = try Data(contentsOf: URL(fileURLWithPath: fullPath))
+		
+		#if os(Linux)
+			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
+		#else
+			let data = dataIn
+		#endif
 		
 		return try PublicKey(with: data)
 	}
@@ -225,7 +231,13 @@ public extension CryptorRSA {
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't find a DER file named '\(derName)'")
 		}
 		
-		let data = try Data(contentsOf: URL(fileURLWithPath: path))
+		let dataIn = try Data(contentsOf: URL(fileURLWithPath: path))
+		
+		#if os(Linux)
+			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
+		#else
+			let data = dataIn
+		#endif
 		
 		return try PublicKey(with: data)
 	}
@@ -267,8 +279,7 @@ public extension CryptorRSA {
 		
 		#if os(Linux)
 			
-			let key = try CryptorRSA.createKey(from: data, type: .publicType)
-			return PublicKey(with: key)
+			throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
 			
 		#else
 		
@@ -382,7 +393,13 @@ public extension CryptorRSA {
 			fullPath = fullPath.appending(DER_SUFFIX)
 		}
 		
-		let data = try Data(contentsOf: URL(fileURLWithPath: fullPath))
+		let dataIn = try Data(contentsOf: URL(fileURLWithPath: fullPath))
+		
+		#if os(Linux)
+			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .privateType)
+		#else
+			let data = dataIn
+		#endif
 		
 		return try PrivateKey(with: data)
 	}
@@ -424,7 +441,13 @@ public extension CryptorRSA {
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't find a DER file named '\(derName)'")
 		}
 		
-		let data = try Data(contentsOf: URL(fileURLWithPath: path))
+		let dataIn = try Data(contentsOf: URL(fileURLWithPath: path))
+		
+		#if os(Linux)
+			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .privateType)
+		#else
+			let data = dataIn
+		#endif
 		
 		return try PrivateKey(with: data)
 	}
@@ -470,7 +493,11 @@ public extension CryptorRSA {
 		internal init(with data: Data, type: KeyType) throws {
 			
 			self.type = type
-			let data = try CryptorRSA.stripPublicKeyHeader(for: data)
+			
+			// On macOS, we need to strip off the header...  Not so on Linux...
+			#if !os(Linux)
+				let data = try CryptorRSA.stripPublicKeyHeader(for: data)
+			#endif
 			reference = try CryptorRSA.createKey(from: data, type: type)
 		}
 		
