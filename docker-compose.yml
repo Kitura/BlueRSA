@@ -1,0 +1,7 @@
+app:
+  image: ibmcom/swift-ubuntu:3.1.1
+  ports:
+    - "8080:8080"
+  volumes:
+    - .:/BlueRSA
+  command: bash -c "cd /BlueRSA && swift package clean && swift build && swift test"
