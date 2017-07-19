@@ -19,6 +19,9 @@
 // 	limitations under the License.
 //
 
+#if os(Linux)
+import OpenSSL
+#endif
 import XCTest
 @testable import CryptorRSA
 
@@ -467,11 +470,14 @@ class CryptorRSATests: XCTestCase {
 	static public func pemKeyString(name: String) -> String {
 
 		if useBundles {
+
 			let pubPath = bundle.path(forResource: name, ofType: "pem")!
 			return (try! String(contentsOfFile: pubPath, encoding: String.Encoding.utf8))
+
 		} else {
 			let pubPath = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".pem"))
 			return (try! String(contentsOfFile: pubPath, encoding: String.Encoding.utf8))
+
 		}
 	}
 
@@ -531,11 +537,19 @@ class CryptorRSATests: XCTestCase {
 
 	static public func randomData(count: Int) -> Data {
 
+		//https://www.openssl.org/docs/man1.0.2/crypto/RAND_pseudo_bytes.html
+		//https://developer.apple.com/documentation/security/1399291-secrandomcopybytes?preferredLanguage=occ
+
 		var data = Data(capacity: count)
 		data.withUnsafeMutableBytes { (bytes: UnsafeMutablePointer<UInt8>) -> Void in
 
-			_ = SecRandomCopyBytes(kSecRandomDefault, count, bytes)
+			#if os(Linux)
+				RAND_bytes(bytes, Int32(count))
+			#else
+				_ = SecRandomCopyBytes(kSecRandomDefault, count, bytes)
+			#endif
 		}
+
 		return data
 	}
 
