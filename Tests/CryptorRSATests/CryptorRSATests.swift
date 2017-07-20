@@ -28,216 +28,141 @@ import XCTest
 @available(macOS 10.12, iOS 10.0, *)
 class CryptorRSATests: XCTestCase {
 
-	static var useBundles: Bool {
+	// Ideally, we would use Bundles... but on Linux, they are not fully implemented yet.
+	// For instance, this constructor is not yet implemented:
+	// fatal error: init(for:) is not yet implemented: file Foundation/NSBundle.swift, line 56
+	// static let bundle = Bundle(for: CryptorRSATests.self)
+	// Also tried using a different constructor... that worked but then ran into another problem with Foundation...
+	//static let keysURL: URL = URL(fileURLWithPath: #file).appendingPathComponent("../keys").standardized
 
+	#if !os(Linux)
+	static let bundle =  Bundle(for: CryptorRSATests.self)
+	static var useBundles: Bool {
 		let path = CryptorRSATests.bundle.path(forResource: "public", ofType: "der")
 		return path != nil
 	}
+	#endif
 
-	//static let bundle = Bundle(for: CryptorRSATests.self)
-	static var bundle: Bundle {
-
-		//tmp
-		setbuf(stdout, nil)
-
-		#if os(Linux)
-		// The following Bundle initializer not yet implemented:
-		// init(for: AnyClass)
-		// fatal error: init(for:) is not yet implemented: file Foundation/NSBundle.swift, line 56
-		let bundleURL: URL = URL(fileURLWithPath: #file).appendingPathComponent("..").standardized
-		print("bundleURL: \(bundleURL)")
-		guard let bundle: Bundle = Bundle(url: bundleURL) else {
-			print("Fatal error... could not initialize Bundle for loading test resources...")
-			exit(1)
+	static func getPath(forResource resource: String, ofType type: String) -> String? {
+		var path = "./Tests/CryptorRSATests/keys/\(resource).\(type)"
+		#if !os(Linux)
+		if useBundles {
+			guard let bPath = CryptorRSATests.bundle.path(forResource: resource, ofType: type) else {
+				XCTFail()
+				return nil
+			}
+			path = bPath
 		}
-		print("Returning bundle...")
-		return bundle
-		#else
-		return Bundle(for: CryptorRSATests.self)
 		#endif
+		return path
 	}
 
 	// MARK: Public Key Tests
 
 	func test_public_initWithData() throws {
-
-		var path: String
-		if CryptorRSATests.useBundles {
-			guard let bPath = CryptorRSATests.bundle.path(forResource: "public", ofType: "der") else {
-
-				return XCTFail()
-			}
-			path = bPath
-
-		} else {
-
-			path = "./Tests/CryptorRSATests/Keys/public.der"
+		setbuf(stdout, nil)
+		if let path: String = CryptorRSATests.getPath(forResource: "public", ofType: "der") {
+			let data = try Data(contentsOf: URL(fileURLWithPath: path))
+			let publicKey = try? CryptorRSA.createPublicKey(with: data)
+			XCTAssertNotNil(publicKey)
+			XCTAssertTrue(publicKey!.type == .publicType)
 		}
-
-		let data = try Data(contentsOf: URL(fileURLWithPath: path))
-		let publicKey = try? CryptorRSA.createPublicKey(with: data)
-		XCTAssertNotNil(publicKey)
-		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 
 	func test_public_initWithCertData() throws {
-
-		var path: String
-		if CryptorRSATests.useBundles {
-			guard let bPath = CryptorRSATests.bundle.path(forResource: "staging", ofType: "cer") else {
-
-				return XCTFail()
-			}
-			path = bPath
-
-		} else {
-
-			path = "./Tests/CryptorRSATests/Keys/staging.cer"
+		if let path: String = CryptorRSATests.getPath(forResource: "staging", ofType: "cer") {
+			let data = try Data(contentsOf: URL(fileURLWithPath: path))
+			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: data)
+			XCTAssertNotNil(publicKey)
+			XCTAssertTrue(publicKey!.type == .publicType)
 		}
-
-		let data = try Data(contentsOf: URL(fileURLWithPath: path))
-		let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: data)
-		XCTAssertNotNil(publicKey)
-		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 
 	func test_public_initWithCertData2() throws {
-
-		var path: String
-		if CryptorRSATests.useBundles {
-			guard let bPath = CryptorRSATests.bundle.path(forResource: "staging2", ofType: "cer") else {
-
-				return XCTFail()
-			}
-			path = bPath
-
-		} else {
-
-			path = "./Tests/CryptorRSATests/Keys/staging2.cer"
+		if let path: String = CryptorRSATests.getPath(forResource: "staging2", ofType: "cer") {
+			let data = try Data(contentsOf: URL(fileURLWithPath: path))
+			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: data)
+			XCTAssertNotNil(publicKey)
+			XCTAssertTrue(publicKey!.type == .publicType)
 		}
-
-		let data = try Data(contentsOf: URL(fileURLWithPath: path))
-		let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: data)
-		XCTAssertNotNil(publicKey)
-		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 
 	func test_public_initWithBase64String() throws {
-
-		var path: String
-		if CryptorRSATests.useBundles {
-			guard let bPath = CryptorRSATests.bundle.path(forResource: "public-base64", ofType: "txt") else {
-
-				return XCTFail()
-			}
-			path = bPath
-
-		} else {
-
-			path = "./Tests/CryptorRSATests/Keys/public-base64.txt"
+		if let path: String = CryptorRSATests.getPath(forResource: "public-base64", ofType: "txt") {
+			let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
+			let publicKey = try? CryptorRSA.createPublicKey(withBase64: str)
+			XCTAssertNotNil(publicKey)
+			XCTAssertTrue(publicKey!.type == .publicType)
 		}
-
-		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let publicKey = try? CryptorRSA.createPublicKey(withBase64: str)
-		XCTAssertNotNil(publicKey)
-		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 
 
 	func test_public_initWithBase64StringWhichContainsNewLines() throws {
-
-		var path: String
-		if CryptorRSATests.useBundles {
-			guard let bPath = CryptorRSATests.bundle.path(forResource: "public-base64-newlines", ofType: "txt") else {
-
-				return XCTFail()
-			}
-			path = bPath
-
-		} else {
-
-			path = "./Tests/CryptorRSATests/Keys/public-base64-newlines.txt"
+		if let path: String = CryptorRSATests.getPath(forResource: "public-base64-newlines", ofType: "txt") {
+			let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
+			let publicKey = try? CryptorRSA.createPublicKey(withBase64: str)
+			XCTAssertNotNil(publicKey)
+			XCTAssertTrue(publicKey!.type == .publicType)
 		}
-
-		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let publicKey = try? CryptorRSA.createPublicKey(withBase64: str)
-		XCTAssertNotNil(publicKey)
-		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 
 	func test_public_initWithPEMString() throws {
-
-		var path: String
-		if CryptorRSATests.useBundles {
-			guard let bPath = CryptorRSATests.bundle.path(forResource: "public", ofType: "pem") else {
-
-				return XCTFail()
-			}
-			path = bPath
-
-		} else {
-
-			path = "./Tests/CryptorRSATests/Keys/public.pem"
+		if let path: String = CryptorRSATests.getPath(forResource: "public", ofType: "pem") {
+			let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
+			let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
+			XCTAssertNotNil(publicKey)
+			XCTAssertTrue(publicKey!.type == .publicType)
 		}
-
-		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
-		XCTAssertNotNil(publicKey)
-		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 
 	func test_public_initWithPEMName() throws {
+		#if !os(Linux)
 
 		if CryptorRSATests.useBundles {
-
 			let publicKey = try? CryptorRSA.createPublicKey(withPEMNamed: "public", in: CryptorRSATests.bundle)
 			XCTAssertNotNil(publicKey)
-
 		} else {
-
-			let publicKey = try? CryptorRSA.createPublicKey(withPEMNamed: "public", onPath: "./Tests/CryptorRSATests/Keys/")
+			let publicKey = try? CryptorRSA.createPublicKey(withPEMNamed: "public", onPath: "./Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(publicKey)
 		}
+
+		#else
+
+		let publicKey = try? CryptorRSA.createPublicKey(withPEMNamed: "public", onPath: "./Tests/CryptorRSATests/keys/")
+		XCTAssertNotNil(publicKey)
+
+		#endif
 	}
 
 	func test_public_initWithDERName() throws {
+		#if !os(Linux)
 
 		if CryptorRSATests.useBundles {
-
 			let publicKey = try? CryptorRSA.createPublicKey(withDERNamed: "public", in: CryptorRSATests.bundle)
 			XCTAssertNotNil(publicKey)
-
 		} else {
-
-			let publicKey = try? CryptorRSA.createPublicKey(withDERNamed: "public", onPath: "./Tests/CryptorRSATests/Keys/")
+			let publicKey = try? CryptorRSA.createPublicKey(withDERNamed: "public", onPath: "./Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(publicKey)
 		}
 
+		#else
+
+		let publicKey = try? CryptorRSA.createPublicKey(withDERNamed: "public", onPath: "./Tests/CryptorRSATests/keys/")
+		XCTAssertNotNil(publicKey)
+
+		#endif
 	}
 
 	func test_public_initWithPEMStringHeaderless() throws {
-
-		var path: String
-		if CryptorRSATests.useBundles {
-			guard let bPath = CryptorRSATests.bundle.path(forResource: "public-headerless", ofType: "pem") else {
-
-				return XCTFail()
-			}
-			path = bPath
-
-		} else {
-
-			path = "./Tests/CryptorRSATests/Keys/public-headerless.pem"
+		if let path: String = CryptorRSATests.getPath(forResource: "public-headerless", ofType: "pem") {
+			let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
+			let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
+			XCTAssertNotNil(publicKey)
+			XCTAssertTrue(publicKey!.type == .publicType)
 		}
-
-		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
-		XCTAssertNotNil(publicKey)
-		XCTAssertTrue(publicKey!.type == .publicType)
 	}
 
 	func test_publicKeysFromComplexPEMFileWorksCorrectly() {
-
 		let input = CryptorRSATests.pemKeyString(name: "multiple-keys-testcase")
 		let keys = CryptorRSA.PublicKey.publicKeys(withPEM: input)
 		XCTAssertEqual(keys.count, 9)
@@ -248,114 +173,98 @@ class CryptorRSATests: XCTestCase {
 	}
 
 	func test_publicKeysFromEmptyPEMFileReturnsEmptyArray() {
-
 		let keys = CryptorRSA.PublicKey.publicKeys(withPEM: "")
 		XCTAssertEqual(keys.count, 0)
 	}
 
 	func test_public_initWithCertificateName() throws {
+		#if !os(Linux)
 
 		if CryptorRSATests.useBundles {
-
 			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging", in: CryptorRSATests.bundle)
 			XCTAssertNotNil(publicKey)
-
 		} else {
-
-			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging", onPath: "./Tests/CryptorRSATests/Keys/")
+			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging", onPath: "./Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(publicKey)
 		}
 
+		#else
+		let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging", onPath: "./Tests/CryptorRSATests/keys/")
+		XCTAssertNotNil(publicKey)
+		#endif
 	}
 
 	func test_public_initWithCertificateName2() throws {
+		#if !os(Linux)
 
 		if CryptorRSATests.useBundles {
-
 			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging2", in: CryptorRSATests.bundle)
 			XCTAssertNotNil(publicKey)
-
 		} else {
-
-			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging2", onPath: "./Tests/CryptorRSATests/Keys/")
+			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging2", onPath: "./Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(publicKey)
 		}
 
+		#else
+		let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging2", onPath: "./Tests/CryptorRSATests/keys/")
+		XCTAssertNotNil(publicKey)
+		#endif
 	}
-
 
 	// MARK: Private Key Tests
 
 	func test_private_initWithPEMString() throws {
-
-		var path: String
-		if CryptorRSATests.useBundles {
-			guard let bPath = CryptorRSATests.bundle.path(forResource: "private", ofType: "pem") else {
-
-				return XCTFail()
-			}
-			path = bPath
-
-		} else {
-
-			path = "./Tests/CryptorRSATests/Keys/private.pem"
+		if let path: String = CryptorRSATests.getPath(forResource: "private", ofType: "pem") {
+			let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
+			let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str)
+			XCTAssertNotNil(privateKey)
+			XCTAssertTrue(privateKey!.type == .privateType)
 		}
-
-		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str)
-		XCTAssertNotNil(privateKey)
-		XCTAssertTrue(privateKey!.type == .privateType)
 	}
 
 	func test_private_initWithPEMStringHeaderless() throws {
-
-		var path: String
-		if CryptorRSATests.useBundles {
-			guard let bPath = CryptorRSATests.bundle.path(forResource: "private-headerless", ofType: "pem") else {
-
-				return XCTFail()
-			}
-			path = bPath
-
-		} else {
-
-			path = "./Tests/CryptorRSATests/Keys/private-headerless.pem"
+		if let path: String = CryptorRSATests.getPath(forResource: "private-headerless", ofType: "pem") {
+			let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
+			let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str)
+			XCTAssertNotNil(privateKey)
+			XCTAssertTrue(privateKey!.type == .privateType)
 		}
-
-		let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str)
-		XCTAssertNotNil(privateKey)
-		XCTAssertTrue(privateKey!.type == .privateType)
 	}
 
 	func test_private_initWithPEMName() throws {
+		#if !os(Linux)
 
 		if CryptorRSATests.useBundles {
-
 			let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", in: CryptorRSATests.bundle)
 			XCTAssertNotNil(privateKey)
-
 		} else {
-
 			let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/")
 			XCTAssertNotNil(privateKey)
 		}
 
+		#else
+
+		let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/")
+		XCTAssertNotNil(privateKey)
+
+		#endif
 	}
 
 	func test_private_initWithDERName() throws {
+		#if !os(Linux)
 
 		if CryptorRSATests.useBundles {
-
 			let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", in: CryptorRSATests.bundle)
 			XCTAssertNotNil(privateKey)
-
 		} else {
-
 			let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/")
 			XCTAssertNotNil(privateKey)
 		}
 
+		#else
+		let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/")
+		XCTAssertNotNil(privateKey)
+		#endif
 	}
 
 	// MARK: Encyption/Decryption Tests
@@ -366,10 +275,10 @@ class CryptorRSATests: XCTestCase {
 	func test_simpleEncryption() throws {
 
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-		                                              (.sha224, ".sha224"),
-		                                              (.sha256, ".sha256"),
-		                                              (.sha384, ".sha384"),
-		                                              /*(.sha512, ".sha512")*/]
+		(.sha224, ".sha224"),
+		(.sha256, ".sha256"),
+		(.sha384, ".sha384"),
+		/*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
 		//	Note: .sha512 appears to be broken internally on Apple platforms.
 		for (algorithm, name) in algorithms {
@@ -391,10 +300,10 @@ class CryptorRSATests: XCTestCase {
 	func test_longStringEncryption() throws {
 
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-		                                              (.sha224, ".sha224"),
-		                                              (.sha256, ".sha256"),
-		                                              (.sha384, ".sha384"),
-		                                              /*(.sha512, ".sha512")*/]
+		(.sha224, ".sha224"),
+		(.sha256, ".sha256"),
+		(.sha384, ".sha384"),
+		/*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
 		//	Note: .sha512 appears to be broken internally on Apple platforms.
 		for (algorithm, name) in algorithms {
@@ -416,10 +325,10 @@ class CryptorRSATests: XCTestCase {
 	func test_randomByteEncryption() throws {
 
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-		                                              (.sha224, ".sha224"),
-		                                              (.sha256, ".sha256"),
-		                                              (.sha384, ".sha384"),
-		                                              /*(.sha512, ".sha512")*/]
+		(.sha224, ".sha224"),
+		(.sha256, ".sha256"),
+		(.sha384, ".sha384"),
+		/*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
 		//	Note: .sha512 appears to be broken internally on Apple platforms.
 		for (algorithm, name) in algorithms {
@@ -442,10 +351,10 @@ class CryptorRSATests: XCTestCase {
 	func test_signVerifyAllDigestTypes() throws {
 
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-		                                              (.sha224, ".sha224"),
-		                                              (.sha256, ".sha256"),
-		                                              (.sha384, ".sha384"),
-		                                              (.sha512, ".sha512")]
+		(.sha224, ".sha224"),
+		(.sha256, ".sha256"),
+		(.sha384, ".sha384"),
+		(.sha512, ".sha512")]
 		// Test all the algorithms available...
 		for (algorithm, name) in algorithms {
 
@@ -463,10 +372,10 @@ class CryptorRSATests: XCTestCase {
 	func test_signVerifyBase64() throws {
 
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-		                                              (.sha224, ".sha224"),
-		                                              (.sha256, ".sha256"),
-		                                              (.sha384, ".sha384"),
-		                                              (.sha512, ".sha512")]
+		(.sha224, ".sha224"),
+		(.sha256, ".sha256"),
+		(.sha384, ".sha384"),
+		(.sha512, ".sha512")]
 		// Test all the algorithms available...
 		for (algorithm, name) in algorithms {
 
@@ -489,48 +398,63 @@ class CryptorRSATests: XCTestCase {
 	}
 
 	static public func pemKeyString(name: String) -> String {
+		#if !os(Linux)
 
 		if useBundles {
-
 			let pubPath = bundle.path(forResource: name, ofType: "pem")!
 			return (try! String(contentsOfFile: pubPath, encoding: String.Encoding.utf8))
-
 		} else {
-			let pubPath = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".pem"))
+			let pubPath = "./Tests/CryptorRSATests/keys/".appending(name.appending(".pem"))
 			return (try! String(contentsOfFile: pubPath, encoding: String.Encoding.utf8))
-
 		}
+
+		#else
+
+		let pubPath = "./Tests/CryptorRSATests/keys/".appending(name.appending(".pem"))
+		return (try! String(contentsOfFile: pubPath, encoding: String.Encoding.utf8))
+
+		#endif
 	}
 
 	static public func derKeyData(name: String) -> Data {
+		#if !os(Linux)
 
 		if useBundles {
-
 			let pubPath  = bundle.path(forResource: name, ofType: "der")!
 			return (try! Data(contentsOf: URL(fileURLWithPath: pubPath)))
-
 		} else {
-
-			let pubPath = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".der"))
+			let pubPath = "./Tests/CryptorRSATests/keys/".appending(name.appending(".der"))
 			return (try! Data(contentsOf: URL(fileURLWithPath: pubPath)))
 		}
+
+		#else
+
+		let pubPath = "./Tests/CryptorRSATests/keys/".appending(name.appending(".der"))
+		return (try! Data(contentsOf: URL(fileURLWithPath: pubPath)))
+
+		#endif
 	}
 
 	static public func publicKey(name: String) throws -> CryptorRSA.PublicKey {
 
 		var path: String
+
+		#if !os(Linux)
+
 		if useBundles {
 			guard let bPath = bundle.path(forResource: name, ofType: "pem") else {
-
 				throw TestError(description: "Couldn't load key for provided path")
 			}
 			path = bPath
-
 		} else {
-
-			path = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".pem"))
-
+			path = "./Tests/CryptorRSATests/keys/".appending(name.appending(".pem"))
 		}
+
+		#else
+
+		path = "./Tests/CryptorRSATests/keys/".appending(name.appending(".pem"))
+
+		#endif
 
 		let pemString = try String(contentsOf: URL(fileURLWithPath: path))
 		return try CryptorRSA.createPublicKey(withPEM: pemString)
@@ -539,18 +463,22 @@ class CryptorRSATests: XCTestCase {
 	static public func privateKey(name: String) throws -> CryptorRSA.PrivateKey {
 
 		var path: String
+
+		#if !os(Linux)
+
 		if useBundles {
 			guard let bPath = bundle.path(forResource: name, ofType: "pem") else {
 
 				throw TestError(description: "Couldn't load key for provided path")
 			}
 			path = bPath
-
 		} else {
-
 			path = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".pem"))
-
 		}
+
+		#else
+		path = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".pem"))
+		#endif
 
 		let pemString = try String(contentsOf: URL(fileURLWithPath: path))
 		return try CryptorRSA.createPrivateKey(withPEM: pemString)
@@ -565,9 +493,9 @@ class CryptorRSATests: XCTestCase {
 		data.withUnsafeMutableBytes { (bytes: UnsafeMutablePointer<UInt8>) -> Void in
 
 			#if os(Linux)
-				RAND_bytes(bytes, Int32(count))
+			RAND_bytes(bytes, Int32(count))
 			#else
-				_ = SecRandomCopyBytes(kSecRandomDefault, count, bytes)
+			_ = SecRandomCopyBytes(kSecRandomDefault, count, bytes)
 			#endif
 		}
 
@@ -576,31 +504,30 @@ class CryptorRSATests: XCTestCase {
 
 	// MARK: Test Lists
 
-
 	static var allTests : [(String, (CryptorRSATests) -> () throws -> Void)] {
-        return [
-            ("test_public_initWithData", test_public_initWithData),
-            ("test_public_initWithCertData", test_public_initWithCertData),
-            ("test_public_initWithCertData2", test_public_initWithCertData2),
-            ("test_public_initWithBase64String", test_public_initWithBase64String),
-            ("test_public_initWithBase64StringWhichContainsNewLines", test_public_initWithBase64StringWhichContainsNewLines),
-            ("test_public_initWithPEMString", test_public_initWithPEMString),
-            ("test_public_initWithPEMName", test_public_initWithPEMName),
-            ("test_public_initWithDERName", test_public_initWithDERName),
-            ("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless),
-            ("test_publicKeysFromComplexPEMFileWorksCorrectly", test_publicKeysFromComplexPEMFileWorksCorrectly),
-            ("test_publicKeysFromEmptyPEMFileReturnsEmptyArray", test_publicKeysFromEmptyPEMFileReturnsEmptyArray),
-            ("test_public_initWithCertificateName", test_public_initWithCertificateName),
-            ("test_public_initWithCertificateName2", test_public_initWithCertificateName2),
-            ("test_private_initWithPEMString", test_private_initWithPEMString),
-            ("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
-            ("test_private_initWithPEMName", test_private_initWithPEMName),
-            ("test_private_initWithDERName", test_private_initWithDERName),
-            ("test_simpleEncryption", test_simpleEncryption),
-            ("test_longStringEncryption", test_longStringEncryption),
-            ("test_randomByteEncryption", test_randomByteEncryption),
-            ("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
-            ("test_signVerifyBase64", test_signVerifyBase64),
-        ]
-    }
+		return [
+			("test_public_initWithData", test_public_initWithData),
+			("test_public_initWithCertData", test_public_initWithCertData),
+			("test_public_initWithCertData2", test_public_initWithCertData2),
+			("test_public_initWithBase64String", test_public_initWithBase64String),
+			("test_public_initWithBase64StringWhichContainsNewLines", test_public_initWithBase64StringWhichContainsNewLines),
+			("test_public_initWithPEMString", test_public_initWithPEMString),
+			("test_public_initWithPEMName", test_public_initWithPEMName),
+			("test_public_initWithDERName", test_public_initWithDERName),
+			("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless),
+			("test_publicKeysFromComplexPEMFileWorksCorrectly", test_publicKeysFromComplexPEMFileWorksCorrectly),
+			("test_publicKeysFromEmptyPEMFileReturnsEmptyArray", test_publicKeysFromEmptyPEMFileReturnsEmptyArray),
+			("test_public_initWithCertificateName", test_public_initWithCertificateName),
+			("test_public_initWithCertificateName2", test_public_initWithCertificateName2),
+			("test_private_initWithPEMString", test_private_initWithPEMString),
+			("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
+			("test_private_initWithPEMName", test_private_initWithPEMName),
+			("test_private_initWithDERName", test_private_initWithDERName),
+			("test_simpleEncryption", test_simpleEncryption),
+			("test_longStringEncryption", test_longStringEncryption),
+			("test_randomByteEncryption", test_randomByteEncryption),
+			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
+			("test_signVerifyBase64", test_signVerifyBase64),
+		]
+	}
 }
