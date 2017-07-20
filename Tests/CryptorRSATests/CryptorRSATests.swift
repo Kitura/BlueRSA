@@ -34,9 +34,30 @@ class CryptorRSATests: XCTestCase {
 		return path != nil
 	}
 
-	// MARK: Public Key Tests
+	//static let bundle = Bundle(for: CryptorRSATests.self)
+	static var bundle: Bundle {
 
-	static let bundle = Bundle(for: CryptorRSATests.self)
+		//tmp
+		setbuf(stdout, nil)
+
+		#if os(Linux)
+		// The following Bundle initializer not yet implemented:
+		// init(for: AnyClass)
+		// fatal error: init(for:) is not yet implemented: file Foundation/NSBundle.swift, line 56
+		let bundleURL: URL = URL(fileURLWithPath: #file).appendingPathComponent("..").standardized
+		print("bundleURL: \(bundleURL)")
+		guard let bundle: Bundle = Bundle(url: bundleURL) else {
+			print("Fatal error... could not initialize Bundle for loading test resources...")
+			exit(1)
+		}
+		print("Returning bundle...")
+		return bundle
+		#else
+		return Bundle(for: CryptorRSATests.self)
+		#endif
+	}
+
+	// MARK: Public Key Tests
 
 	func test_public_initWithData() throws {
 
