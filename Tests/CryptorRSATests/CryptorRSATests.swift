@@ -238,13 +238,13 @@ class CryptorRSATests: XCTestCase {
 			let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", in: CryptorRSATests.bundle)
 			XCTAssertNotNil(privateKey)
 		} else {
-			let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/")
+			let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", onPath: "./Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(privateKey)
 		}
 
 		#else
 
-		let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/")
+		let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", onPath: "./Tests/CryptorRSATests/keys/")
 		XCTAssertNotNil(privateKey)
 
 		#endif
@@ -257,12 +257,12 @@ class CryptorRSATests: XCTestCase {
 			let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", in: CryptorRSATests.bundle)
 			XCTAssertNotNil(privateKey)
 		} else {
-			let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/")
+			let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", onPath: "./Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(privateKey)
 		}
 
 		#else
-		let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", onPath: "./Tests/CryptorRSATests/Keys/")
+		let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", onPath: "./Tests/CryptorRSATests/keys/")
 		XCTAssertNotNil(privateKey)
 		#endif
 	}
@@ -473,11 +473,11 @@ class CryptorRSATests: XCTestCase {
 			}
 			path = bPath
 		} else {
-			path = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".pem"))
+			path = "./Tests/CryptorRSATests/keys/".appending(name.appending(".pem"))
 		}
 
 		#else
-		path = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".pem"))
+		path = "./Tests/CryptorRSATests/keys/".appending(name.appending(".pem"))
 		#endif
 
 		let pemString = try String(contentsOf: URL(fileURLWithPath: path))
