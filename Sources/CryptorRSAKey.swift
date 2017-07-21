@@ -31,23 +31,23 @@ import Foundation
 
 @available(macOS 10.12, iOS 10.0, *)
 public extension CryptorRSA {
-	
+
 	// MARK: Type Aliases
-	
+
 	#if os(Linux)
-	
+
 		typealias NativeKey = UnsafeMutablePointer<RSA>
-	
+
 	#else
-	
+
 		typealias NativeKey = SecKey
-	
+
 	#endif
-	
+
 	// MARK: Class Functions
-	
+
 	// MARK: -- Public Key Creation
-	
+
 	///
 	/// Creates a public key with data.
 	///
@@ -57,7 +57,7 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(with data: Data) throws -> PublicKey {
-		
+
 		return try PublicKey(with: data)
 	}
 
@@ -70,21 +70,21 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(extractingFrom data: Data) throws -> PublicKey {
-		
+
 		// Extact the data as a base64 string...
 		let str = String(data: data, encoding: .utf8)
 		guard let tmp = str else {
-			
+
 			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data, incorrect format.")
 		}
-		
+
 		let base64 = try CryptorRSA.base64String(for: tmp)
 		let data = Data(base64Encoded: base64)!
-		
+
 		// Call the internal function to finish up...
 		return try CryptorRSA.createPublicKey(data: data)
 	}
-	
+
 	///
 	/// Creates a key with a base64-encoded string.
 	///
@@ -94,15 +94,15 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withBase64 base64String: String) throws -> PublicKey {
-		
+
 		guard let data = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
-			
+
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string")
 		}
-		
+
 		return try PublicKey(with: data)
 	}
-	
+
 	///
 	/// Creates a key with a PEM string.
 	///
@@ -112,12 +112,12 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withPEM pemString: String) throws -> PublicKey {
-		
+
 		let base64String = try CryptorRSA.base64String(for: pemString)
-		
+
 		return try createPublicKey(withBase64: base64String)
 	}
-	
+
 	///
 	/// Creates a key with a PEM file.
 	///
@@ -128,18 +128,18 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withPEMNamed pemName: String, onPath path: String) throws -> PublicKey {
-		
+
 		var fullPath = path.appending(pemName)
 		if !path.hasSuffix(PEM_SUFFIX) {
-			
 			fullPath = fullPath.appending(PEM_SUFFIX)
 		}
-		
+
 		let keyString = try String(contentsOf: URL(fileURLWithPath: fullPath), encoding: .utf8)
-		
+		//let keyString = try String(contentsOfFile: fullPath, encoding: .utf8)
+
 		return try createPublicKey(withPEM: keyString)
 	}
-	
+
 	///
 	/// Creates a key with a DER file.
 	///
@@ -150,24 +150,24 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withDERNamed derName: String, onPath path: String) throws -> PublicKey {
-		
+
 		var fullPath = path.appending(derName)
 		if !path.hasSuffix(DER_SUFFIX) {
-			
+
 			fullPath = fullPath.appending(DER_SUFFIX)
 		}
-		
+
 		let dataIn = try Data(contentsOf: URL(fileURLWithPath: fullPath))
-		
+
 		#if os(Linux)
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
 		#else
 			let data = dataIn
 		#endif
-		
+
 		return try PublicKey(with: data)
 	}
-	
+
 	///
 	/// Creates a public key by extracting it from a certificate.
 	///
@@ -178,22 +178,25 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(extractingFrom certName: String, onPath path: String) throws -> PublicKey {
-		
+
 		var fullPath = path.appending(certName)
 		if !path.hasSuffix(CER_SUFFIX) {
-			
+
 			fullPath = fullPath.appending(CER_SUFFIX)
 		}
-		
+
+		print("Here1")
 		// Import the data from the file...
 		let tmp = try String(contentsOf: URL(fileURLWithPath: fullPath))
+		//let tmp = try String(contentsOfFile: fullPath)
+		print("Here2")
 		let base64 = try CryptorRSA.base64String(for: tmp)
 		let data = Data(base64Encoded: base64)!
-		
+
 		// Call the internal function to finish up...
 		return try CryptorRSA.createPublicKey(data: data)
 	}
-	
+
 	///
 	/// Creates a key with a PEM file.
 	///
@@ -204,17 +207,16 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withPEMNamed pemName: String, in bundle: Bundle = Bundle.main) throws -> PublicKey {
-		
+
 		guard let path = bundle.path(forResource: pemName, ofType: PEM_SUFFIX) else {
-			
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't find a PEM file named '\(pemName)'")
 		}
-		
+
 		let keyString = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		
+		//let keyString = try String(contentsOfFile: path, encoding: .utf8)
 		return try createPublicKey(withPEM: keyString)
 	}
-	
+
 	///
 	/// Creates a key with a DER file.
 	///
@@ -225,23 +227,23 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withDERNamed derName: String, in bundle: Bundle = Bundle.main) throws -> PublicKey {
-		
+
 		guard let path = bundle.path(forResource: derName, ofType: DER_SUFFIX) else {
-			
+
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't find a DER file named '\(derName)'")
 		}
-		
+
 		let dataIn = try Data(contentsOf: URL(fileURLWithPath: path))
-		
+
 		#if os(Linux)
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
 		#else
 			let data = dataIn
 		#endif
-		
+
 		return try PublicKey(with: data)
 	}
-	
+
 	///
 	/// Creates a public key by extracting it from a certificate.
 	///
@@ -252,21 +254,21 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(extractingFrom certName: String, in bundle: Bundle = Bundle.main) throws -> PublicKey {
-		
+
 		guard let path = bundle.path(forResource: certName, ofType: CER_SUFFIX) else {
-			
+
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't find a certificate file named '\(certName)'")
 		}
-		
+
 		// Import the data from the file...
 		let tmp = try String(contentsOf: URL(fileURLWithPath: path))
 		let base64 = try CryptorRSA.base64String(for: tmp)
 		let data = Data(base64Encoded: base64)!
-		
+
 		// Call the internal function to finish up...
 		return try CryptorRSA.createPublicKey(data: data)
 	}
-	
+
 	///
 	/// Creates a public key by extracting it certificate data.
 	///
@@ -276,38 +278,38 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	internal class func createPublicKey(data: Data) throws -> PublicKey {
-		
+
 		#if os(Linux)
-			
+
 			throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
-			
+
 		#else
-		
+
 			// Create a certificate from the data...
 			let certificateData = SecCertificateCreateWithData(nil, data as CFData)
 			guard let certData = certificateData else {
-			
+
 				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data.")
 			}
-		
+
 			// Now extract the public key from it...
 			var key: SecKey? = nil
 			let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
-				
+
 				SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
 			}
 			if status != errSecSuccess || key == nil {
-			
+
 				throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
 			}
-			
+
 			return PublicKey(with: key!)
-		
+
 		#endif
 	}
 
 	// MARK: -- Private Key Creation
-	
+
 	///
 	/// Creates a private key with data.
 	///
@@ -317,10 +319,10 @@ public extension CryptorRSA {
 	/// - Returns:				New `PrivateKey` instance.
 	///
 	public class func createPrivateKey(with data: Data) throws -> PrivateKey {
-		
+
 		return try PrivateKey(with: data)
 	}
-	
+
 	///
 	/// Creates a key with a base64-encoded string.
 	///
@@ -330,15 +332,15 @@ public extension CryptorRSA {
 	/// - Returns:				New `PrivateKey` instance.
 	///
 	public class func createPrivateKey(withBase64 base64String: String) throws -> PrivateKey {
-		
+
 		guard let data = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
-			
+
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base 64 string")
 		}
-		
+
 		return try PrivateKey(with: data)
 	}
-	
+
 	///
 	/// Creates a key with a PEM string.
 	///
@@ -348,12 +350,12 @@ public extension CryptorRSA {
 	/// - Returns:				New `PrivateKey` instance.
 	///
 	public class func createPrivateKey(withPEM pemString: String) throws -> PrivateKey {
-		
+
 		let base64String = try CryptorRSA.base64String(for: pemString)
-		
+
 		return try CryptorRSA.createPrivateKey(withBase64: base64String)
 	}
-	
+
 	///
 	/// Creates a key with a PEM file.
 	///
@@ -364,18 +366,17 @@ public extension CryptorRSA {
 	/// - Returns:				New `PrivateKey` instance.
 	///
 	public class func createPrivateKey(withPEMNamed pemName: String, onPath path: String) throws -> PrivateKey {
-		
+
 		var fullPath = path.appending(pemName)
 		if !path.hasSuffix(PEM_SUFFIX) {
-			
 			fullPath = fullPath.appending(PEM_SUFFIX)
 		}
-		
+
 		let keyString = try String(contentsOf: URL(fileURLWithPath: fullPath), encoding: .utf8)
-		
+		//let keyString = try String(contentsOfFile: fullPath, encoding: .utf8)
 		return try CryptorRSA.createPrivateKey(withPEM: keyString)
 	}
-	
+
 	///
 	/// Creates a key with a DER file.
 	///
@@ -386,24 +387,24 @@ public extension CryptorRSA {
 	/// - Returns:				New `PrivateKey` instance.
 	///
 	public class func createPrivateKey(withDERNamed derName: String, onPath path: String) throws -> PrivateKey {
-		
+
 		var fullPath = path.appending(derName)
 		if !path.hasSuffix(DER_SUFFIX) {
-			
+
 			fullPath = fullPath.appending(DER_SUFFIX)
 		}
-		
+
 		let dataIn = try Data(contentsOf: URL(fileURLWithPath: fullPath))
-		
+
 		#if os(Linux)
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .privateType)
 		#else
 			let data = dataIn
 		#endif
-		
+
 		return try PrivateKey(with: data)
 	}
-	
+
 	///
 	/// Creates a key with a PEM file.
 	///
@@ -414,17 +415,16 @@ public extension CryptorRSA {
 	/// - Returns:				New `PrivateKey` instance.
 	///
 	public class func createPrivateKey(withPEMNamed pemName: String, in bundle: Bundle = Bundle.main) throws -> PrivateKey {
-		
+
 		guard let path = bundle.path(forResource: pemName, ofType: PEM_SUFFIX) else {
-			
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't find a PEM file named '\(pemName)'")
 		}
-		
+
 		let keyString = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		
+		//let keyString = try String(contentsOfFile: path, encoding: .utf8)
 		return try CryptorRSA.createPrivateKey(withPEM: keyString)
 	}
-	
+
 	///
 	/// Creates a key with a DER file.
 	///
@@ -435,52 +435,52 @@ public extension CryptorRSA {
 	/// - Returns:				New `PrivateKey` instance.
 	///
 	public class func createPrivateKey(withDERNamed derName: String, in bundle: Bundle = Bundle.main) throws -> PrivateKey {
-		
+
 		guard let path = bundle.path(forResource: derName, ofType: DER_SUFFIX) else {
-			
+
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't find a DER file named '\(derName)'")
 		}
-		
+
 		let dataIn = try Data(contentsOf: URL(fileURLWithPath: path))
-		
+
 		#if os(Linux)
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .privateType)
 		#else
 			let data = dataIn
 		#endif
-		
+
 		return try PrivateKey(with: data)
 	}
-	
+
 	// MARK: -
-	
+
 	///
 	/// RSA Key Creation and Handling
 	///
 	public class RSAKey {
-		
+
 		// MARK: Enums
-		
+
 		/// Denotes the type of key this represents.
 		public enum KeyType {
-			
+
 			/// Public
 			case publicType
-			
+
 			/// Private
 			case privateType
 		}
-		
+
 		// MARK: Properties
-		
+
 		/// The stored key
 		internal let reference: NativeKey
-		
+
 		/// Represents the type of key data contained.
 		public internal(set) var type: KeyType = .publicType
-		
+
 		// MARK: Initializers
-		
+
 		///
 		/// Create a key using key data.
 		///
@@ -491,16 +491,16 @@ public extension CryptorRSA {
 		/// - Returns:				New `RSAKey` instance.
 		///
 		internal init(with data: Data, type: KeyType) throws {
-			
+
 			self.type = type
-			
+
 			// On macOS, we need to strip off the header...  Not so on Linux...
 			#if !os(Linux)
 				let data = try CryptorRSA.stripPublicKeyHeader(for: data)
 			#endif
 			reference = try CryptorRSA.createKey(from: data, type: type)
 		}
-		
+
 		///
 		/// Create a key using a native key.
 		///
@@ -511,30 +511,30 @@ public extension CryptorRSA {
 		/// - Returns:				New `RSAKey` instance.
 		///
 		internal init(with nativeKey: NativeKey, type: KeyType) {
-			
+
 			self.type = type
 			self.reference = nativeKey
 		}
 	}
-	
+
 	// MARK: -
-	
+
 	///
 	/// Public Key - Represents public key data.
 	///
 	public class PublicKey: RSAKey {
-		
+
 		/// MARK: Statics
-		
+
 		/// Regular expression for the PK using the begin and end markers.
 		static let publicKeyRegex: NSRegularExpression? = {
-			
+
 			let publicKeyRegex = "(\(CryptorRSA.PK_BEGIN_MARKER).+?\(CryptorRSA.PK_END_MARKER))"
 			return try? NSRegularExpression(pattern: publicKeyRegex, options: .dotMatchesLineSeparators)
 		}()
-		
+
 		// MARK: -- Static Functions
-		
+
 		///
 		/// Takes an input string, scans for public key sections, and then returns a Key for any valid keys found
 		/// - This method scans the file for public key armor - if no keys are found, an empty array is returned
@@ -547,17 +547,17 @@ public extension CryptorRSA {
 		/// - Returns: 				An array of `PublicKey` objects containing just public keys.
 		///
 		public static func publicKeys(withPEM pemString: String) -> [PublicKey] {
-			
+
 			// If our regexp isn't valid, or the input string is empty, we can't move forward…
 			guard let publicKeyRegexp = publicKeyRegex, pemString.characters.count > 0 else {
 				return []
 			}
-			
+
 			let all = NSRange(
 				location: 0,
 				length: pemString.characters.count
 			)
-			
+
 			#if os(Linux)
 				let matches = publicKeyRegexp.matches(
 					in: pemString,
@@ -571,9 +571,9 @@ public extension CryptorRSA {
 					range: all
 				)
 			#endif
-			
+
 			let keys = matches.flatMap { result -> PublicKey? in
-				
+
 				#if os(Linux)
 					let match = result.range(at: 1)
 				#else
@@ -581,19 +581,19 @@ public extension CryptorRSA {
 				#endif
 				let start = pemString.characters.index(pemString.startIndex, offsetBy: match.location)
 				let end = pemString.characters.index(start, offsetBy: match.length)
-				
+
 				let range = Range<String.Index>(start..<end)
-				
+
 				let thisKey = pemString[range]
-				
+
 				return try? CryptorRSA.createPublicKey(withPEM: thisKey)
 			}
-			
+
 			return keys
 		}
-		
+
 		// MARK: -- Initializers
-		
+
 		///
 		/// Create a public key using key data.
 		///
@@ -603,10 +603,10 @@ public extension CryptorRSA {
 		/// - Returns:				New `PublicKey` instance.
 		///
 		public init(with data: Data) throws {
-			
+
 			try super.init(with: data, type: .publicType)
 		}
-	
+
 		///
 		/// Create a key using a native key.
 		///
@@ -622,14 +622,14 @@ public extension CryptorRSA {
 	}
 
 	// MARK: -
-	
+
 	///
 	/// Private Key - Represents private key data.
 	///
 	public class PrivateKey: RSAKey {
-		
+
 		// MARK: -- Initializers
-		
+
 		///
 		/// Create a private key using key data.
 		///
@@ -639,10 +639,10 @@ public extension CryptorRSA {
 		/// - Returns:				New `PrivateKey` instance.
 		///
 		public init(with data: Data) throws {
-			
+
 			try super.init(with: data, type: .privateType)
 		}
-		
+
 		///
 		/// Create a key using a native key.
 		///
@@ -652,7 +652,7 @@ public extension CryptorRSA {
 		/// - Returns:				New `PrivateKey` instance.
 		///
 		public init(with nativeKey: NativeKey) {
-			
+
 			super.init(with: nativeKey, type: .privateType)
 		}
 	}

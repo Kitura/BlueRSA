@@ -48,7 +48,7 @@ class CryptorRSATests: XCTestCase {
 		#if !os(Linux)
 		if useBundles {
 			guard let bPath = CryptorRSATests.bundle.path(forResource: resource, ofType: type) else {
-				XCTFail()
+				XCTFail("Could not load test resource!")
 				return nil
 			}
 			path = bPath
@@ -109,14 +109,16 @@ class CryptorRSATests: XCTestCase {
 		}
 	}
 
-	/*
 	func test_public_initWithBase64StringWhichContainsNewLines() throws {
 		if let path: String = CryptorRSATests.getPath(forResource: "public-base64-newlines", ofType: "txt") {
 			//let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 			let str = try String(contentsOfFile: path, encoding: .utf8)
-			let publicKey = try? CryptorRSA.createPublicKey(withBase64: str)
+			guard let publicKey = try? CryptorRSA.createPublicKey(withBase64: str) else {
+				XCTFail("publicKey was nil!")
+				return
+			}
 			XCTAssertNotNil(publicKey)
-			XCTAssertTrue(publicKey!.type == .publicType)
+			XCTAssertTrue(publicKey.type == .publicType)
 		}
 	}
 
@@ -124,11 +126,15 @@ class CryptorRSATests: XCTestCase {
 		if let path: String = CryptorRSATests.getPath(forResource: "public", ofType: "pem") {
 			//let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 			let str = try String(contentsOfFile: path, encoding: .utf8)
-			let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
+			guard let publicKey = try? CryptorRSA.createPublicKey(withPEM: str) else {
+				XCTFail("publicKey was nil!")
+				return
+			}
 			XCTAssertNotNil(publicKey)
-			XCTAssertTrue(publicKey!.type == .publicType)
+			XCTAssertTrue(publicKey.type == .publicType)
 		}
 	}
+
 
 	func test_public_initWithPEMName() throws {
 		#if !os(Linux)
@@ -149,6 +155,7 @@ class CryptorRSATests: XCTestCase {
 		#endif
 	}
 
+
 	func test_public_initWithDERName() throws {
 		#if !os(Linux)
 
@@ -168,13 +175,17 @@ class CryptorRSATests: XCTestCase {
 		#endif
 	}
 
+
 	func test_public_initWithPEMStringHeaderless() throws {
 		if let path: String = CryptorRSATests.getPath(forResource: "public-headerless", ofType: "pem") {
 			//let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 			let str = try String(contentsOfFile: path, encoding: .utf8)
-			let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
+			guard let publicKey = try? CryptorRSA.createPublicKey(withPEM: str) else {
+				XCTFail("publicKey was nil!")
+				return
+			}
 			XCTAssertNotNil(publicKey)
-			XCTAssertTrue(publicKey!.type == .publicType)
+			XCTAssertTrue(publicKey.type == .publicType)
 		}
 	}
 
@@ -233,9 +244,12 @@ class CryptorRSATests: XCTestCase {
 		if let path: String = CryptorRSATests.getPath(forResource: "private", ofType: "pem") {
 			//let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 			let str = try String(contentsOfFile: path, encoding: .utf8)
-			let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str)
+			guard let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str) else {
+				XCTFail("privateKey was nil!")
+				return
+			}
 			XCTAssertNotNil(privateKey)
-			XCTAssertTrue(privateKey!.type == .privateType)
+			XCTAssertTrue(privateKey.type == .privateType)
 		}
 	}
 
@@ -243,9 +257,12 @@ class CryptorRSATests: XCTestCase {
 		if let path: String = CryptorRSATests.getPath(forResource: "private-headerless", ofType: "pem") {
 			//let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 			let str = try String(contentsOfFile: path, encoding: .utf8)
-			let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str)
+			guard let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str) else {
+				XCTFail("privateKey was nil!")
+				return
+			}
 			XCTAssertNotNil(privateKey)
-			XCTAssertTrue(privateKey!.type == .privateType)
+			XCTAssertTrue(privateKey.type == .privateType)
 		}
 	}
 
@@ -287,10 +304,16 @@ class CryptorRSATests: XCTestCase {
 
 	// MARK: Encyption/Decryption Tests
 
-	let publicKey: CryptorRSA.PublicKey = try! CryptorRSATests.publicKey(name: "public")
-	let privateKey: CryptorRSA.PrivateKey = try! CryptorRSATests.privateKey(name: "private")
-
 	func test_simpleEncryption() throws {
+
+		guard let publicKey: CryptorRSA.PublicKey = try? CryptorRSATests.publicKey(name: "public") else {
+			XCTFail("publicKey was nil!")
+			return
+		}
+		guard let privateKey: CryptorRSA.PrivateKey = try? CryptorRSATests.privateKey(name: "private") else {
+			XCTFail("privateKey was nil!")
+			return
+		}
 
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
 		(.sha224, ".sha224"),
@@ -304,7 +327,6 @@ class CryptorRSATests: XCTestCase {
 			print("Testing algorithm: \(name)")
 			let str = "Plain Text"
 			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
-
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
 			let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: algorithm)
@@ -316,6 +338,15 @@ class CryptorRSATests: XCTestCase {
 	}
 
 	func test_longStringEncryption() throws {
+
+		guard let publicKey: CryptorRSA.PublicKey = try? CryptorRSATests.publicKey(name: "public") else {
+			XCTFail("publicKey was nil!")
+			return
+		}
+		guard let privateKey: CryptorRSA.PrivateKey = try? CryptorRSATests.privateKey(name: "private") else {
+			XCTFail("privateKey was nil!")
+			return
+		}
 
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
 		(.sha224, ".sha224"),
@@ -341,6 +372,15 @@ class CryptorRSATests: XCTestCase {
 	}
 
 	func test_randomByteEncryption() throws {
+
+		guard let publicKey: CryptorRSA.PublicKey = try? CryptorRSATests.publicKey(name: "public") else {
+			XCTFail("publicKey was nil!")
+			return
+		}
+		guard let privateKey: CryptorRSA.PrivateKey = try? CryptorRSATests.privateKey(name: "private") else {
+			XCTFail("privateKey was nil!")
+			return
+		}
 
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
 		(.sha224, ".sha224"),
@@ -368,6 +408,15 @@ class CryptorRSATests: XCTestCase {
 
 	func test_signVerifyAllDigestTypes() throws {
 
+		guard let publicKey: CryptorRSA.PublicKey = try? CryptorRSATests.publicKey(name: "public") else {
+			XCTFail("publicKey was nil!")
+			return
+		}
+		guard let privateKey: CryptorRSA.PrivateKey = try? CryptorRSATests.privateKey(name: "private") else {
+			XCTFail("privateKey was nil!")
+			return
+		}
+
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
 		(.sha224, ".sha224"),
 		(.sha256, ".sha256"),
@@ -389,6 +438,15 @@ class CryptorRSATests: XCTestCase {
 
 	func test_signVerifyBase64() throws {
 
+		guard let publicKey: CryptorRSA.PublicKey = try? CryptorRSATests.publicKey(name: "public") else {
+			XCTFail("publicKey was nil!")
+			return
+		}
+		guard let privateKey: CryptorRSA.PrivateKey = try? CryptorRSATests.privateKey(name: "private") else {
+			XCTFail("privateKey was nil!")
+			return
+		}
+
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
 		(.sha224, ".sha224"),
 		(.sha256, ".sha256"),
@@ -408,7 +466,6 @@ class CryptorRSATests: XCTestCase {
 			print("Test of algorithm: \(name) succeeded")
 		}
 	}
-	*/
 
 	// MARK: Test Utilities
 
@@ -528,7 +585,7 @@ class CryptorRSATests: XCTestCase {
 			("test_public_initWithData", test_public_initWithData),
 			("test_public_initWithCertData", test_public_initWithCertData),
 			("test_public_initWithCertData2", test_public_initWithCertData2),
-			("test_public_initWithBase64String", test_public_initWithBase64String), /*
+			("test_public_initWithBase64String", test_public_initWithBase64String),
 			("test_public_initWithBase64StringWhichContainsNewLines", test_public_initWithBase64StringWhichContainsNewLines),
 			("test_public_initWithPEMString", test_public_initWithPEMString),
 			("test_public_initWithPEMName", test_public_initWithPEMName),
@@ -546,7 +603,7 @@ class CryptorRSATests: XCTestCase {
 			("test_longStringEncryption", test_longStringEncryption),
 			("test_randomByteEncryption", test_randomByteEncryption),
 			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
-			("test_signVerifyBase64", test_signVerifyBase64), */
+			("test_signVerifyBase64", test_signVerifyBase64),
 		]
 	}
 }
