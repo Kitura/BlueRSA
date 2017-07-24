@@ -60,7 +60,6 @@ class CryptorRSATests: XCTestCase {
 	// MARK: Public Key Tests
 
 	func test_public_initWithData() throws {
-		setbuf(stdout, nil)
 		if let path: String = CryptorRSATests.getPath(forResource: "public", ofType: "der") {
 			let data = try Data(contentsOf: URL(fileURLWithPath: path))
 			guard let publicKey = try? CryptorRSA.createPublicKey(with: data) else {
