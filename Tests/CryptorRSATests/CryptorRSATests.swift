@@ -59,9 +59,45 @@ class CryptorRSATests: XCTestCase {
 
 	// MARK: Public Key Tests
 
+	//////////////
+	func test_public_initWithDataRO() throws {
+		if let path: String = CryptorRSATests.getPath(forResource: "public", ofType: "pem") {
+            let dataIn = try Data(contentsOf: URL(fileURLWithPath: path))
+            // I could only get this to work by making this dat conversion from DER to PEM
+            // before calling the createPublicKey() method...
+            // but is this expected? Do we need to make this transformation from DER to PEM?
+            // https://support.ssl.com/Knowledgebase/Article/View/19/0/der-vs-crt-vs-cer-vs-pem-certificates-and-how-to-convert-them
+            // Is OpenSSL expecting data in PEM format?
+            #if os(Linux)
+                let data = dataIn
+            #else
+                let data = dataIn
+            #endif
+
+			guard let publicKey = try? CryptorRSA.createPublicKey(with: data) else {
+				XCTFail("publicKey was nil!")
+				return
+			}
+			XCTAssertNotNil(publicKey)
+			XCTAssertTrue(publicKey.type == .publicType)
+		}
+	}
+	//////////////
+
 	func test_public_initWithData() throws {
 		if let path: String = CryptorRSATests.getPath(forResource: "public", ofType: "der") {
-			let data = try Data(contentsOf: URL(fileURLWithPath: path))
+            let dataIn = try Data(contentsOf: URL(fileURLWithPath: path))
+            // I could only get this to work by making this dat conversion from DER to PEM
+            // before calling the createPublicKey() method...
+            // but is this expected? Do we need to make this transformation from DER to PEM?
+            // https://support.ssl.com/Knowledgebase/Article/View/19/0/der-vs-crt-vs-cer-vs-pem-certificates-and-how-to-convert-them
+            // Is OpenSSL expecting data in PEM format?
+            #if os(Linux)
+                let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
+            #else
+                let data = dataIn
+            #endif
+
 			guard let publicKey = try? CryptorRSA.createPublicKey(with: data) else {
 				XCTFail("publicKey was nil!")
 				return
@@ -581,6 +617,7 @@ class CryptorRSATests: XCTestCase {
 
 	static var allTests : [(String, (CryptorRSATests) -> () throws -> Void)] {
 		return [
+			("test_public_initWithDataRO", test_public_initWithDataRO),
 			("test_public_initWithData", test_public_initWithData),
 			("test_public_initWithCertData", test_public_initWithCertData),
 			("test_public_initWithCertData2", test_public_initWithCertData2),

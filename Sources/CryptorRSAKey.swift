@@ -57,7 +57,6 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(with data: Data) throws -> PublicKey {
-
 		return try PublicKey(with: data)
 	}
 
@@ -153,7 +152,6 @@ public extension CryptorRSA {
 
 		var fullPath = path.appending(derName)
 		if !path.hasSuffix(DER_SUFFIX) {
-
 			fullPath = fullPath.appending(DER_SUFFIX)
 		}
 

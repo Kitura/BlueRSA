@@ -51,7 +51,11 @@ public extension CryptorRSA {
 	///
 	static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  NativeKey {
 
-		let keyData = keyData
+		setbuf(stdout, nil)
+
+		print("createKey1")
+
+		//let keyData = keyData
 
 		// Create a memory BIO...
 		let bio = BIO_new(BIO_s_mem())
@@ -63,7 +67,8 @@ public extension CryptorRSA {
 		// Move the key data to it...
 		keyData.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
 
-			BIO_write(bio, buffer, Int32(keyData.count))
+			let c = BIO_write(bio, buffer, Int32(keyData.count))
+            print("bytes written: \(c)")
 
 			// The below is equivalent of BIO_flush...
 			BIO_ctrl(bio, BIO_CTRL_FLUSH, 0, nil)
@@ -71,20 +76,35 @@ public extension CryptorRSA {
 			return
 		}
 
+		print("createKey2")
+
 		// It's base64 data...
 		BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL)
 
 		// Get the right function depending on the type of key...
-		let keyReader: RSAKeyReader = type == .publicType ? PEM_read_bio_RSA_PUBKEY : PEM_read_bio_RSAPrivateKey
+		let keyReader: RSAKeyReader = (type == .publicType) ? PEM_read_bio_RSA_PUBKEY : PEM_read_bio_RSAPrivateKey
+    
+        print("type: \(type)")
+        print("data: \(keyData)")
+        print("keyReader: \(keyReader)")
+
+		print("createKey3")
 
 		// Read the key in...
 		guard let key = keyReader(bio, nil, nil, nil) else {
+			print("createKey4 -error")
 			let source = "Couldn't create key reference from key data."
 			if let reason = CryptorRSA.getLastError(source: source) {
+                print("Reason: \(reason)")
 				throw Error(code: ERR_ADD_KEY, reason: reason)
 			}
+            print("No reason.")
 			throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
 		}
+
+		print("createKey5")
+
+		print("key: \(key)")
 
 		return key
 	}
@@ -160,8 +180,6 @@ public extension CryptorRSA {
 	///	- Returns:				`SecKey` representation of the key.
 	///
 	static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  NativeKey {
-
-		var keyData = keyData
 
 		let keyClass = type == .publicType ? kSecAttrKeyClassPublic : kSecAttrKeyClassPrivate
 
