@@ -185,11 +185,9 @@ public extension CryptorRSA {
 			fullPath = fullPath.appending(CER_SUFFIX)
 		}
 
-		print("Here1")
 		// Import the data from the file...
 		let tmp = try String(contentsOf: URL(fileURLWithPath: fullPath))
 		//let tmp = try String(contentsOfFile: fullPath)
-		print("Here2")
 		let base64 = try CryptorRSA.base64String(for: tmp)
 		let data = Data(base64Encoded: base64)!
 
