@@ -63,11 +63,7 @@ class CryptorRSATests: XCTestCase {
 	func test_public_initWithDataRO() throws {
 		if let path: String = CryptorRSATests.getPath(forResource: "public", ofType: "pem") {
             let dataIn = try Data(contentsOf: URL(fileURLWithPath: path))
-            // I could only get this to work by making this dat conversion from DER to PEM
-            // before calling the createPublicKey() method...
-            // but is this expected? Do we need to make this transformation from DER to PEM?
-            // https://support.ssl.com/Knowledgebase/Article/View/19/0/der-vs-crt-vs-cer-vs-pem-certificates-and-how-to-convert-them
-            // Is OpenSSL expecting data in PEM format?
+            // So... it looks like OpenSSL expects PEM as input while Apple's library expects DER?????
             #if os(Linux)
                 let data = dataIn
             #else
