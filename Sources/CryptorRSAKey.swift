@@ -71,14 +71,14 @@ public extension CryptorRSA {
 	public class func createPublicKey(extractingFrom data: Data) throws -> PublicKey {
 
 		// Extact the data as a base64 string...
-		let str = String(data: data, encoding: .utf8)
-		guard let tmp = str else {
-
+		guard let str = String(data: data, encoding: .utf8) else {
 			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data, incorrect format.")
 		}
 
-		let base64 = try CryptorRSA.base64String(for: tmp)
-		let data = Data(base64Encoded: base64)!
+		let base64 = try CryptorRSA.base64String(for: str)
+		guard let data = Data(base64Encoded: base64) else {
+			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data, incorrect format.")
+		}
 
 		// Call the internal function to finish up...
 		return try CryptorRSA.createPublicKey(data: data)
@@ -95,9 +95,10 @@ public extension CryptorRSA {
 	public class func createPublicKey(withBase64 base64String: String) throws -> PublicKey {
 
 		guard let data = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
-
-			throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string")
+			throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string.")
 		}
+        
+        print("createPublicKey(withBase64): \(data)")
 
 		return try PublicKey(with: data)
 	}
@@ -111,9 +112,7 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withPEM pemString: String) throws -> PublicKey {
-
 		let base64String = try CryptorRSA.base64String(for: pemString)
-
 		return try createPublicKey(withBase64: base64String)
 	}
 
@@ -127,16 +126,28 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withPEMNamed pemName: String, onPath path: String) throws -> PublicKey {
+        
+        print("createPublicKey start")
 
 		var fullPath = path.appending(pemName)
 		if !path.hasSuffix(PEM_SUFFIX) {
 			fullPath = fullPath.appending(PEM_SUFFIX)
 		}
-
+        
+        //testing - RO
 		let keyString = try String(contentsOf: URL(fileURLWithPath: fullPath), encoding: .utf8)
-		//let keyString = try String(contentsOfFile: fullPath, encoding: .utf8)
-
-		return try createPublicKey(withPEM: keyString)
+        //print("keyString: \(keyString)")
+        return try createPublicKey(withPEM: keyString)
+        
+        //print("right before creating data...")
+        //let data = keyString.data(using: .utf8)
+        // OR
+        //let data = try Data(contentsOf: URL(fileURLWithPath: fullPath))
+        //print("right after creating data...")
+        //print("createPublicKey")
+        //print("data: \(data!)")
+        //return try PublicKey(with: data!)
+        //testing - RO
 	}
 
 	///
