@@ -99,12 +99,30 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withBase64 base64String: String) throws -> PublicKey {
+        
+        #if os(Linux)
+            
+        let base64Str: String
+            
+        if !base64String.contains("\n") {
+            let lines = base64String.split(to: 65)
+            // Join those lines with a new line...
+            base64Str = lines.joined(separator: "\n")
+        } else {
+            base64Str = base64String
+        }
+            
+        guard let data = (CryptorRSA.PK_BEGIN_MARKER + "\n" + base64Str + "\n" + CryptorRSA.PK_END_MARKER).data(using: .utf8) else {
+            throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string.")
+        }
+        
+        #else
 
         guard let data = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
             throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string.")
         }
-        
-        //let data = base64String.data(using: .utf8)
+            
+        #endif
         
         print("createPublicKey(withBase64): \(data)")
 
@@ -121,7 +139,6 @@ public extension CryptorRSA {
 	///
 	public class func createPublicKey(withPEM pemString: String) throws -> PublicKey {
         
-        //RO
         #if os(Linux)
         
         guard let data = pemString.data(using: .utf8) else {
@@ -135,9 +152,6 @@ public extension CryptorRSA {
         return try createPublicKey(withBase64: base64String)
         
         #endif
-        //RO
-		//let base64String = try CryptorRSA.base64String(for: pemString)
-		//return try createPublicKey(withBase64: base64String)
 	}
 
 	///
@@ -254,10 +268,14 @@ public extension CryptorRSA {
 		let dataIn = try Data(contentsOf: URL(fileURLWithPath: path))
 
 		#if os(Linux)
-			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
-		#else
-			let data = dataIn
-		#endif
+        
+        let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
+		
+        #else
+		
+        let data = dataIn
+		
+        #endif
 
 		return try PublicKey(with: data)
 	}
@@ -343,11 +361,8 @@ public extension CryptorRSA {
                 throw Error(code: ERR_EXTRACT_KEY_FAILED, reason: source + ": No OpenSSL error reported.")
             }
             
-          
-            
             return PublicKey(with: key)
             
-
 		#else
 
 			// Create a certificate from the data...
