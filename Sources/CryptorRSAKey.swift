@@ -440,9 +440,21 @@ public extension CryptorRSA {
 	///
 	public class func createPrivateKey(withPEM pemString: String) throws -> PrivateKey {
 
+		#if os(Linux)
+
+			 guard let data = pemString.data(using: .utf8) else {
+					 throw Error(code: ERR_READ_CERT_FAILED, reason: "Couldn't read PEM certificate: '\(pemString)'")
+			 }
+			 return try PrivateKey(with: data)
+
+			 #else
+
+
 		let base64String = try CryptorRSA.base64String(for: pemString)
 
 		return try CryptorRSA.createPrivateKey(withBase64: base64String)
+
+		  #endif
 	}
 
 	///

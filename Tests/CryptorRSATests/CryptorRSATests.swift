@@ -285,7 +285,6 @@ class CryptorRSATests: XCTestCase {
 
 	func test_private_initWithPEMString() throws {
 		if let path: String = CryptorRSATests.getPath(forResource: "private", ofType: "pem") {
-			//let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 			let str = try String(contentsOfFile: path, encoding: .utf8)
 			guard let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str) else {
 				XCTFail("privateKey was nil!")
@@ -638,11 +637,11 @@ class CryptorRSATests: XCTestCase {
 			("test_publicKeysFromComplexPEMFileWorksCorrectly", test_publicKeysFromComplexPEMFileWorksCorrectly),
 			("test_publicKeysFromEmptyPEMFileReturnsEmptyArray", test_publicKeysFromEmptyPEMFileReturnsEmptyArray),
 			("test_public_initWithCertificateName", test_public_initWithCertificateName),
-			("test_public_initWithCertificateName2", test_public_initWithCertificateName2),/*
+			("test_public_initWithCertificateName2", test_public_initWithCertificateName2),
 			("test_private_initWithPEMString", test_private_initWithPEMString),
 			("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
 			("test_private_initWithPEMName", test_private_initWithPEMName),
-			("test_private_initWithDERName", test_private_initWithDERName),
+			("test_private_initWithDERName", test_private_initWithDERName),/*
 			("test_simpleEncryption", test_simpleEncryption),
 			("test_longStringEncryption", test_longStringEncryption),
 			("test_randomByteEncryption", test_randomByteEncryption),
