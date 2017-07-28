@@ -373,6 +373,7 @@ class CryptorRSATests: XCTestCase {
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			print("HELLLLLLLOOOOOO2")
 			XCTAssertNotNil(encrypted)
+			print("HELLLLLLLOOOOOO3")
 			let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: algorithm)
 			XCTAssertNotNil(decrypted)
 			let decryptedString = try decrypted!.string(using: .utf8)
