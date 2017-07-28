@@ -70,10 +70,10 @@ public extension CryptorRSA {
 	///
 	public class func createPublicKey(extractingFrom data: Data) throws -> PublicKey {
 
-        //It looks like on Linux, we should not be messing with the base64 encoding
-        //OpenSSL is probably doing this on our behalf
-        #if !os(Linux)
-        
+    //It looks like on Linux, we should not be messing with the base64 encoding
+    //OpenSSL is probably doing this on our behalf
+    #if !os(Linux)
+
 		// Extact the data as a base64 string...
 		guard let str = String(data: data, encoding: .utf8) else {
 			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data, incorrect format.")
@@ -84,7 +84,7 @@ public extension CryptorRSA {
 			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data, incorrect format.")
 		}
         #endif
-        
+
 
 		// Call the internal function to finish up...
 		return try CryptorRSA.createPublicKey(data: data)
@@ -99,11 +99,11 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withBase64 base64String: String) throws -> PublicKey {
-        
+
         #if os(Linux)
-            
+
         let base64Str: String
-            
+
         if !base64String.contains("\n") {
             let lines = base64String.split(to: 65)
             // Join those lines with a new line...
@@ -111,19 +111,19 @@ public extension CryptorRSA {
         } else {
             base64Str = base64String
         }
-            
+
         guard let data = (CryptorRSA.PK_BEGIN_MARKER + "\n" + base64Str + "\n" + CryptorRSA.PK_END_MARKER).data(using: .utf8) else {
             throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string.")
         }
-        
+
         #else
 
         guard let data = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
             throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string.")
         }
-            
+
         #endif
-        
+
         print("createPublicKey(withBase64): \(data)")
 
 		return try PublicKey(with: data)
@@ -138,19 +138,19 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withPEM pemString: String) throws -> PublicKey {
-        
+
         #if os(Linux)
-        
+
         guard let data = pemString.data(using: .utf8) else {
             throw Error(code: ERR_READ_CERT_FAILED, reason: "Couldn't read PEM certificate: '\(pemString)'")
         }
         return try PublicKey(with: data)
-        
+
         #else
-            
+
         let base64String = try CryptorRSA.base64String(for: pemString)
         return try createPublicKey(withBase64: base64String)
-        
+
         #endif
 	}
 
@@ -164,14 +164,14 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withPEMNamed pemName: String, onPath path: String) throws -> PublicKey {
-        
+
         print("createPublicKey start")
 
 		var fullPath = path.appending(pemName)
 		if !path.hasSuffix(PEM_SUFFIX) {
 			fullPath = fullPath.appending(PEM_SUFFIX)
 		}
-        
+
         let keyString = try String(contentsOf: URL(fileURLWithPath: fullPath), encoding: .utf8)
         return try createPublicKey(withPEM: keyString)
 	}
@@ -216,15 +216,24 @@ public extension CryptorRSA {
 
 		var fullPath = path.appending(certName)
 		if !path.hasSuffix(CER_SUFFIX) {
-
 			fullPath = fullPath.appending(CER_SUFFIX)
 		}
 
 		// Import the data from the file...
-		let tmp = try String(contentsOf: URL(fileURLWithPath: fullPath))
-		//let tmp = try String(contentsOfFile: fullPath)
-		let base64 = try CryptorRSA.base64String(for: tmp)
-		let data = Data(base64Encoded: base64)!
+
+		#if os(Linux)
+
+		let data = try Data(contentsOf: URL(fileURLWithPath: fullPath))
+
+		#else
+
+		let fileContent = try String(contentsOf: URL(fileURLWithPath: fullPath))
+		let base64 = try CryptorRSA.base64String(for: fileContent)
+		guard let data = Data(base64Encoded: base64) else {
+			throw Error(code: ERR_READ_CERT_FAILED, reason: "Couldn't read certificate.")
+		}
+
+		#endif
 
 		// Call the internal function to finish up...
 		return try CryptorRSA.createPublicKey(data: data)
@@ -268,13 +277,13 @@ public extension CryptorRSA {
 		let dataIn = try Data(contentsOf: URL(fileURLWithPath: path))
 
 		#if os(Linux)
-        
+
         let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
-		
+
         #else
-		
+
         let data = dataIn
-		
+
         #endif
 
 		return try PublicKey(with: data)
@@ -316,14 +325,14 @@ public extension CryptorRSA {
 	internal class func createPublicKey(data: Data) throws -> PublicKey {
 
 		#if os(Linux)
-            
+
             // Create a memory BIO...
             let bio = BIO_new(BIO_s_mem())
-            
+
             defer {
                 BIO_free(bio)
             }
-            
+
             // Move cert data to BIO...
             data.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
                 BIO_write(bio, buffer, Int32(data.count))
@@ -331,10 +340,10 @@ public extension CryptorRSA {
                 BIO_ctrl(bio, BIO_CTRL_FLUSH, 0, nil)
                 return
             }
-            
+
             // It's base64 data...
             BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL)
-            
+
             guard let cert = PEM_read_bio_X509(bio, nil, nil, nil) else {
                 let source = "Couldn't read certificate from key data."
                 if let reason = CryptorRSA.getLastError(source: source) {
@@ -342,17 +351,17 @@ public extension CryptorRSA {
                 }
                 throw Error(code: ERR_READ_CERT_FAILED, reason: source + ": No OpenSSL error reported.")
             }
-            
+
             guard let evpKey: UnsafeMutablePointer<EVP_PKEY> = X509_get_pubkey(cert) else {
                 let source = "Couldn't read EVP key from certificate."
                 if let reason = CryptorRSA.getLastError(source: source) {
                     throw Error(code: ERR_EXTRACT_KEY_FAILED, reason: reason)
                 }
                 throw Error(code: ERR_EXTRACT_KEY_FAILED, reason: source + ": No OpenSSL error reported.")
-                
-                
+
+
             }
-            
+
             guard let key = EVP_PKEY_get1_RSA(evpKey) else {
                 let source = "Couldn't read RSA key from EVP key."
                 if let reason = CryptorRSA.getLastError(source: source) {
@@ -360,9 +369,9 @@ public extension CryptorRSA {
                 }
                 throw Error(code: ERR_EXTRACT_KEY_FAILED, reason: source + ": No OpenSSL error reported.")
             }
-            
+
             return PublicKey(with: key)
-            
+
 		#else
 
 			// Create a certificate from the data...

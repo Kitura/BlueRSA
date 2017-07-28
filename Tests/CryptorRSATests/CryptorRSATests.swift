@@ -175,11 +175,11 @@ class CryptorRSATests: XCTestCase {
 
 
 	func test_public_initWithPEMName() throws {
-        
+
         setbuf(stdout, nil)
-        
+
         print("start: test_public_initWithPEMName")
-        
+
 		#if !os(Linux)
 
 		if CryptorRSATests.useBundles {
@@ -217,7 +217,6 @@ class CryptorRSATests: XCTestCase {
 
 		#endif
 	}
-
 
 	func test_public_initWithPEMStringHeaderless() throws {
 		if let path: String = CryptorRSATests.getPath(forResource: "public-headerless", ofType: "pem") {
@@ -634,12 +633,12 @@ class CryptorRSATests: XCTestCase {
 			("test_public_initWithBase64StringWhichContainsNewLines", test_public_initWithBase64StringWhichContainsNewLines),
 			("test_public_initWithPEMString", test_public_initWithPEMString),
 			("test_public_initWithPEMName", test_public_initWithPEMName),
-			("test_public_initWithDERName", test_public_initWithDERName),/*
-			("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless),
+			("test_public_initWithDERName", test_public_initWithDERName),
+			//("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless), // is this a valid test???
 			("test_publicKeysFromComplexPEMFileWorksCorrectly", test_publicKeysFromComplexPEMFileWorksCorrectly),
 			("test_publicKeysFromEmptyPEMFileReturnsEmptyArray", test_publicKeysFromEmptyPEMFileReturnsEmptyArray),
 			("test_public_initWithCertificateName", test_public_initWithCertificateName),
-			("test_public_initWithCertificateName2", test_public_initWithCertificateName2),
+			("test_public_initWithCertificateName2", test_public_initWithCertificateName2),/*
 			("test_private_initWithPEMString", test_private_initWithPEMString),
 			("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
 			("test_private_initWithPEMName", test_private_initWithPEMName),
