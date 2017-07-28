@@ -70,6 +70,10 @@ public extension CryptorRSA {
 	///
 	public class func createPublicKey(extractingFrom data: Data) throws -> PublicKey {
 
+        //It looks like on Linux, we should not be messing with the base64 encoding
+        //OpenSSL is probably doing this on our behalf
+        #if !os(Linux)
+        
 		// Extact the data as a base64 string...
 		guard let str = String(data: data, encoding: .utf8) else {
 			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data, incorrect format.")
@@ -79,6 +83,8 @@ public extension CryptorRSA {
 		guard let data = Data(base64Encoded: base64) else {
 			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data, incorrect format.")
 		}
+        #endif
+        
 
 		// Call the internal function to finish up...
 		return try CryptorRSA.createPublicKey(data: data)
@@ -94,9 +100,11 @@ public extension CryptorRSA {
 	///
 	public class func createPublicKey(withBase64 base64String: String) throws -> PublicKey {
 
-		guard let data = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
-			throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string.")
-		}
+        guard let data = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
+            throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string.")
+        }
+        
+        //let data = base64String.data(using: .utf8)
         
         print("createPublicKey(withBase64): \(data)")
 
@@ -112,8 +120,24 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withPEM pemString: String) throws -> PublicKey {
-		let base64String = try CryptorRSA.base64String(for: pemString)
-		return try createPublicKey(withBase64: base64String)
+        
+        //RO
+        #if os(Linux)
+        
+        guard let data = pemString.data(using: .utf8) else {
+            throw Error(code: ERR_READ_CERT_FAILED, reason: "Couldn't read PEM certificate: '\(pemString)'")
+        }
+        return try PublicKey(with: data)
+        
+        #else
+            
+        let base64String = try CryptorRSA.base64String(for: pemString)
+        return try createPublicKey(withBase64: base64String)
+        
+        #endif
+        //RO
+		//let base64String = try CryptorRSA.base64String(for: pemString)
+		//return try createPublicKey(withBase64: base64String)
 	}
 
 	///
@@ -134,20 +158,8 @@ public extension CryptorRSA {
 			fullPath = fullPath.appending(PEM_SUFFIX)
 		}
         
-        //testing - RO
-		let keyString = try String(contentsOf: URL(fileURLWithPath: fullPath), encoding: .utf8)
-        //print("keyString: \(keyString)")
+        let keyString = try String(contentsOf: URL(fileURLWithPath: fullPath), encoding: .utf8)
         return try createPublicKey(withPEM: keyString)
-        
-        //print("right before creating data...")
-        //let data = keyString.data(using: .utf8)
-        // OR
-        //let data = try Data(contentsOf: URL(fileURLWithPath: fullPath))
-        //print("right after creating data...")
-        //print("createPublicKey")
-        //print("data: \(data!)")
-        //return try PublicKey(with: data!)
-        //testing - RO
 	}
 
 	///
@@ -220,7 +232,6 @@ public extension CryptorRSA {
 		}
 
 		let keyString = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
-		//let keyString = try String(contentsOfFile: path, encoding: .utf8)
 		return try createPublicKey(withPEM: keyString)
 	}
 
@@ -277,7 +288,7 @@ public extension CryptorRSA {
 	}
 
 	///
-	/// Creates a public key by extracting it certificate data.
+	/// Creates a public key by extracting it from certificate data.
 	///
 	/// - Parameters:
 	/// 	- data:				`Data` representing the certificate.
@@ -287,8 +298,55 @@ public extension CryptorRSA {
 	internal class func createPublicKey(data: Data) throws -> PublicKey {
 
 		#if os(Linux)
-
-			throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
+            
+            // Create a memory BIO...
+            let bio = BIO_new(BIO_s_mem())
+            
+            defer {
+                BIO_free(bio)
+            }
+            
+            // Move cert data to BIO...
+            data.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
+                BIO_write(bio, buffer, Int32(data.count))
+                // The following is equivalent of BIO_flush...
+                BIO_ctrl(bio, BIO_CTRL_FLUSH, 0, nil)
+                return
+            }
+            
+            // It's base64 data...
+            BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL)
+            
+            guard let cert = PEM_read_bio_X509(bio, nil, nil, nil) else {
+                let source = "Couldn't read certificate from key data."
+                if let reason = CryptorRSA.getLastError(source: source) {
+                    throw Error(code: ERR_READ_CERT_FAILED, reason: reason)
+                }
+                throw Error(code: ERR_READ_CERT_FAILED, reason: source + ": No OpenSSL error reported.")
+            }
+            
+            guard let evpKey: UnsafeMutablePointer<EVP_PKEY> = X509_get_pubkey(cert) else {
+                let source = "Couldn't read EVP key from certificate."
+                if let reason = CryptorRSA.getLastError(source: source) {
+                    throw Error(code: ERR_EXTRACT_KEY_FAILED, reason: reason)
+                }
+                throw Error(code: ERR_EXTRACT_KEY_FAILED, reason: source + ": No OpenSSL error reported.")
+                
+                
+            }
+            
+            guard let key = EVP_PKEY_get1_RSA(evpKey) else {
+                let source = "Couldn't read RSA key from EVP key."
+                if let reason = CryptorRSA.getLastError(source: source) {
+                    throw Error(code: ERR_EXTRACT_KEY_FAILED, reason: reason)
+                }
+                throw Error(code: ERR_EXTRACT_KEY_FAILED, reason: source + ": No OpenSSL error reported.")
+            }
+            
+          
+            
+            return PublicKey(with: key)
+            
 
 		#else
 

@@ -89,7 +89,12 @@ class CryptorRSATests: XCTestCase {
             // before calling the createPublicKey() method...
             // but is this expected? Do we need to make this transformation from DER to PEM?
             // https://support.ssl.com/Knowledgebase/Article/View/19/0/der-vs-crt-vs-cer-vs-pem-certificates-and-how-to-convert-them
+            // https://stackoverflow.com/questions/25366887/openssl-api-read-private-key-in-der-format-instead-of-pem
+            // https://search.thawte.com/support/ssl-digital-certificates/index?page=content&actp=CROSSLINK&id=SO26449
             // Is OpenSSL expecting data in PEM format? And Apple expects DER format?
+            // http://gagravarr.org/writing/openssl-certs/general.shtml
+            // http://fm4dd.com/openssl/certpubkey.htm
+            // http://openssl.6102.n7.nabble.com/Converting-RSA-to-EVP-pkey-td12798.html
             #if os(Linux)
                 let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
             #else
@@ -131,7 +136,7 @@ class CryptorRSATests: XCTestCase {
 
 	func test_public_initWithBase64String() throws {
 		if let path: String = CryptorRSATests.getPath(forResource: "public-base64", ofType: "txt") {
-			//let str = try String(contentsOfFile: URL(fileURLWithPath: path), encoding: .utf8)
+			//let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 			let str = try String(contentsOfFile: path, encoding: .utf8)
 			guard let publicKey = try? CryptorRSA.createPublicKey(withBase64: str) else {
 				XCTFail("publicKey was nil!")
@@ -216,6 +221,7 @@ class CryptorRSATests: XCTestCase {
 
 	func test_public_initWithPEMStringHeaderless() throws {
 		if let path: String = CryptorRSATests.getPath(forResource: "public-headerless", ofType: "pem") {
+        //if let path: String = CryptorRSATests.getPath(forResource: "public", ofType: "pem") {
 			//let str = try String(contentsOf: URL(fileURLWithPath: path), encoding: .utf8)
 			let str = try String(contentsOfFile: path, encoding: .utf8)
 			guard let publicKey = try? CryptorRSA.createPublicKey(withPEM: str) else {
@@ -628,7 +634,7 @@ class CryptorRSATests: XCTestCase {
 			("test_public_initWithBase64StringWhichContainsNewLines", test_public_initWithBase64StringWhichContainsNewLines),
 			("test_public_initWithPEMString", test_public_initWithPEMString),
 			("test_public_initWithPEMName", test_public_initWithPEMName),
-			("test_public_initWithDERName", test_public_initWithDERName),
+			("test_public_initWithDERName", test_public_initWithDERName),/*
 			("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless),
 			("test_publicKeysFromComplexPEMFileWorksCorrectly", test_publicKeysFromComplexPEMFileWorksCorrectly),
 			("test_publicKeysFromEmptyPEMFileReturnsEmptyArray", test_publicKeysFromEmptyPEMFileReturnsEmptyArray),
@@ -642,7 +648,7 @@ class CryptorRSATests: XCTestCase {
 			("test_longStringEncryption", test_longStringEncryption),
 			("test_randomByteEncryption", test_randomByteEncryption),
 			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
-			("test_signVerifyBase64", test_signVerifyBase64),
+			("test_signVerifyBase64", test_signVerifyBase64),*/
 		]
 	}
 }

@@ -55,8 +55,6 @@ public extension CryptorRSA {
 
 		print("createKey1")
 
-		//let keyData = keyData
-
 		// Create a memory BIO...
 		let bio = BIO_new(BIO_s_mem())
 
