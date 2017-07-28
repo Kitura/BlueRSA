@@ -231,7 +231,7 @@ public class CryptorRSA {
 					throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "SOME ERROR...")
 				}
 
-				let encrypt_len = RSA_public_encrypt(Int32(text.utf8.count), text, encrypt, key.reference, RSA_PKCS1_OAEP_PADDING)
+				let _ = RSA_public_encrypt(Int32(text.utf8.count), text, encrypt, key.reference, RSA_PKCS1_OAEP_PADDING)
 				//let encrypt_len = RSA_public_encrypt(Int32(plaintext.utf8.count), plaintext, encrypt, keypair, RSA_PKCS1_OAEP_PADDING)
 				let encrypted_str = String(cString: UnsafePointer(encrypt))
 
@@ -286,9 +286,48 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not private")
 			}
 
+
 			#if os(Linux)
 
-				throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
+
+			let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(self.data.count))
+			defer {
+				decrypted.deallocate(capacity: Int(self.data.count))
+			}
+
+
+			let mydata: UnsafePointer<UInt8> = NSData(data: self.data).bytes.assumingMemoryBound(to: UInt8.self)
+		//let f: UnsafePointer<UInt8> = (self.data as NSData).bytes
+			 let _ = RSA_private_decrypt(Int32(self.data.count), mydata, decrypted, key.reference, RSA_PKCS1_OAEP_PADDING)
+
+
+
+				let decryption_str = String(cString: UnsafePointer(decrypted))
+
+				guard let data = decryption_str.data(using: .utf8) else {
+					throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "SOME ERROR...")
+				}
+
+
+
+return PlaintextData(with: data)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 			#else
 

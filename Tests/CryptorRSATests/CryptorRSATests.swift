@@ -370,11 +370,14 @@ class CryptorRSATests: XCTestCase {
 			let str = "Plain Text"
 			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
 			print("HELLLLLLLOOOOOO1")
-			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
+			guard let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm) else {
+				XCTFail("Fail to encrypt text!")
+				return
+			}
 			print("HELLLLLLLOOOOOO2")
 			XCTAssertNotNil(encrypted)
 			print("HELLLLLLLOOOOOO3")
-			let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: algorithm)
+			let decrypted = try encrypted.decrypted(with: privateKey, algorithm: algorithm)
 			XCTAssertNotNil(decrypted)
 			let decryptedString = try decrypted!.string(using: .utf8)
 			XCTAssertEqual(decryptedString, str)
