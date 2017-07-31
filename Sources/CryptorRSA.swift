@@ -251,7 +251,8 @@ public class CryptorRSA {
 				guard let data = encryptedStr.data(using: .utf8) else {
 					throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Failed to generate Data object from encrypted text")
 				}
-
+                
+                //Maybe I should just create the data object directlyt from the bytes... see the Data init methods
 				return EncryptedData(with: data)
 
 			#else
@@ -298,44 +299,43 @@ public class CryptorRSA {
 			#if os(Linux)
 
 			let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(self.data.count))
+            let encrypted: UnsafePointer<UInt8> = NSData(data: self.data).bytes.assumingMemoryBound(to: UInt8.self)
 			defer {
 				decrypted.deallocate(capacity: Int(self.data.count))
 			}
 
+		    let decryptedDataLength = RSA_private_decrypt(Int32(self.data.count), encrypted, decrypted, key.reference, RSA_PKCS1_OAEP_PADDING)
+            print("decryptedDataLength: \(decryptedDataLength)")
+            if decryptedDataLength == -1 {
+                throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "RSA failed to decrypt data")
+            }
+                
+            let decryptedStr = String(cString: UnsafePointer(decrypted))
+                
+            print("decryptedStr: \(decryptedStr)")
 
-			let mydata: UnsafePointer<UInt8> = NSData(data: self.data).bytes.assumingMemoryBound(to: UInt8.self)
-		//let f: UnsafePointer<UInt8> = (self.data as NSData).bytes
-			 let _ = RSA_private_decrypt(Int32(self.data.count), mydata, decrypted, key.reference, RSA_PKCS1_OAEP_PADDING)
+			guard let data = decryptedStr.data(using: .utf8) else {
+                throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Failed to generate Data object from decrypted text")
+            }
 
-
-
-				let decryption_str = String(cString: UnsafePointer(decrypted))
-
-				guard let data = decryption_str.data(using: .utf8) else {
-					throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "SOME ERROR...")
-				}
-
-
-
-return PlaintextData(with: data)
-
-
+            return PlaintextData(with: data)
 
 			#else
 
 				var response: Unmanaged<CFError>? = nil
-				let pData = SecKeyCreateDecryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
+                guard let pData = SecKeyCreateDecryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response) else {
+                    throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed")
+                }
+                
 				if response != nil {
-
 					guard let error = response?.takeRetainedValue() else {
-
 						throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed. Unable to determine error.")
 					}
 
 					throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed with error: \(error)")
 				}
 
-				return PlaintextData(with: pData! as Data)
+				return PlaintextData(with: pData as Data)
 
 			#endif
 		}
