@@ -347,16 +347,18 @@ class CryptorRSATests: XCTestCase {
 	// MARK: Encyption/Decryption Tests
 
 	func test_simpleEncryption() throws {
-
+        // Get keys
 		guard let publicKey: CryptorRSA.PublicKey = try? CryptorRSATests.publicKey(name: "public") else {
 			XCTFail("publicKey was nil!")
 			return
 		}
+        
 		guard let privateKey: CryptorRSA.PrivateKey = try? CryptorRSATests.privateKey(name: "private") else {
 			return
 		}
 
-		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
+		let algorithms: [(Data.Algorithm, String)] = [
+        (.sha1, ".sha1"),
 		(.sha224, ".sha224"),
 		(.sha256, ".sha256"),
 		(.sha384, ".sha384"),
@@ -365,21 +367,24 @@ class CryptorRSATests: XCTestCase {
 		//	Note: .sha512 appears to be broken internally on Apple platforms.
 		for (algorithm, name) in algorithms {
 			print("Testing algorithm: \(name)")
-			let str = "Plain Text"
-			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
-			print("HELLLLLLLOOOOOO1")
-			guard let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm) else {
-				XCTFail("Fail to encrypt text!")
+			let txt = "Plain Text"
+			let plainText = try CryptorRSA.createPlaintext(with: txt, using: .utf8)
+			
+            guard let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm) else {
+				XCTFail("Fail to encrypt plain text!")
 				return
 			}
-			print("HELLLLLLLOOOOOO2")
 			XCTAssertNotNil(encrypted)
-			print("HELLLLLLLOOOOOO3")
-			let decrypted = try encrypted.decrypted(with: privateKey, algorithm: algorithm)
+            
+            guard let decrypted = try encrypted.decrypted(with: privateKey, algorithm: algorithm) else {
+                XCTFail("Fail to decrypt plain text!")
+                return
+            }
 			XCTAssertNotNil(decrypted)
-			let decryptedString = try decrypted!.string(using: .utf8)
-			XCTAssertEqual(decryptedString, str)
-			print("Test of algorithm: \(name) succeeded")
+			
+            let decryptedString = try decrypted.string(using: .utf8)
+			XCTAssertEqual(decryptedString, txt)
+			print("Finished running validatations for algorithm: \(name)")
 		}
 	}
 
@@ -647,8 +652,8 @@ class CryptorRSATests: XCTestCase {
 			("test_private_initWithPEMName", test_private_initWithPEMName),
 			("test_private_initWithDERName", test_private_initWithDERName),
             /////
-			("test_simpleEncryption", test_simpleEncryption),
-			("test_longStringEncryption", test_longStringEncryption),/*
+			("test_simpleEncryption", test_simpleEncryption),/*
+			("test_longStringEncryption", test_longStringEncryption),
 			("test_randomByteEncryption", test_randomByteEncryption),
 			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
 			("test_signVerifyBase64", test_signVerifyBase64) */

@@ -173,7 +173,7 @@ public class CryptorRSA {
 		}
 
 		///
-		/// Creates a message from a plaintext string, with the specified encoding.
+		/// Creates a message from a plain text string, with the specified encoding.
 		///
 		/// - Parameters:
 		///   - string: 			String value of the plaintext message
@@ -182,14 +182,14 @@ public class CryptorRSA {
 		/// - Returns:				Newly initialized `RSAData`.
 		///
 		internal init(with string: String, using encoding: String.Encoding) throws {
-
 			guard let data = string.data(using: encoding) else {
-
 				throw Error(code: CryptorRSA.ERR_STRING_ENCODING, reason: "Couldn't convert string to data using specified encoding")
 			}
 
 			self.data = data
 			self.type = .plaintextType
+            
+            print("Finished creating data from plain text")
 		}
 
 
@@ -219,46 +219,57 @@ public class CryptorRSA {
 			}
 
 			#if os(Linux)
-				//https://github.com/gtaban/simpleCrypto/blob/master/Sources/main.swift
-				//throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
-
+                //https://github.com/gtaban/simpleCrypto/blob/master/Sources/main.swift
+                print("Entering new logic for encrypting on linux...")
+                defer {
+                    print("Exiting new logic for encrypting on linux...")
+                }
+				
+			
 				let encrypt = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(RSA_size(key.reference)))
 				defer {
-    			encrypt.deallocate(capacity: Int(RSA_size(key.reference)))
+                    encrypt.deallocate(capacity: Int(RSA_size(key.reference)))
 				}
 
 				guard let text = String(data: self.data, encoding: .utf8) else {
-					throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "SOME ERROR...")
+					throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Failed to create plain text string from Data object")
 				}
+                
+                print("THIS IS THE TEXT: \(text)")
+                
+                let encryptedDataLength = RSA_public_encrypt(Int32(text.utf8.count), text, encrypt, key.reference, RSA_PKCS1_OAEP_PADDING)
+                if encryptedDataLength == -1 {
+                    throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Failed to encrypt plain text")
+                }
+                
+                print("encryptedDataLength: \(encryptedDataLength)")
+                
+				let encryptedStr = String(cString: UnsafePointer(encrypt))
+                
+                print("encryptedStr: \(encryptedStr)")
 
-				let _ = RSA_public_encrypt(Int32(text.utf8.count), text, encrypt, key.reference, RSA_PKCS1_OAEP_PADDING)
-				//let encrypt_len = RSA_public_encrypt(Int32(plaintext.utf8.count), plaintext, encrypt, keypair, RSA_PKCS1_OAEP_PADDING)
-				let encrypted_str = String(cString: UnsafePointer(encrypt))
-
-				guard let data = encrypted_str.data(using: .utf8) else {
-					throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "SOME ERROR...")
+				guard let data = encryptedStr.data(using: .utf8) else {
+					throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Failed to generate Data object from encrypted text")
 				}
 
 				return EncryptedData(with: data)
 
-
-				//RSA_public_encrypt()//int flen, const unsigned char *from, unsigned char *to, RSA *rsa, int padding);
-				//throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
 			#else
 
 				var response: Unmanaged<CFError>? = nil
-				let eData = SecKeyCreateEncryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
+                guard let eData = SecKeyCreateEncryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response) else {
+                    throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed")
+                }
+                    
 				if response != nil {
-
 					guard let error = response?.takeRetainedValue() else {
-
 						throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed. Unable to determine error.")
 					}
 
 					throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed with error: \(error)")
 				}
 
-				return EncryptedData(with: eData! as Data)
+				return EncryptedData(with: eData as Data)
 
 			#endif
 		}
@@ -276,19 +287,15 @@ public class CryptorRSA {
 
 			// Must be encrypted...
 			guard self.type == .encryptedType else {
-
 				throw Error(code: CryptorRSA.ERR_NOT_ENCRYPTED, reason: "Data is plaintext")
 			}
 
 			// Key must be private...
 			guard key.type == .privateType else {
-
 				throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not private")
 			}
 
-
 			#if os(Linux)
-
 
 			let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(self.data.count))
 			defer {
