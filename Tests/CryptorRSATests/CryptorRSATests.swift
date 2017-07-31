@@ -364,8 +364,6 @@ class CryptorRSATests: XCTestCase {
 		// Test all the algorithms available...
 		//	Note: .sha512 appears to be broken internally on Apple platforms.
 		for (algorithm, name) in algorithms {
-
-
 			print("Testing algorithm: \(name)")
 			let str = "Plain Text"
 			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
@@ -404,11 +402,9 @@ class CryptorRSATests: XCTestCase {
 		// Test all the algorithms available...
 		//	Note: .sha512 appears to be broken internally on Apple platforms.
 		for (algorithm, name) in algorithms {
-
 			print("Testing algorithm: \(name)")
 			let str = [String](repeating: "a", count: 9999).joined(separator: "")
 			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
-
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
 			let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: algorithm)
@@ -650,11 +646,12 @@ class CryptorRSATests: XCTestCase {
 			("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
 			("test_private_initWithPEMName", test_private_initWithPEMName),
 			("test_private_initWithDERName", test_private_initWithDERName),
-			("test_simpleEncryption", test_simpleEncryption),/*
-			("test_longStringEncryption", test_longStringEncryption),
+            /////
+			("test_simpleEncryption", test_simpleEncryption),
+			("test_longStringEncryption", test_longStringEncryption),/*
 			("test_randomByteEncryption", test_randomByteEncryption),
 			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
-			("test_signVerifyBase64", test_signVerifyBase64),*/
+			("test_signVerifyBase64", test_signVerifyBase64) */
 		]
 	}
 }

@@ -314,21 +314,6 @@ return PlaintextData(with: data)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 			#else
 
 				var response: Unmanaged<CFError>? = nil
@@ -364,31 +349,85 @@ return PlaintextData(with: data)
 
 			// Must be plaintext...
 			guard self.type == .plaintextType else {
-
 				throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
 			}
 
 			// Key must be private...
 			guard key.type == .privateType else {
-
 				throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "Supplied key is not private")
 			}
 
 			#if os(Linux)
+                //https://eclipsesource.com/blogs/2016/09/07/tutorial-code-signing-and-verification-with-openssl/
+                //https://wiki.openssl.org/index.php/Manual:EVP_DigestInit(3)
+                //https://wiki.openssl.org/index.php/EVP_Message_Digests???
+                //https://www.raywenderlich.com/148569/unsafe-swift
 
-				throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
+                
+                let mydata: UnsafePointer<UInt8> = NSData(data: self.data).bytes.assumingMemoryBound(to: UInt8.self)
+                //let f: UnsafePointer<UInt8> = (self.data as NSData).bytes
+				
+                let signingCtx = EVP_MD_CTX_create()
+                let evpPrivateKey = EVP_PKEY_new()
+                
+                //EVP_PKEY_assign_RSA(evpPrivateKey, key.reference)
+                EVP_PKEY_set1_RSA(evpPrivateKey, key.reference)
+                
+                if EVP_DigestSignInit(signingCtx, nil, EVP_sha256(), nil, evpPrivateKey) <= 0 {
+                    //return false;
+                }
+                
+                if EVP_DigestUpdate(signingCtx, mydata, self.data.count) <= 0 {
+                    //return false;
+                }
+                
+                
+               let encMessageLength = UnsafeMutablePointer<Int>.allocate(capacity: 1)
+               encMessageLength.initialize(to: 0, count: 1)
+                
+                defer {
+                    encMessageLength.deinitialize(count: 1)
+                    encMessageLength.deallocate(capacity: 1)
+                }
+                    
+                if EVP_DigestSignFinal(signingCtx, nil, encMessageLength) <= 0 {
+                
+                }
+                
+                //let alignment = MemoryLayout<Int>.alignment
+                //let encMsg = UnsafeMutableRawPointer.allocate(bytes: byteCount, alignedTo: alignment)
+                let encMsg = UnsafeMutablePointer<UInt8>.allocate(capacity: encMessageLength.pointee)
+                //UnsafeMutableRawPointer.allocate(bytes: encMessageLength.pointee, alignedTo: alignment)
+                
+                defer {
+                    encMsg.deinitialize(count: encMessageLength.pointee)
+                    encMsg.deallocate(capacity: encMessageLength.pointee)
+                }
+                
+                if EVP_DigestSignFinal(signingCtx, encMsg, encMessageLength) <= 0 {
+                    
+                }
+                
+                EVP_MD_CTX_cleanup(signingCtx)
+                
+                let x = UnsafeBufferPointer(start: encMsg, count: encMessageLength.pointee)
+                
+                let data = Data(x)
+                //https://stackoverflow.com/questions/42868241/how-to-construct-data-nsdata-from-unsafemutablepointert
+                return SignedData(with: data)
+                
+
+                
+               // throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
 
 			#else
 
 				var response: Unmanaged<CFError>? = nil
 				let sData = SecKeyCreateSignature(key.reference, algorithm.alogrithmForSignature, self.data as CFData, &response)
 				if response != nil {
-
 					guard let error = response?.takeRetainedValue() else {
-
 						throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed. Unable to determine error.")
 					}
-
 					throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed with error: \(error)")
 				}
 
