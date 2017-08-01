@@ -358,8 +358,6 @@ public extension CryptorRSA {
                     throw Error(code: ERR_EXTRACT_KEY_FAILED, reason: reason)
                 }
                 throw Error(code: ERR_EXTRACT_KEY_FAILED, reason: source + ": No OpenSSL error reported.")
-
-
             }
 
             guard let key = EVP_PKEY_get1_RSA(evpKey) else {

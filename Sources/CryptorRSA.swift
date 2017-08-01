@@ -164,7 +164,6 @@ public class CryptorRSA {
 		internal init(withBase64 base64String: String) throws {
 
 			guard let data = Data(base64Encoded: base64String) else {
-
 				throw Error(code: CryptorRSA.ERR_BASE64_PEM_DATA, reason: "Couldn't convert base 64 encoded string ")
 			}
 
@@ -226,34 +225,37 @@ public class CryptorRSA {
                 }
 				
 			
-				let encrypt = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(RSA_size(key.reference)))
+				let encrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(RSA_size(key.reference)))
 				defer {
-                    encrypt.deallocate(capacity: Int(RSA_size(key.reference)))
+                    encrypted.deallocate(capacity: Int(RSA_size(key.reference)))
 				}
 
+                print("Int(RSA_size(key.reference) -> \(Int(RSA_size(key.reference)))")
+                
 				guard let text = String(data: self.data, encoding: .utf8) else {
 					throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Failed to create plain text string from Data object")
 				}
                 
                 print("THIS IS THE TEXT: \(text)")
                 
-                let encryptedDataLength = RSA_public_encrypt(Int32(text.utf8.count), text, encrypt, key.reference, RSA_PKCS1_OAEP_PADDING)
+                let encryptedDataLength = RSA_public_encrypt(Int32(text.utf8.count), text, encrypted, key.reference, RSA_PKCS1_OAEP_PADDING)
                 if encryptedDataLength == -1 {
                     throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Failed to encrypt plain text")
                 }
                 
                 print("encryptedDataLength: \(encryptedDataLength)")
                 
-				let encryptedStr = String(cString: UnsafePointer(encrypt))
+                let data = Data(UnsafeBufferPointer(start: encrypted, count: Int(encryptedDataLength)))
                 
-                print("encryptedStr: \(encryptedStr)")
-
-				guard let data = encryptedStr.data(using: .utf8) else {
-					throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Failed to generate Data object from encrypted text")
-				}
+                print("1 self.data -> \(data)")
+                print("encrypted: \(encrypted)")
                 
-                //Maybe I should just create the data object directlyt from the bytes... see the Data init methods
-				return EncryptedData(with: data)
+                let t = UnsafeBufferPointer(start: encrypted, count: Int(encryptedDataLength))
+                print("t =\(t)")
+                let val = data.map { String(format: "%02x", $0) }.joined()
+                print("1 val = \(val)")
+                
+                return EncryptedData(with: data)
 
 			#else
 
@@ -268,7 +270,7 @@ public class CryptorRSA {
 					}
 
 					throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed with error: \(error)")
-				}
+                }
 
 				return EncryptedData(with: eData as Data)
 
@@ -300,6 +302,17 @@ public class CryptorRSA {
 
 			let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(self.data.count))
             let encrypted: UnsafePointer<UInt8> = NSData(data: self.data).bytes.assumingMemoryBound(to: UInt8.self)
+                
+                print("pointer: \(encrypted.pointee)")
+             print("2 encrypted: \(encrypted)")
+            print("2 self.data -> \(self.data)")
+                let val = self.data.map { String(format: "%02x", $0) }.joined()
+                print("2 val = \(val)")
+                
+                
+               // let g = self.data.subscript(0)
+               // print("g: \(g)")
+                
 			defer {
 				decrypted.deallocate(capacity: Int(self.data.count))
 			}
@@ -307,6 +320,11 @@ public class CryptorRSA {
 		    let decryptedDataLength = RSA_private_decrypt(Int32(self.data.count), encrypted, decrypted, key.reference, RSA_PKCS1_OAEP_PADDING)
             print("decryptedDataLength: \(decryptedDataLength)")
             if decryptedDataLength == -1 {
+                let source = "error"
+                if let reason = CryptorRSA.getLastError(source: source) {
+                    print("REASON: \(reason)")
+                    throw Error(code: ERR_DECRYPTION_FAILED, reason: reason)
+                }
                 throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "RSA failed to decrypt data")
             }
                 

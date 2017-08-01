@@ -354,8 +354,11 @@ class CryptorRSATests: XCTestCase {
 		}
         
 		guard let privateKey: CryptorRSA.PrivateKey = try? CryptorRSATests.privateKey(name: "private") else {
+            XCTFail("privateKey was nil!")
 			return
 		}
+        
+        
 
 		let algorithms: [(Data.Algorithm, String)] = [
         (.sha1, ".sha1"),
