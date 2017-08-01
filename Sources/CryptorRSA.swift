@@ -301,23 +301,28 @@ public class CryptorRSA {
 			#if os(Linux)
 
 			let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(self.data.count))
-            let encrypted: UnsafePointer<UInt8> = NSData(data: self.data).bytes.assumingMemoryBound(to: UInt8.self)
+            //let encrypted: UnsafePointer<UInt8> = NSData(data: self.data).bytes.assumingMemoryBound(to: UInt8.self) this does not work!!!!!!!!!!!!!!
                 
-                print("pointer: \(encrypted.pointee)")
-             print("2 encrypted: \(encrypted)")
+                
+            //print("pointer: \(encrypted.pointee)")
+             //print("2 encrypted: \(encrypted)")
             print("2 self.data -> \(self.data)")
-                let val = self.data.map { String(format: "%02x", $0) }.joined()
-                print("2 val = \(val)")
-                
-                
-               // let g = self.data.subscript(0)
-               // print("g: \(g)")
+                print("2 self.data.count: \(self.data.count)")
+               // let val = self.data.map { String(format: "%02x", $0) }.joined()
+                //print("2 val = \(val)")
                 
 			defer {
 				decrypted.deallocate(capacity: Int(self.data.count))
 			}
+                
+                let decryptedDataLength = self.data.withUnsafeBytes { (u8Ptr: UnsafePointer<UInt8>) -> Int in
+                    let length = RSA_private_decrypt(Int32(self.data.count), u8Ptr, decrypted, key.reference, RSA_PKCS1_OAEP_PADDING)
+                    // Need to null terminate the string?
+                    decrypted[Int(length)] = 0
+                    return Int(length)
+                }
 
-		    let decryptedDataLength = RSA_private_decrypt(Int32(self.data.count), encrypted, decrypted, key.reference, RSA_PKCS1_OAEP_PADDING)
+		    //let decryptedDataLength = RSA_private_decrypt(Int32(self.data.count), encrypted, decrypted, key.reference, RSA_PKCS1_OAEP_PADDING)
             print("decryptedDataLength: \(decryptedDataLength)")
             if decryptedDataLength == -1 {
                 let source = "error"
