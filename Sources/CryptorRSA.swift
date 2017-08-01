@@ -206,6 +206,9 @@ public class CryptorRSA {
 		///	- Returns:				A new optional `EncryptedData` containing the encrypted data.
 		///
 		public func encrypted(with key: PublicKey, algorithm: Data.Algorithm) throws -> EncryptedData? {
+            // References:
+            //http://openssl.6102.n7.nabble.com/How-to-encrypt-a-large-file-by-a-public-key-td2906.html
+            //https://unix.stackexchange.com/questions/12260/how-to-encrypt-messages-text-with-rsa-openssl
 
 			// Must be plaintext...
 			guard self.type == .plaintextType else {
@@ -218,43 +221,23 @@ public class CryptorRSA {
 			}
 
 			#if os(Linux)
-                //https://github.com/gtaban/simpleCrypto/blob/master/Sources/main.swift
-                print("Entering new logic for encrypting on linux...")
-                defer {
-                    print("Exiting new logic for encrypting on linux...")
-                }
-				
-			
 				let encrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(RSA_size(key.reference)))
 				defer {
                     encrypted.deallocate(capacity: Int(RSA_size(key.reference)))
 				}
 
-                print("Int(RSA_size(key.reference) -> \(Int(RSA_size(key.reference)))")
+                //print("Int(RSA_size(key.reference) -> \(Int(RSA_size(key.reference)))")
                 
 				guard let text = String(data: self.data, encoding: .utf8) else {
 					throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Failed to create plain text string from Data object")
 				}
-                
-                print("THIS IS THE TEXT: \(text)")
                 
                 let encryptedDataLength = RSA_public_encrypt(Int32(text.utf8.count), text, encrypted, key.reference, RSA_PKCS1_OAEP_PADDING)
                 if encryptedDataLength == -1 {
                     throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Failed to encrypt plain text")
                 }
                 
-                print("encryptedDataLength: \(encryptedDataLength)")
-                
                 let data = Data(UnsafeBufferPointer(start: encrypted, count: Int(encryptedDataLength)))
-                
-                print("1 self.data -> \(data)")
-                print("encrypted: \(encrypted)")
-                
-                let t = UnsafeBufferPointer(start: encrypted, count: Int(encryptedDataLength))
-                print("t =\(t)")
-                let val = data.map { String(format: "%02x", $0) }.joined()
-                print("1 val = \(val)")
-                
                 return EncryptedData(with: data)
 
 			#else
@@ -301,41 +284,22 @@ public class CryptorRSA {
 			#if os(Linux)
 
 			let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(self.data.count))
-            //let encrypted: UnsafePointer<UInt8> = NSData(data: self.data).bytes.assumingMemoryBound(to: UInt8.self) this does not work!!!!!!!!!!!!!!
-                
-                
-            //print("pointer: \(encrypted.pointee)")
-             //print("2 encrypted: \(encrypted)")
-            print("2 self.data -> \(self.data)")
-                print("2 self.data.count: \(self.data.count)")
-               // let val = self.data.map { String(format: "%02x", $0) }.joined()
-                //print("2 val = \(val)")
-                
 			defer {
 				decrypted.deallocate(capacity: Int(self.data.count))
 			}
                 
-                let decryptedDataLength = self.data.withUnsafeBytes { (u8Ptr: UnsafePointer<UInt8>) -> Int in
-                    let length = RSA_private_decrypt(Int32(self.data.count), u8Ptr, decrypted, key.reference, RSA_PKCS1_OAEP_PADDING)
-                    // Need to null terminate the string?
-                    decrypted[Int(length)] = 0
-                    return Int(length)
-                }
+            let decryptedDataLength = self.data.withUnsafeBytes { (u8Ptr: UnsafePointer<UInt8>) -> Int in
+                let length = RSA_private_decrypt(Int32(self.data.count), u8Ptr, decrypted, key.reference, RSA_PKCS1_OAEP_PADDING)
+                // It looks like we must null terminate the string...
+                decrypted[Int(length)] = 0
+                return Int(length)
+            }
 
-		    //let decryptedDataLength = RSA_private_decrypt(Int32(self.data.count), encrypted, decrypted, key.reference, RSA_PKCS1_OAEP_PADDING)
-            print("decryptedDataLength: \(decryptedDataLength)")
             if decryptedDataLength == -1 {
-                let source = "error"
-                if let reason = CryptorRSA.getLastError(source: source) {
-                    print("REASON: \(reason)")
-                    throw Error(code: ERR_DECRYPTION_FAILED, reason: reason)
-                }
                 throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "RSA failed to decrypt data")
             }
                 
             let decryptedStr = String(cString: UnsafePointer(decrypted))
-                
-            print("decryptedStr: \(decryptedStr)")
 
 			guard let data = decryptedStr.data(using: .utf8) else {
                 throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Failed to generate Data object from decrypted text")
@@ -445,9 +409,7 @@ public class CryptorRSA {
                 let data = Data(x)
                 //https://stackoverflow.com/questions/42868241/how-to-construct-data-nsdata-from-unsafemutablepointert
                 return SignedData(with: data)
-                
-
-                
+        
                // throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
 
 			#else

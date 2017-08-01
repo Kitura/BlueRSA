@@ -124,8 +124,6 @@ public extension CryptorRSA {
 
         #endif
 
-        print("createPublicKey(withBase64): \(data)")
-
 		return try PublicKey(with: data)
 	}
 
