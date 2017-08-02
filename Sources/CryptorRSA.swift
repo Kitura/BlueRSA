@@ -211,7 +211,8 @@ public class CryptorRSA {
             //https://unix.stackexchange.com/questions/12260/how-to-encrypt-messages-text-with-rsa-openssl
             //https://stackoverflow.com/questions/22373305/rsa-public-key-encryption-openssl
             
-            //Is SHA1 the only algorithm supported in OpenSSL?
+            //It seems that SHA1 is the only algorithm supported in OpenSSL for encryption...
+            //Makes me wonder if we should change this API... and/or just use OpenSSL on both platforms?
 
 			// Must be plaintext...
 			guard self.type == .plaintextType else {
@@ -228,8 +229,7 @@ public class CryptorRSA {
 				defer {
                     encrypted.deallocate(capacity: Int(RSA_size(key.reference)))
 				}
-
-                //print("Int(RSA_size(key.reference) -> \(Int(RSA_size(key.reference)))")
+                // Int(RSA_size(key.reference)) -> 128
                 
 				guard let text = String(data: self.data, encoding: .utf8) else {
 					throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Failed to create plain text string from Data object")
@@ -377,7 +377,6 @@ public class CryptorRSA {
                 
                 //TODO: use specified algorithm
                 if EVP_DigestSignInit(signingCtx, nil, algorithm.algorithmForSignature(), nil, evpPrivateKey) != 1 {
-                //if EVP_DigestSignInit(signingCtx, nil, EVP_sha256(), nil, evpPrivateKey) != 1 {
                     throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "EVP_DigestSignInit() failed")
                 }
                 
@@ -412,10 +411,8 @@ public class CryptorRSA {
                      throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "EVP_DigestSignFinal() failed")
                 }
                 
-                let x = UnsafeBufferPointer(start: encMsg, count: encMessageLength.pointee)
-                
-                let data = Data(x)
-                return SignedData(with: data)
+                let signedData = Data(UnsafeBufferPointer(start: encMsg, count: encMessageLength.pointee))
+                return SignedData(with: signedData)
 
 			#else
 
@@ -476,7 +473,6 @@ public class CryptorRSA {
                 // Initialize evpKey with public key
                 EVP_PKEY_set1_RSA(evpPublicKey, key.reference)
                 if EVP_DigestVerifyInit(signingCtx, nil, algorithm.algorithmForSignature(), nil, evpPublicKey) != 1 {
-                //if EVP_DigestVerifyInit(signingCtx, nil, EVP_sha256(), nil, evpPublicKey) != 1 {
                     throw Error(code: CryptorRSA.ERR_VERIFICATION_FAILED, reason: "EVP_DigestVerifyInit() failed")
                 }
                 
@@ -540,10 +536,8 @@ public class CryptorRSA {
 		public func string(using encoding: String.Encoding) throws -> String {
 
 			guard let str = String(data: data, encoding: encoding) else {
-
 				throw Error(code: CryptorRSA.ERR_STRING_ENCODING, reason: "Couldn't convert data to string representation")
 			}
-
 			return str
 		}
 
@@ -567,7 +561,6 @@ public class CryptorRSA {
 		/// - Returns:				Newly initialized `PlaintextData`.
 		///
 		internal init(with data: Data) {
-
 			super.init(with: data, type: .plaintextType)
 		}
 
@@ -581,7 +574,6 @@ public class CryptorRSA {
 		/// - Returns:				Newly initialized `RSAData`.
 		///
 		internal override init(with string: String, using encoding: String.Encoding) throws {
-
 			try super.init(with: string, using: encoding)
 		}
 	}
@@ -617,7 +609,6 @@ public class CryptorRSA {
 		/// - Returns:				Newly initialized `RSAData`.
 		///
 		internal override init(withBase64 base64String: String) throws {
-
 			try super.init(withBase64: base64String)
 		}
 	}
@@ -640,7 +631,6 @@ public class CryptorRSA {
 		/// - Returns:				Newly initialized `SignedData`.
 		///
 		internal init(with data: Data) {
-
 			super.init(with: data, type: .signedType)
 		}
 
