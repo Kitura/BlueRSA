@@ -369,7 +369,8 @@ class CryptorRSATests: XCTestCase {
 		(.sha384, ".sha384"),
 		/*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
-		//	Note: .sha512 appears to be broken internally on Apple platforms.
+		// Note: .sha512 appears to be broken internally on Apple platforms.
+        // OpenSSL seems to support only SHA1...
 		for (algorithm, name) in algorithms {
 			print("Testing algorithm: \(name)")
 			let txt = "Plain Text"
@@ -651,9 +652,9 @@ class CryptorRSATests: XCTestCase {
 			("test_simpleEncryption", test_simpleEncryption),
             ("test_randomByteEncryption", test_randomByteEncryption),
             ("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
-            //("test_signVerifyBase64", test_signVerifyBase64),
-			//("test_longStringEncryption", test_longStringEncryption),
-            //("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless), // is this a valid test???
+            ("test_signVerifyBase64", test_signVerifyBase64),
+            //("test_longStringEncryption", test_longStringEncryption), // is this a valid test for linux?
+            //("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless), // is this a valid test for linux?
 		]
 	}
 }
