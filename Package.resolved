@@ -1,0 +1,16 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "OpenSSL",
+        "repositoryURL": "https://github.com/IBM-Swift/OpenSSL.git",
+        "state": {
+          "branch": null,
+          "revision": "740ca278df3f4698698810c6aabf3c6d09d682d6",
+          "version": "0.3.6"
+        }
+      }
+    ]
+  },
+  "version": 1
+}
