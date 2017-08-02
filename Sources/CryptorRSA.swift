@@ -209,6 +209,9 @@ public class CryptorRSA {
             // References:
             //http://openssl.6102.n7.nabble.com/How-to-encrypt-a-large-file-by-a-public-key-td2906.html
             //https://unix.stackexchange.com/questions/12260/how-to-encrypt-messages-text-with-rsa-openssl
+            //https://stackoverflow.com/questions/22373305/rsa-public-key-encryption-openssl
+            
+            //Is SHA1 the only algorithm supported in OpenSSL?
 
 			// Must be plaintext...
 			guard self.type == .plaintextType else {
@@ -352,70 +355,72 @@ public class CryptorRSA {
 			}
 
 			#if os(Linux)
+                // References
                 //https://eclipsesource.com/blogs/2016/09/07/tutorial-code-signing-and-verification-with-openssl/
                 //https://wiki.openssl.org/index.php/Manual:EVP_DigestInit(3)
                 //https://wiki.openssl.org/index.php/EVP_Message_Digests???
                 //https://www.raywenderlich.com/148569/unsafe-swift
+                //https://stackoverflow.com/questions/42868241/how-to-construct-data-nsdata-from-unsafemutablepointert
 
-                
-                let mydata: UnsafePointer<UInt8> = NSData(data: self.data).bytes.assumingMemoryBound(to: UInt8.self)
-                //let f: UnsafePointer<UInt8> = (self.data as NSData).bytes
-				
                 let signingCtx = EVP_MD_CTX_create()
                 let evpPrivateKey = EVP_PKEY_new()
                 
+                // Release created memory
+                defer {
+                    EVP_PKEY_free(evpPrivateKey)
+                    EVP_MD_CTX_destroy(signingCtx)
+                }
+                
+                // For some reasone, EVP_PKEY_assign_RSA() is not defined...
                 //EVP_PKEY_assign_RSA(evpPrivateKey, key.reference)
                 EVP_PKEY_set1_RSA(evpPrivateKey, key.reference)
                 
-                if EVP_DigestSignInit(signingCtx, nil, EVP_sha256(), nil, evpPrivateKey) <= 0 {
-                    //return false;
+                //TODO: use specified algorithm
+                if EVP_DigestSignInit(signingCtx, nil, algorithm.algorithmForSignature(), nil, evpPrivateKey) != 1 {
+                //if EVP_DigestSignInit(signingCtx, nil, EVP_sha256(), nil, evpPrivateKey) != 1 {
+                    throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "EVP_DigestSignInit() failed")
                 }
                 
-                if EVP_DigestUpdate(signingCtx, mydata, self.data.count) <= 0 {
-                    //return false;
+                // For some reason, EVP_DigestSignUpdate() is not defined...
+                // Instead, using EVP_DigestUpdate()
+                let digestUpdateResult = self.data.withUnsafeBytes { (u8Ptr: UnsafePointer<UInt8>) -> Int in
+                    return Int(EVP_DigestUpdate(signingCtx, u8Ptr, self.data.count))
                 }
                 
+                if digestUpdateResult != 1 {
+                    throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "EVP_DigestUpdate() failed")
+                }
                 
-               let encMessageLength = UnsafeMutablePointer<Int>.allocate(capacity: 1)
-               encMessageLength.initialize(to: 0, count: 1)
-                
+                let encMessageLength = UnsafeMutablePointer<Int>.allocate(capacity: 1)
+                encMessageLength.initialize(to: 0, count: 1)
                 defer {
                     encMessageLength.deinitialize(count: 1)
                     encMessageLength.deallocate(capacity: 1)
                 }
                     
-                if EVP_DigestSignFinal(signingCtx, nil, encMessageLength) <= 0 {
-                
+                if EVP_DigestSignFinal(signingCtx, nil, encMessageLength) != 1 {
+                    throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "EVP_DigestSignFinal() failed")
                 }
                 
-                //let alignment = MemoryLayout<Int>.alignment
-                //let encMsg = UnsafeMutableRawPointer.allocate(bytes: byteCount, alignedTo: alignment)
                 let encMsg = UnsafeMutablePointer<UInt8>.allocate(capacity: encMessageLength.pointee)
-                //UnsafeMutableRawPointer.allocate(bytes: encMessageLength.pointee, alignedTo: alignment)
-                
                 defer {
                     encMsg.deinitialize(count: encMessageLength.pointee)
                     encMsg.deallocate(capacity: encMessageLength.pointee)
                 }
                 
-                if EVP_DigestSignFinal(signingCtx, encMsg, encMessageLength) <= 0 {
-                    
+                if EVP_DigestSignFinal(signingCtx, encMsg, encMessageLength) != 1 {
+                     throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "EVP_DigestSignFinal() failed")
                 }
-                
-                EVP_MD_CTX_cleanup(signingCtx)
                 
                 let x = UnsafeBufferPointer(start: encMsg, count: encMessageLength.pointee)
                 
                 let data = Data(x)
-                //https://stackoverflow.com/questions/42868241/how-to-construct-data-nsdata-from-unsafemutablepointert
                 return SignedData(with: data)
-        
-               // throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
 
 			#else
 
 				var response: Unmanaged<CFError>? = nil
-				let sData = SecKeyCreateSignature(key.reference, algorithm.alogrithmForSignature, self.data as CFData, &response)
+				let sData = SecKeyCreateSignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, &response)
 				if response != nil {
 					guard let error = response?.takeRetainedValue() else {
 						throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed. Unable to determine error.")
@@ -439,42 +444,71 @@ public class CryptorRSA {
 		///	- Returns:				True if verification is successful, false otherwise
 		///
 		public func verify(with key: PublicKey, signature: SignedData, algorithm: Data.Algorithm) throws -> Bool {
-
+            // https://wiki.openssl.org/index.php/EVP_Signing_and_Verifying
+            
 			// Must be plaintext...
 			guard self.type == .plaintextType else {
-
 				throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
 			}
 
 			// Key must be public...
 			guard key.type == .publicType else {
-
-				throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "Supplied key is not public")
+				throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not public")
 			}
+            
 			// Signature must be signed data...
 			guard signature.type == .signedType else {
-
 				throw Error(code: CryptorRSA.ERR_NOT_SIGNED_DATA, reason: "Supplied signature is not of signed data type")
 			}
 
 			#if os(Linux)
-
-				throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
+                
+                // Create message digest context
+                let signingCtx = EVP_MD_CTX_create()
+                let evpPublicKey = EVP_PKEY_new()
+                
+                // Release created memory
+                defer {
+                    EVP_PKEY_free(evpPublicKey)
+                    EVP_MD_CTX_destroy(signingCtx)
+                }
+                
+                // Initialize evpKey with public key
+                EVP_PKEY_set1_RSA(evpPublicKey, key.reference)
+                if EVP_DigestVerifyInit(signingCtx, nil, algorithm.algorithmForSignature(), nil, evpPublicKey) != 1 {
+                //if EVP_DigestVerifyInit(signingCtx, nil, EVP_sha256(), nil, evpPublicKey) != 1 {
+                    throw Error(code: CryptorRSA.ERR_VERIFICATION_FAILED, reason: "EVP_DigestVerifyInit() failed")
+                }
+                
+                let digestUpdateResult: Int = self.data.withUnsafeBytes { (u8Ptr: UnsafePointer<UInt8>) -> Int in
+                    let rawPtr = UnsafeRawPointer(u8Ptr)
+                    // For some reason, EVP_DigestVerifyUpdate() is not a defined method... instead using EVP_DigestUpdate()
+                    return Int(EVP_DigestUpdate(signingCtx, rawPtr, self.data.count))
+                }
+                
+                if digestUpdateResult != 1 {
+                     throw Error(code: CryptorRSA.ERR_VERIFICATION_FAILED, reason: "EVP_DigestUpdate() failed")
+                }
+                
+                let digestVerifyResult: Int = signature.data.withUnsafeBytes { (u8Ptr: UnsafePointer<UInt8>) -> Int in
+                    // It seems odd EVP_DigestVerifyFinal() expects a mutable pointer
+                    let u8MutablePtr = UnsafeMutablePointer<UInt8>(mutating: u8Ptr)
+                    return Int(EVP_DigestVerifyFinal(signingCtx, u8MutablePtr, signature.data.count))
+                }
+                
+                // EVP_DigestVerifyFinal() returns true if signature verification succeeds
+                return (digestVerifyResult == 1)
 
 			#else
 
 				var response: Unmanaged<CFError>? = nil
-				let result = SecKeyVerifySignature(key.reference, algorithm.alogrithmForSignature, self.data as CFData, signature.data as CFData, &response)
+				let result = SecKeyVerifySignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, signature.data as CFData, &response)
 				if response != nil {
-
 					guard let error = response?.takeRetainedValue() else {
-
 						throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Verification failed. Unable to determine error.")
 					}
-
 					throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Verification failed with error: \(error)")
 				}
-
 				return result
 
 			#endif

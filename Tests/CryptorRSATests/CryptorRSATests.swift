@@ -460,11 +460,11 @@ class CryptorRSATests: XCTestCase {
 	// MARK: Signing/Verification Tests
 
 	func test_signVerifyAllDigestTypes() throws {
-
 		guard let publicKey: CryptorRSA.PublicKey = try? CryptorRSATests.publicKey(name: "public") else {
 			XCTFail("publicKey was nil!")
 			return
 		}
+        
 		guard let privateKey: CryptorRSA.PrivateKey = try? CryptorRSATests.privateKey(name: "private") else {
 			XCTFail("privateKey was nil!")
 			return
@@ -477,7 +477,6 @@ class CryptorRSATests: XCTestCase {
 		(.sha512, ".sha512")]
 		// Test all the algorithms available...
 		for (algorithm, name) in algorithms {
-
 			print("Testing algorithm: \(name)")
 			let data = CryptorRSATests.randomData(count: 8192)
 			let message = CryptorRSA.createPlaintext(with: data)
@@ -651,9 +650,9 @@ class CryptorRSATests: XCTestCase {
 			("test_private_initWithDERName", test_private_initWithDERName),
 			("test_simpleEncryption", test_simpleEncryption),
             ("test_randomByteEncryption", test_randomByteEncryption),
+            ("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
+            //("test_signVerifyBase64", test_signVerifyBase64),
 			//("test_longStringEncryption", test_longStringEncryption),
-			//("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
-			//("test_signVerifyBase64", test_signVerifyBase64)
             //("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless), // is this a valid test???
 		]
 	}
