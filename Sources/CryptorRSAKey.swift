@@ -574,10 +574,10 @@ public extension CryptorRSA {
 			
 			let keys = matches.flatMap { result -> PublicKey? in
 				
-				#if os(Linux)
+				#if swift(>=4.0)
 					let match = result.range(at: 1)
 				#else
-					let match = result.rangeAt(1)
+					let match = result.rangeAt( 1)
 				#endif
 				let start = pemString.characters.index(pemString.startIndex, offsetBy: match.location)
 				let end = pemString.characters.index(start, offsetBy: match.length)
@@ -586,7 +586,7 @@ public extension CryptorRSA {
 				
 				let thisKey = pemString[range]
 				
-				return try? CryptorRSA.createPublicKey(withPEM: thisKey)
+				return try? CryptorRSA.createPublicKey(withPEM: String(thisKey))
 			}
 			
 			return keys
