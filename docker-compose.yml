@@ -4,4 +4,4 @@ app:
     - "8080:8080"
   volumes:
     - .:/BlueRSA
-  command: bash -c "cd /BlueRSA && swift package clean && swift build && swift test"
+  command: bash -c "cd /BlueRSA && swift package  --build-path .build-ubuntu clean && swift build  --build-path .build-ubuntu && swift test  --build-path .build-ubuntu"

@@ -2,12 +2,21 @@
   "object": {
     "pins": [
       {
+        "package": "CommonCrypto",
+        "repositoryURL": "https://github.com/IBM-Swift/CommonCrypto.git",
+        "state": {
+          "branch": null,
+          "revision": "9156d238dbc4c15455b77b45e721b2bb0b995e31",
+          "version": "0.1.5"
+        }
+      },
+      {
         "package": "OpenSSL",
         "repositoryURL": "https://github.com/IBM-Swift/OpenSSL.git",
         "state": {
           "branch": null,
-          "revision": "740ca278df3f4698698810c6aabf3c6d09d682d6",
-          "version": "0.3.6"
+          "revision": "95c405c18a071a1c13616e984ba1b3c6091ca6ca",
+          "version": "0.3.7"
         }
       }
     ]
