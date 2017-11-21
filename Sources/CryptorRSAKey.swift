@@ -129,14 +129,16 @@ public extension CryptorRSA {
 	///
 	public class func createPublicKey(withPEMNamed pemName: String, onPath path: String) throws -> PublicKey {
 		
-		var fullPath = path.appending(pemName)
-		if !path.hasSuffix(PEM_SUFFIX) {
-			
-			fullPath = fullPath.appending(PEM_SUFFIX)
-		}
-		
-		let keyString = try String(contentsOf: URL(fileURLWithPath: fullPath), encoding: .utf8)
-		
+        var certName = pemName
+        if !pemName.hasSuffix(PEM_SUFFIX) {
+            
+            certName = pemName.appending(PEM_SUFFIX)
+        }
+
+        let fullPath = URL(fileURLWithPath: #file).appendingPathComponent( path.appending(certName) ).standardized
+
+        let keyString = try String(contentsOf: fullPath, encoding: .utf8)
+
 		return try createPublicKey(withPEM: keyString)
 	}
 	
@@ -151,13 +153,15 @@ public extension CryptorRSA {
 	///
 	public class func createPublicKey(withDERNamed derName: String, onPath path: String) throws -> PublicKey {
 		
-		var fullPath = path.appending(derName)
-		if !path.hasSuffix(DER_SUFFIX) {
-			
-			fullPath = fullPath.appending(DER_SUFFIX)
-		}
+        var certName = derName
+        if !derName.hasSuffix(DER_SUFFIX) {
+            
+            certName = derName.appending(DER_SUFFIX)
+        }
+
+        let fullPath = URL(fileURLWithPath: #file).appendingPathComponent( path.appending(certName) ).standardized
 		
-		let dataIn = try Data(contentsOf: URL(fileURLWithPath: fullPath))
+		let dataIn = try Data(contentsOf: fullPath)
 		
 		#if os(Linux)
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
@@ -179,14 +183,17 @@ public extension CryptorRSA {
 	///
 	public class func createPublicKey(extractingFrom certName: String, onPath path: String) throws -> PublicKey {
 		
-		var fullPath = path.appending(certName)
-		if !path.hasSuffix(CER_SUFFIX) {
-			
-			fullPath = fullPath.appending(CER_SUFFIX)
-		}
+        var certNameFull = certName
+        if !certName.hasSuffix(CER_SUFFIX) {
+            
+            certNameFull = certName.appending(CER_SUFFIX)
+        }
+
+		//let fullPath = path.appending(certName)
+        let fullPath = URL(fileURLWithPath: #file).appendingPathComponent( path.appending(certNameFull) ).standardized
 		
 		// Import the data from the file...
-		let tmp = try String(contentsOf: URL(fileURLWithPath: fullPath))
+		let tmp = try String(contentsOf: fullPath)
 		let base64 = try CryptorRSA.base64String(for: tmp)
 		let data = Data(base64Encoded: base64)!
 		
@@ -365,13 +372,14 @@ public extension CryptorRSA {
 	///
 	public class func createPrivateKey(withPEMNamed pemName: String, onPath path: String) throws -> PrivateKey {
 		
-		var fullPath = path.appending(pemName)
-		if !path.hasSuffix(PEM_SUFFIX) {
-			
-			fullPath = fullPath.appending(PEM_SUFFIX)
-		}
+        var certName = pemName
+        if !pemName.hasSuffix(PEM_SUFFIX) {
+            
+            certName = pemName.appending(PEM_SUFFIX)
+        }
+        let fullPath = URL(fileURLWithPath: #file).appendingPathComponent( path.appending(certName) ).standardized
 		
-		let keyString = try String(contentsOf: URL(fileURLWithPath: fullPath), encoding: .utf8)
+		let keyString = try String(contentsOf: fullPath, encoding: .utf8)
 		
 		return try CryptorRSA.createPrivateKey(withPEM: keyString)
 	}
@@ -387,13 +395,14 @@ public extension CryptorRSA {
 	///
 	public class func createPrivateKey(withDERNamed derName: String, onPath path: String) throws -> PrivateKey {
 		
-		var fullPath = path.appending(derName)
-		if !path.hasSuffix(DER_SUFFIX) {
-			
-			fullPath = fullPath.appending(DER_SUFFIX)
-		}
-		
-		let dataIn = try Data(contentsOf: URL(fileURLWithPath: fullPath))
+        var certName = derName
+        if !derName.hasSuffix(DER_SUFFIX) {
+            
+            certName = derName.appending(DER_SUFFIX)
+        }
+        let fullPath = URL(fileURLWithPath: #file).appendingPathComponent( path.appending(certName) ).standardized
+
+		let dataIn = try Data(contentsOf: fullPath)
 		
 		#if os(Linux)
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .privateType)
