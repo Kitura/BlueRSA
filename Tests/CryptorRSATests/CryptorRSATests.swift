@@ -203,7 +203,6 @@ class CryptorRSATests: XCTestCase {
 
 		} else {
 			
-			//path = "./Tests/CryptorRSATests/Keys/public-headerless.pem"
             path = URL(fileURLWithPath: #file).appendingPathComponent("../keys/public-headerless.pem").standardized
 		}
 		
@@ -297,7 +296,6 @@ class CryptorRSATests: XCTestCase {
 
 		} else {
 			
-			//path = "./Tests/CryptorRSATests/Keys/private-headerless.pem"
             path = URL(fileURLWithPath: #file).appendingPathComponent("../keys/private-headerless.pem").standardized
 		}
 		
@@ -476,8 +474,11 @@ class CryptorRSATests: XCTestCase {
 		
 		} else {
 			
-			let pubPath = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".pem"))
-			return (try! NSString(contentsOfFile: pubPath, encoding: String.Encoding.utf8.rawValue)) as String
+			let pubPath = "../../CryptorRSATests/Keys/".appending(name.appending(".pem"))
+            let fullPath = URL(fileURLWithPath: #file).appendingPathComponent( pubPath ).standardized
+            print ("fullPath = \(fullPath.path) ")
+            
+			return (try! NSString(contentsOfFile: fullPath.path, encoding: String.Encoding.utf8.rawValue )) as String
 		}
 	}
 	
@@ -490,7 +491,7 @@ class CryptorRSATests: XCTestCase {
 		
 		} else {
 			
-			let pubPath = "./Tests/CryptorRSATests/Keys/".appending(name.appending(".der"))
+			let pubPath = "../../Tests/CryptorRSATests/Keys/".appending(name.appending(".der"))
 			return (try! Data(contentsOf: URL(fileURLWithPath: pubPath)))
 		}
 	}
