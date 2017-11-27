@@ -305,7 +305,7 @@ extension String {
 		collectedCharacters.reserveCapacity(length)
 		var count = 0
 		
-		for character in self.characters {
+		for character in self {
 			collectedCharacters.append(character)
 			count += 1
 			if (count == length) {
