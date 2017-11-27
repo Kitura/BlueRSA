@@ -171,7 +171,7 @@ class CryptorRSATests: XCTestCase {
 		
 		} else {
 			
-			let publicKey = try? CryptorRSA.createPublicKey(withPEMNamed: "public", onPath: "../../Tests/CryptorRSATests/keys/")
+			let publicKey = try? CryptorRSA.createPublicKey(withPEMNamed: "public", onPath: "../../../Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(publicKey)
 		}
 	}
@@ -185,7 +185,7 @@ class CryptorRSATests: XCTestCase {
 			
 		} else {
 			
-			let publicKey = try? CryptorRSA.createPublicKey(withDERNamed: "public", onPath: "../../Tests/CryptorRSATests/keys/")
+			let publicKey = try? CryptorRSA.createPublicKey(withDERNamed: "public", onPath: "../../../Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(publicKey)
 		}
 		
@@ -238,7 +238,7 @@ class CryptorRSATests: XCTestCase {
 			
 		} else {
 			
-			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging", onPath: "../../Tests/CryptorRSATests/keys/")
+			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging", onPath: "../../../Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(publicKey)
 		}
 		
@@ -253,7 +253,7 @@ class CryptorRSATests: XCTestCase {
 			
 		} else {
 			
-			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging2", onPath: "../../Tests/CryptorRSATests/keys/")
+			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging2", onPath: "../../../Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(publicKey)
 		}
 		
@@ -314,7 +314,7 @@ class CryptorRSATests: XCTestCase {
 			
 		} else {
 			
-			let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", onPath: "../../Tests/CryptorRSATests/keys/")
+			let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", onPath: "../../../Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(privateKey)
 		}
 		
@@ -329,7 +329,7 @@ class CryptorRSATests: XCTestCase {
 			
 		} else {
 			
-			let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", onPath: "../../Tests/CryptorRSATests/keys/")
+			let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", onPath: "../../../Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(privateKey)
 		}
 		
