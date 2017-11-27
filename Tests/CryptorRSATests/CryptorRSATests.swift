@@ -20,6 +20,10 @@
 //
 
 import XCTest
+#if os(Linux)
+    import OpenSSL
+#endif
+
 @testable import CryptorRSA
 
 @available(macOS 10.12, iOS 10.0, *)
@@ -470,15 +474,14 @@ class CryptorRSATests: XCTestCase {
 		if useBundles {
 			
 			let pubPath = bundle.path(forResource: name, ofType: "pem")!
-			return (try! NSString(contentsOfFile: pubPath, encoding: String.Encoding.utf8.rawValue)) as String
-		
+            return (try! String(contentsOfFile: pubPath, encoding: String.Encoding.utf8))
+
 		} else {
 			
 			let pubPath = "../../CryptorRSATests/Keys/".appending(name.appending(".pem"))
             let fullPath = URL(fileURLWithPath: #file).appendingPathComponent( pubPath ).standardized
-            print ("fullPath = \(fullPath.path) ")
             
-			return (try! NSString(contentsOfFile: fullPath.path, encoding: String.Encoding.utf8.rawValue )) as String
+            return (try! String(contentsOfFile: fullPath.path, encoding: String.Encoding.utf8))
 		}
 	}
 	
@@ -537,7 +540,11 @@ class CryptorRSATests: XCTestCase {
 		var data = Data(capacity: count)
 		data.withUnsafeMutableBytes { (bytes: UnsafeMutablePointer<UInt8>) -> Void in
 			
-			_ = SecRandomCopyBytes(kSecRandomDefault, count, bytes)
+            #if os(Linux)
+                _ = RAND_bytes(bytes, Int32(count))
+            #else
+                _ = SecRandomCopyBytes(kSecRandomDefault, count, bytes)
+            #endif
 		}
 		return data
 	}

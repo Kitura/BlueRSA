@@ -567,19 +567,11 @@ public extension CryptorRSA {
 				length: pemString.count
 			)
 			
-			#if os(Linux)
-				let matches = publicKeyRegexp.matches(
-					in: pemString,
-					options: NSMatchingOptions(rawValue: 0),
-					range: all
-				)
-			#else
-				let matches = publicKeyRegexp.matches(
-					in: pemString,
-					options: NSRegularExpression.MatchingOptions(rawValue: 0),
-					range: all
-				)
-			#endif
+            let matches = publicKeyRegexp.matches(
+                in: pemString,
+                options: NSRegularExpression.MatchingOptions(rawValue: 0),
+                range: all
+            )
 			
 			let keys = matches.flatMap { result -> PublicKey? in
 				
