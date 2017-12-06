@@ -47,10 +47,29 @@ class CryptorRSATests: XCTestCase {
         static let bundle: Bundle? = Bundle(for: CryptorRSATests.self)
     #endif
     
+    static public func getFilePath(for resource: String, ofType: String) -> URL? {
+        
+        var path: URL
+        
+        if CryptorRSATests.useBundles, let bundle = CryptorRSATests.bundle {
+            guard let bPath = bundle.path(forResource: resource, ofType: ofType) else {
+                
+                return nil
+            }
+            path = URL(fileURLWithPath: bPath)
+            
+        } else {
+            
+            path = URL(fileURLWithPath: #file).appendingPathComponent("../keys/" + resource + "." + ofType).standardized
+        }
+        
+        return path
+    }
 
+    
 	func test_public_initWithData() throws {
 		
-        let path = CryptorRSATests.getFilePath(forFilename: "public", ofType: "der")
+        let path = CryptorRSATests.getFilePath(for: "public", ofType: "der")
         XCTAssertNotNil(path)
         
         if let filePath = path {
@@ -63,7 +82,7 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_public_initWithCertData() throws {
 		
-		let path = CryptorRSATests.getFilePath(forFilename: "staging", ofType: "cer")
+		let path = CryptorRSATests.getFilePath(for: "staging", ofType: "cer")
         XCTAssertNotNil(path)
         
         if let filePath = path {
@@ -76,7 +95,7 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_public_initWithCertData2() throws {
 		
-		let path = CryptorRSATests.getFilePath(forFilename: "staging2", ofType: "cer")
+		let path = CryptorRSATests.getFilePath(for: "staging2", ofType: "cer")
         XCTAssertNotNil(path)
         
         if let filePath = path {
@@ -89,7 +108,7 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_public_initWithBase64String() throws {
 		
-        let path = CryptorRSATests.getFilePath(forFilename: "public-base64", ofType: "txt")
+        let path = CryptorRSATests.getFilePath(for: "public-base64", ofType: "txt")
         XCTAssertNotNil(path)
         
         if let filePath = path {
@@ -103,7 +122,7 @@ class CryptorRSATests: XCTestCase {
 
 	func test_public_initWithBase64StringWhichContainsNewLines() throws {
 		
-        let path = CryptorRSATests.getFilePath(forFilename: "public-base64-newlines", ofType: "txt")
+        let path = CryptorRSATests.getFilePath(for: "public-base64-newlines", ofType: "txt")
         XCTAssertNotNil(path)
         
         if let filePath = path {
@@ -116,7 +135,7 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_public_initWithPEMString() throws {
 		
-        let path = CryptorRSATests.getFilePath(forFilename: "public", ofType: "pem")
+        let path = CryptorRSATests.getFilePath(for: "public", ofType: "pem")
         XCTAssertNotNil(path)
         
         if let filePath = path {
@@ -162,7 +181,7 @@ class CryptorRSATests: XCTestCase {
     
 	func test_public_initWithPEMStringHeaderless() throws {
 		
-        let path = CryptorRSATests.getFilePath(forFilename: "public-headerless", ofType: "pem")
+        let path = CryptorRSATests.getFilePath(for: "public-headerless", ofType: "pem")
         XCTAssertNotNil(path)
         
         if let filePath = path {
@@ -226,7 +245,7 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_private_initWithPEMString() throws {
 		
-        let path = CryptorRSATests.getFilePath(forFilename: "private", ofType: "pem")
+        let path = CryptorRSATests.getFilePath(for: "private", ofType: "pem")
         XCTAssertNotNil(path)
         
         if let filePath = path {
@@ -239,7 +258,7 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_private_initWithPEMStringHeaderless() throws {
 		
-        let path = CryptorRSATests.getFilePath(forFilename: "private-headerless", ofType: "pem")
+        let path = CryptorRSATests.getFilePath(for: "private-headerless", ofType: "pem")
         XCTAssertNotNil(path)
         
         if let filePath = path {
@@ -414,7 +433,7 @@ class CryptorRSATests: XCTestCase {
 	
 	static public func pemKeyString(name: String) -> String {
 		
-        let path = CryptorRSATests.getFilePath(forFilename: name, ofType: "pem")
+        let path = CryptorRSATests.getFilePath(for: name, ofType: "pem")
         XCTAssertNotNil(path)
         
         return (try! String(contentsOfFile: path!.path, encoding: String.Encoding.utf8))
@@ -422,7 +441,7 @@ class CryptorRSATests: XCTestCase {
 	
 	static public func derKeyData(name: String) -> Data {
 		
-        let path = CryptorRSATests.getFilePath(forFilename: name, ofType: "der")
+        let path = CryptorRSATests.getFilePath(for: name, ofType: "der")
         XCTAssertNotNil(path)
         
         return (try! Data(contentsOf: URL(fileURLWithPath: path!.path)))
@@ -430,7 +449,7 @@ class CryptorRSATests: XCTestCase {
 	
 	static public func publicKey(name: String) throws -> CryptorRSA.PublicKey {
 		
-        let path = CryptorRSATests.getFilePath(forFilename: name, ofType: "pem")
+        let path = CryptorRSATests.getFilePath(for: name, ofType: "pem")
         XCTAssertNotNil(path)
         
         let pemString = try String(contentsOf: path!, encoding: String.Encoding.ascii)
@@ -439,7 +458,7 @@ class CryptorRSATests: XCTestCase {
 	
 	static public func privateKey(name: String) throws -> CryptorRSA.PrivateKey {
 		
-        let path = CryptorRSATests.getFilePath(forFilename: name, ofType: "pem")
+        let path = CryptorRSATests.getFilePath(for: name, ofType: "pem")
         XCTAssertNotNil(path)
         
         let pemString = try String(contentsOf: path!, encoding: String.Encoding.ascii)
@@ -460,27 +479,6 @@ class CryptorRSATests: XCTestCase {
 		return data
 	}
 	
-    
-
-    static public func getFilePath(forFilename: String, ofType: String) -> URL? {
-        
-        var path: URL
-        
-        if CryptorRSATests.useBundles, let bundle = CryptorRSATests.bundle {
-            guard let bPath = bundle.path(forResource: forFilename, ofType: ofType) else {
-    
-                return nil
-            }
-            path = URL(fileURLWithPath: bPath)
-    
-        } else {
-    
-            path = URL(fileURLWithPath: #file).appendingPathComponent("../keys/" + forFilename + "." + ofType).standardized
-        }
-        
-        return path
-    }
-    
 	// MARK: Test Lists for Linux
 	
 
