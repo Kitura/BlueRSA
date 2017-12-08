@@ -20,8 +20,8 @@
 //
 
 import XCTest
-@testable import BlueRSATests
+@testable import CryptorRSATests
 
 XCTMain([
-     testCase(BlueRSATests.allTests),
+     testCase(CryptorRSATests.allTests),
 ])
