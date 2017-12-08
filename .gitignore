@@ -3,3 +3,6 @@
 /Packages
 /*.xcodeproj
 CommonCrypto
+/Package.pins
+/Package.resolved
+
