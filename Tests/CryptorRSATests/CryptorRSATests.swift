@@ -28,7 +28,8 @@ import XCTest
 
 @available(macOS 10.12, iOS 10.0, *)
 class CryptorRSATests: XCTestCase {
-    
+	
+	/// Test for bundle usage.
     static var useBundles: Bool {
         if let bundle = CryptorRSATests.bundle {
             let path = bundle.path(forResource: "public", ofType: "der")
@@ -38,15 +39,21 @@ class CryptorRSATests: XCTestCase {
         }
     }
     
-    // MARK: Public Key Tests
-    
-
     #if os(Linux)
         static let bundle: Bundle? = nil
     #else
         static let bundle: Bundle? = Bundle(for: CryptorRSATests.self)
     #endif
-    
+	
+	///
+	/// Platform independent utility function to locate test files.
+	///
+	/// - Parameters:
+	///		- resource:			The name of the resource to find.
+	///		- ofType:			The type (i.e. extension) of the resource.
+	///
+	///	- Returns:	URL for the resource or nil if a path to the resource cannot be found.
+	///
     static public func getFilePath(for resource: String, ofType: String) -> URL? {
         
         var path: URL
@@ -67,6 +74,8 @@ class CryptorRSATests: XCTestCase {
     }
 
     
+	// MARK: Public Key Tests
+	
 	func test_public_initWithData() throws {
 		
         let path = CryptorRSATests.getFilePath(for: "public", ofType: "der")
@@ -177,6 +186,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 	}
+	
     #endif //!os(Linux)
     
 	func test_public_initWithPEMStringHeaderless() throws {
@@ -210,6 +220,7 @@ class CryptorRSATests: XCTestCase {
 	}
 	
     #if !os(Linux)
+	
 	func test_public_initWithCertificateName() throws {
 		
 		if CryptorRSATests.useBundles, let bundle = CryptorRSATests.bundle {
@@ -270,6 +281,7 @@ class CryptorRSATests: XCTestCase {
 	}
 	
     #if !os(Linux)
+	
 	func test_private_initWithPEMName() throws {
 		
 		if CryptorRSATests.useBundles, let bundle = CryptorRSATests.bundle {
@@ -299,6 +311,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 	}
+	
     #endif
     
 	// MARK: Encyption/Decryption Tests
@@ -314,7 +327,7 @@ class CryptorRSATests: XCTestCase {
 		                                              (.sha384, ".sha384"),
 		                                              /*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
-		//	Note: .sha512 appears to be broken internally on Apple platforms.
+		//	Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
 		for (algorithm, name) in algorithms {
 		
 			print("Testing algorithm: \(name)")
@@ -339,7 +352,7 @@ class CryptorRSATests: XCTestCase {
 		                                              (.sha384, ".sha384"),
 		                                              /*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
-		//	Note: .sha512 appears to be broken internally on Apple platforms.
+		//	Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
 		for (algorithm, name) in algorithms {
 			
 			print("Testing algorithm: \(name)")
@@ -364,7 +377,7 @@ class CryptorRSATests: XCTestCase {
 		                                              (.sha384, ".sha384"),
 		                                              /*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
-		//	Note: .sha512 appears to be broken internally on Apple platforms.
+		//	Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
 		for (algorithm, name) in algorithms {
 			
 			print("Testing algorithm: \(name)")
@@ -481,31 +494,32 @@ class CryptorRSATests: XCTestCase {
 	
 	// MARK: Test Lists for Linux
 	
-
 	static var allTests : [(String, (CryptorRSATests) -> () throws -> Void)] {
         return [
-//            ("test_public_initWithData", test_public_initWithData),
-//            ("test_public_initWithCertData", test_public_initWithCertData),
-//            ("test_public_initWithCertData2", test_public_initWithCertData2),
-//            ("test_public_initWithBase64String", test_public_initWithBase64String),
-//            ("test_public_initWithBase64StringWhichContainsNewLines", test_public_initWithBase64StringWhichContainsNewLines),
-//            ("test_public_initWithPEMString", test_public_initWithPEMString),
-//            ("test_public_initWithPEMName", test_public_initWithPEMName),
-//            ("test_public_initWithDERName", test_public_initWithDERName),
-//            ("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless),
-//            ("test_publicKeysFromComplexPEMFileWorksCorrectly", test_publicKeysFromComplexPEMFileWorksCorrectly),
-//            ("test_publicKeysFromEmptyPEMFileReturnsEmptyArray", test_publicKeysFromEmptyPEMFileReturnsEmptyArray),
-//            ("test_public_initWithCertificateName", test_public_initWithCertificateName),
-//            ("test_public_initWithCertificateName2", test_public_initWithCertificateName2),
-//            ("test_private_initWithPEMString", test_private_initWithPEMString),
-//            ("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
-//            ("test_private_initWithPEMName", test_private_initWithPEMName),
-//            ("test_private_initWithDERName", test_private_initWithDERName),
-//            ("test_simpleEncryption", test_simpleEncryption),
-//            ("test_longStringEncryption", test_longStringEncryption),
-//            ("test_randomByteEncryption", test_randomByteEncryption),
-//            ("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
-//            ("test_signVerifyBase64", test_signVerifyBase64),
+			/*
+            ("test_public_initWithData", test_public_initWithData),
+            ("test_public_initWithCertData", test_public_initWithCertData),
+            ("test_public_initWithCertData2", test_public_initWithCertData2),
+            ("test_public_initWithBase64String", test_public_initWithBase64String),
+            ("test_public_initWithBase64StringWhichContainsNewLines", test_public_initWithBase64StringWhichContainsNewLines),
+            ("test_public_initWithPEMString", test_public_initWithPEMString),
+            ("test_public_initWithPEMName", test_public_initWithPEMName),
+            ("test_public_initWithDERName", test_public_initWithDERName),
+            ("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless),
+            ("test_publicKeysFromComplexPEMFileWorksCorrectly", test_publicKeysFromComplexPEMFileWorksCorrectly),
+            ("test_publicKeysFromEmptyPEMFileReturnsEmptyArray", test_publicKeysFromEmptyPEMFileReturnsEmptyArray),
+            ("test_public_initWithCertificateName", test_public_initWithCertificateName),
+            ("test_public_initWithCertificateName2", test_public_initWithCertificateName2),
+            ("test_private_initWithPEMString", test_private_initWithPEMString),
+            ("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
+            ("test_private_initWithPEMName", test_private_initWithPEMName),
+            ("test_private_initWithDERName", test_private_initWithDERName),
+            ("test_simpleEncryption", test_simpleEncryption),
+            ("test_longStringEncryption", test_longStringEncryption),
+            ("test_randomByteEncryption", test_randomByteEncryption),
+            ("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
+            ("test_signVerifyBase64", test_signVerifyBase64),
+			*/
         ]
     }
 }
