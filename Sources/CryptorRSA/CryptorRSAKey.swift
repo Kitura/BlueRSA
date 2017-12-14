@@ -71,6 +71,9 @@ public extension CryptorRSA {
 	///
 	public class func createPublicKey(extractingFrom data: Data) throws -> PublicKey {
 		
+        // TODO: possibly no base64 for linux?
+        print(#function + "- potential base64 problems")
+        
 		// Extact the data as a base64 string...
 		let str = String(data: data, encoding: .utf8)
 		guard let tmp = str else {
@@ -95,11 +98,16 @@ public extension CryptorRSA {
 	///
 	public class func createPublicKey(withBase64 base64String: String) throws -> PublicKey {
 		
+        // TODO: possibly problems here
+        print(#function + "- potential problems")
+        
 		guard let data = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
 			
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string")
 		}
-		
+
+        print(#function + "- calling with \(data)")
+
 		return try PublicKey(with: data)
 	}
 	
@@ -113,9 +121,19 @@ public extension CryptorRSA {
 	///
 	public class func createPublicKey(withPEM pemString: String) throws -> PublicKey {
 		
-		let base64String = try CryptorRSA.base64String(for: pemString)
-		
-		return try createPublicKey(withBase64: base64String)
+        #if os(Linux)
+            // openssl takes the full PEM format
+            let keyData = pemString.data(using: String.Encoding.utf8)!
+
+            return try PublicKey(with: keyData)
+            
+        #else
+            // SecKey needs the PEM format stripped off the header info and converted to base64
+            let base64String = try CryptorRSA.base64String(for: pemString)
+                print("base64String = \(base64String ) ")
+            
+            return try createPublicKey(withBase64: base64String)
+        #endif
 	}
 	
 	///
@@ -129,6 +147,8 @@ public extension CryptorRSA {
 	///
 	public class func createPublicKey(withPEMNamed pemName: String, onPath path: String) throws -> PublicKey {
 		
+        print("\(#function): pemName = \(pemName) ")
+        
         var certName = pemName
         if !pemName.hasSuffix(PEM_SUFFIX) {
             
@@ -183,6 +203,9 @@ public extension CryptorRSA {
 	///
 	public class func createPublicKey(extractingFrom certName: String, onPath path: String) throws -> PublicKey {
 		
+        // TODO: changes
+        print(#function + "- potential problems")
+        
         var certNameFull = certName
         if !certName.hasSuffix(CER_SUFFIX) {
             
@@ -284,10 +307,11 @@ public extension CryptorRSA {
 	///
 	internal class func createPublicKey(data: Data) throws -> PublicKey {
 		
+        print(#function + " update ")
 		#if os(Linux)
 			
-			throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
-			
+            throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
+            
 		#else
 		
 			// Create a certificate from the data...
@@ -356,9 +380,20 @@ public extension CryptorRSA {
 	///
 	public class func createPrivateKey(withPEM pemString: String) throws -> PrivateKey {
 		
-		let base64String = try CryptorRSA.base64String(for: pemString)
-		
-		return try CryptorRSA.createPrivateKey(withBase64: base64String)
+        print(#function)
+        #if os(Linux)
+            // openssl takes the full PEM format
+            let keyData = pemString.data(using: String.Encoding.utf8)!
+            
+            return try PrivateKey(with: keyData)
+
+        #else
+            // SecKey needs the PEM format stripped off the header info and converted to base64
+
+            let base64String = try CryptorRSA.base64String(for: pemString)
+            
+            return try CryptorRSA.createPrivateKey(withBase64: base64String)
+        #endif
 	}
 	
 	///
@@ -507,6 +542,7 @@ public extension CryptorRSA {
 			#if !os(Linux)
 				let data = try CryptorRSA.stripPublicKeyHeader(for: data)
 			#endif
+            print(#function)
 			reference = try CryptorRSA.createKey(from: data, type: type)
 		}
 		
@@ -605,6 +641,7 @@ public extension CryptorRSA {
 		///
 		public init(with data: Data) throws {
 			
+            print(#function)
 			try super.init(with: data, type: .publicType)
 		}
 	
