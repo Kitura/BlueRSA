@@ -37,9 +37,6 @@ public extension CryptorRSA {
 	
 #if os(Linux)
 	
-	/// Both the private and public key PEM read function take exactly the same parameters.  This alias makes is easier to reference and use in code.
-	typealias RSAKeyReader = ((UnsafeMutablePointer<BIO>?, UnsafeMutablePointer<UnsafeMutablePointer<RSA>?>?, (@convention(c) (UnsafeMutablePointer<Int8>?, Int32, Int32, UnsafeMutableRawPointer?) -> Int32)?, UnsafeMutableRawPointer?) -> UnsafeMutablePointer<RSA>!)
-	
 	///
 	/// Create a key from key data.
 	///
@@ -55,41 +52,49 @@ public extension CryptorRSA {
 	
 		// Create a memory BIO...
 		let bio = BIO_new(BIO_s_mem())
-		
-		defer {
-			BIO_free(bio)
-		}
+        defer {
+            BIO_free(bio)
+        }
 	
-		// Move the key data to it...
-		keyData.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
+		// create a BIO object with the key data
+		try keyData.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
 			
-			BIO_write(bio, buffer, Int32(keyData.count))
-	
+			let len = BIO_write(bio, buffer, Int32(keyData.count))
+            guard len != 0 else {
+                let source = "Couldn't create BIO reference from key data"
+                if let reason = CryptorRSA.getLastError(source: source) {
+    
+                    throw Error(code: ERR_ADD_KEY, reason: reason)
+                }
+                throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+            }
 			// The below is equivalent of BIO_flush...
-			BIO_ctrl(bio, BIO_CTRL_FLUSH, 0, nil)
-	
-			return
+            BIO_ctrl(bio, BIO_CTRL_FLUSH, 0, nil)
 		}
-	
-		// It's base64 data...
-		BIO_set_flags(bio, BIO_FLAGS_BASE64_NO_NL)
-	
-		// Get the right function depending on the type of key...
-		let keyReader: RSAKeyReader = type == .publicType ? PEM_read_bio_RSA_PUBKEY : PEM_read_bio_RSAPrivateKey
+    
+        var evp_key: UnsafeMutablePointer<EVP_PKEY>
+        defer {
+        EVP_PKEY_free(evp_key)
+        }
 
-		// Read the key in...
-		let key = keyReader(bio, nil, nil, nil)
-		
-		if key == nil {
-	
-			let source = "Couldn't create key reference from key data"
-			if let reason = CryptorRSA.getLastError(source: source) {
-				
-				throw Error(code: ERR_ADD_KEY, reason: reason)
-			}
-			throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
-		}
-		
+        // Read in the key data and process depending on key type
+        if type == .publicType {
+            evp_key = PEM_read_bio_PUBKEY(bio, nil, nil, nil)
+
+        } else {
+            evp_key = PEM_read_bio_PrivateKey(bio, nil, nil, nil)
+        }
+
+        let key = EVP_PKEY_get1_RSA( evp_key)
+        if ( key == nil ) {
+            let source = "Couldn't create key reference from key data"
+            if let reason = CryptorRSA.getLastError(source: source) {
+    
+                throw Error(code: ERR_ADD_KEY, reason: reason)
+            }
+            throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+        }
+
 		return key!
 	}
 	
@@ -166,7 +171,7 @@ public extension CryptorRSA {
 	static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  NativeKey {
 		
 		var keyData = keyData
-		
+        
 		let keyClass = type == .publicType ? kSecAttrKeyClassPublic : kSecAttrKeyClassPrivate
 		
 		let sizeInBits = keyData.count * MemoryLayout<UInt8>.size
@@ -180,7 +185,7 @@ public extension CryptorRSA {
 			
 			throw Error(code: ERR_ADD_KEY, reason: "Couldn't create key reference from key data")
 		}
-		
+        
 		return key
 		
 	}
@@ -222,7 +227,7 @@ public extension CryptorRSA {
 	///
 	/// - Returns:					`Data` containing the public with header (if present) removed.
 	///
-	static func stripPublicKeyHeader(for keyData: Data) throws -> Data {
+	static func stripX509CertificateHeader(for keyData: Data) throws -> Data {
 		
 		let count = keyData.count / MemoryLayout<CUnsignedChar>.size
 		

@@ -89,6 +89,7 @@ class CryptorRSATests: XCTestCase {
         }
 	}
 	
+    // Certificate is PEM
 	func test_public_initWithCertData() throws {
 		
 		let path = CryptorRSATests.getFilePath(for: "staging", ofType: "cer")
@@ -102,6 +103,7 @@ class CryptorRSATests: XCTestCase {
         }
 	}
 	
+    // Certificate is PEM
 	func test_public_initWithCertData2() throws {
 		
 		let path = CryptorRSATests.getFilePath(for: "staging2", ofType: "cer")
@@ -115,6 +117,7 @@ class CryptorRSATests: XCTestCase {
         }
 	}
 	
+    // Public key is base64 encoded DER
 	func test_public_initWithBase64String() throws {
 		
         let path = CryptorRSATests.getFilePath(for: "public-base64", ofType: "txt")
@@ -155,9 +158,6 @@ class CryptorRSATests: XCTestCase {
         }
 	}
 	
-    // The following tests are macOS only since Bundles are not yet fully implemented in Linux
-    #if !os(Linux)
-    
 	func test_public_initWithPEMName() throws {
 		
 		if CryptorRSATests.useBundles, let bundle = CryptorRSATests.bundle {
@@ -186,9 +186,8 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 	}
-	
-    #endif //!os(Linux)
-    
+
+    // Why do we need to test this?
 	func test_public_initWithPEMStringHeaderless() throws {
 		
         let path = CryptorRSATests.getFilePath(for: "public-headerless", ofType: "pem")
@@ -219,8 +218,7 @@ class CryptorRSATests: XCTestCase {
 		XCTAssertEqual(keys.count, 0)
 	}
 	
-    #if !os(Linux)
-	
+
 	func test_public_initWithCertificateName() throws {
 		
 		if CryptorRSATests.useBundles, let bundle = CryptorRSATests.bundle {
@@ -250,7 +248,6 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 	}
-    #endif
 	
 	// MARK: Private Key Tests
 	
@@ -279,8 +276,6 @@ class CryptorRSATests: XCTestCase {
             XCTAssertTrue(privateKey!.type == .privateType)
         }
 	}
-	
-    #if !os(Linux)
 	
 	func test_private_initWithPEMName() throws {
 		
@@ -311,9 +306,7 @@ class CryptorRSATests: XCTestCase {
 		}
 		
 	}
-	
-    #endif
-    
+
 	// MARK: Encyption/Decryption Tests
 	
     let publicKey: CryptorRSA.PublicKey = try! CryptorRSATests.publicKey(name: "public")
@@ -496,7 +489,6 @@ class CryptorRSATests: XCTestCase {
 	
 	static var allTests : [(String, (CryptorRSATests) -> () throws -> Void)] {
         return [
-			/*
             ("test_public_initWithData", test_public_initWithData),
             ("test_public_initWithCertData", test_public_initWithCertData),
             ("test_public_initWithCertData2", test_public_initWithCertData2),
@@ -505,21 +497,22 @@ class CryptorRSATests: XCTestCase {
             ("test_public_initWithPEMString", test_public_initWithPEMString),
             ("test_public_initWithPEMName", test_public_initWithPEMName),
             ("test_public_initWithDERName", test_public_initWithDERName),
-            ("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless),
-            ("test_publicKeysFromComplexPEMFileWorksCorrectly", test_publicKeysFromComplexPEMFileWorksCorrectly),
+//            ("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless),
+//            ("test_publicKeysFromComplexPEMFileWorksCorrectly", test_publicKeysFromComplexPEMFileWorksCorrectly),
             ("test_publicKeysFromEmptyPEMFileReturnsEmptyArray", test_publicKeysFromEmptyPEMFileReturnsEmptyArray),
             ("test_public_initWithCertificateName", test_public_initWithCertificateName),
             ("test_public_initWithCertificateName2", test_public_initWithCertificateName2),
             ("test_private_initWithPEMString", test_private_initWithPEMString),
-            ("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
+
+//            ("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
             ("test_private_initWithPEMName", test_private_initWithPEMName),
             ("test_private_initWithDERName", test_private_initWithDERName),
-            ("test_simpleEncryption", test_simpleEncryption),
-            ("test_longStringEncryption", test_longStringEncryption),
-            ("test_randomByteEncryption", test_randomByteEncryption),
-            ("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
-            ("test_signVerifyBase64", test_signVerifyBase64),
-			*/
+//            ("test_simpleEncryption", test_simpleEncryption),
+//            ("test_longStringEncryption", test_longStringEncryption),
+//            ("test_randomByteEncryption", test_randomByteEncryption),
+//            ("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
+//            ("test_signVerifyBase64", test_signVerifyBase64),
         ]
     }
 }
+
