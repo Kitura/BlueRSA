@@ -107,7 +107,7 @@ public extension Data {
 		#if !os(Linux)
 			
 			@available(macOS 10.12, iOS 10.0, *)
-			public var alogrithmForSignature: SecKeyAlgorithm {
+			public var algorithmForSignature: SecKeyAlgorithm {
 					
 				switch self {
 						

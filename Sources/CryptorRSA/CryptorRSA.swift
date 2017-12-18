@@ -319,7 +319,7 @@ public class CryptorRSA {
 			#else
 				
 				var response: Unmanaged<CFError>? = nil
-				let sData = SecKeyCreateSignature(key.reference, algorithm.alogrithmForSignature, self.data as CFData, &response)
+				let sData = SecKeyCreateSignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, &response)
 				if response != nil {
 				
 					guard let error = response?.takeRetainedValue() else {
@@ -371,7 +371,7 @@ public class CryptorRSA {
 			#else
 				
 				var response: Unmanaged<CFError>? = nil
-				let result = SecKeyVerifySignature(key.reference, algorithm.alogrithmForSignature, self.data as CFData, signature.data as CFData, &response)
+				let result = SecKeyVerifySignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, signature.data as CFData, &response)
 				if response != nil {
 				
 					guard let error = response?.takeRetainedValue() else {
