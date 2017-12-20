@@ -104,7 +104,30 @@ public extension Data {
 			#endif
 		}
 		
-		#if !os(Linux)
+		#if os(Linux)
+            public var algorithmForSignature: (UnsafePointer<EVP_MD>, Int32) {
+        
+                switch self {
+        
+                case .sha1:
+                    return (EVP_sha1(), RSA_PKCS1_PADDING)
+        
+                case .sha224:
+                    return (EVP_sha224(), RSA_PKCS1_PADDING)
+        
+                case .sha256:
+                    return (EVP_sha256(), RSA_PKCS1_PADDING)
+
+                case .sha384:
+                    return (EVP_sha384(), RSA_PKCS1_PADDING)
+
+                case .sha512:
+                    return (EVP_sha512(), RSA_PKCS1_PADDING)
+
+                }
+            }
+
+        #else
 			
 			@available(macOS 10.12, iOS 10.0, *)
 			public var algorithmForSignature: SecKeyAlgorithm {

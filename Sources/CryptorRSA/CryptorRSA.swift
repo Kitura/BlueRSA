@@ -21,6 +21,10 @@
 
 import Foundation
 
+#if os(Linux)
+    import OpenSSL
+#endif
+
 // MARK: -
 
 // MARK: -
@@ -313,9 +317,51 @@ public class CryptorRSA {
 			}
 			
 			#if os(Linux)
-				
-				throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
-				
+                
+                // EVP_MD_CTX_create() renamed to _new
+                let md_ctx = EVP_MD_CTX_create()
+                defer {
+                    EVP_MD_CTX_destroy(md_ctx)
+                }
+                
+                let (md, _) = algorithm.algorithmForSignature // (md, padding)
+                // TODO. Add the padding option. Right now we are ignoring it
+
+                // convert RSA key to EVP
+                let  evp_key = EVP_PKEY_new()
+                var rc = EVP_PKEY_set1_RSA(evp_key, key.reference)
+                guard rc == 1 else {
+                    let source = "Couldn't create key reference from key data"
+                    if let reason = CryptorRSA.getLastError(source: source) {
+                        
+                        throw Error(code: ERR_ADD_KEY, reason: reason)
+                    }
+                    throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+                }
+                
+                // Determine the size of the signature
+                var sig_len: Int = Int(EVP_PKEY_size(evp_key))
+                let sig = UnsafeMutablePointer<UInt8>.allocate(capacity: sig_len)
+                
+                EVP_DigestSignInit(md_ctx, nil, md, nil, evp_key)
+
+                // convert Data to UnsafeRawPointer!
+                _ = self.data.withUnsafeBytes({ (message: UnsafePointer<UInt8>) -> Int32 in
+                    return EVP_DigestUpdate(md_ctx, message, self.data.count)
+                })
+                
+                rc = EVP_DigestSignFinal(md_ctx, sig, &sig_len)
+                guard rc == 1 else {
+                    let source = "Couldn't create key reference from key data"
+                    if let reason = CryptorRSA.getLastError(source: source) {
+                        
+                        throw Error(code: ERR_SIGNING_FAILED, reason: reason)
+                    }
+                    throw Error(code: ERR_SIGNING_FAILED, reason: source + ": No OpenSSL error reported.")
+                }
+
+                return SignedData(with: Data(bytes: sig, count: sig_len))
+
 			#else
 				
 				var response: Unmanaged<CFError>? = nil
@@ -366,7 +412,46 @@ public class CryptorRSA {
 			
 			#if os(Linux)
 				
-				throw Error(code: ERR_NOT_IMPLEMENTED, reason: "Not implemented yet.")
+                let md_ctx = EVP_MD_CTX_create()
+                defer {
+                    EVP_MD_CTX_destroy(md_ctx)
+                }
+
+                let (md, _) = algorithm.algorithmForSignature // (md, padding)
+                // TODO. Add the padding option. Right now we are ignoring it
+                
+                // convert RSA key to EVP
+                let  evp_key = EVP_PKEY_new()
+                var rc = EVP_PKEY_set1_RSA(evp_key, key.reference)
+                guard rc == 1 else {
+                    let source = "Couldn't create key reference from key data"
+                    if let reason = CryptorRSA.getLastError(source: source) {
+                        
+                        throw Error(code: ERR_ADD_KEY, reason: reason)
+                    }
+                    throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+                }
+
+                EVP_DigestVerifyInit(md_ctx, nil, md, nil, evp_key)
+                
+                rc = self.data.withUnsafeBytes({ (message: UnsafePointer<UInt8>) -> Int32 in
+                    return EVP_DigestUpdate(md_ctx, message, self.data.count)
+                })
+                guard rc == 1 else {
+                    let source = "Couldn't create key reference from key data"
+                    if let reason = CryptorRSA.getLastError(source: source) {
+                        
+                        throw Error(code: ERR_VERIFICATION_FAILED, reason: reason)
+                    }
+                    throw Error(code: ERR_VERIFICATION_FAILED, reason: source + ": No OpenSSL error reported.")
+                }
+
+                // Unlike other return values above, this return indicates if signature verifies or not
+                rc = signature.data.withUnsafeBytes({ (sig: UnsafePointer<UInt8>) -> Int32 in
+                    return EVP_DigestVerifyFinal(md_ctx, sig, signature.data.count)
+                })
+                
+                return (rc == 1) ? true : false
 				
 			#else
 				
@@ -376,10 +461,10 @@ public class CryptorRSA {
 				
 					guard let error = response?.takeRetainedValue() else {
 					
-						throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Verification failed. Unable to determine error.")
+						throw Error(code: CryptorRSA.ERR_VERIFICATION_FAILED, reason: "Verification failed. Unable to determine error.")
 					}
 				
-					throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Verification failed with error: \(error)")
+					throw Error(code: CryptorRSA.ERR_VERIFICATION_FAILED, reason: "Verification failed with error: \(error)")
 				}
 			
 				return result
