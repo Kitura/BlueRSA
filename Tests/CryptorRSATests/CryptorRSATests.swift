@@ -187,7 +187,7 @@ class CryptorRSATests: XCTestCase {
 		
 	}
 
-    // Why do we need to test this?
+    // This function tests stripping a PEM string that's already been stripped...
 	func test_public_initWithPEMStringHeaderless() throws {
 		
         let path = CryptorRSATests.getFilePath(for: "public-headerless", ofType: "pem")
@@ -497,21 +497,21 @@ class CryptorRSATests: XCTestCase {
             ("test_public_initWithPEMString", test_public_initWithPEMString),
             ("test_public_initWithPEMName", test_public_initWithPEMName),
             ("test_public_initWithDERName", test_public_initWithDERName),
-//            ("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless),
-//            ("test_publicKeysFromComplexPEMFileWorksCorrectly", test_publicKeysFromComplexPEMFileWorksCorrectly),
+//			("test_public_initWithPEMStringHeaderless", test_public_initWithPEMStringHeaderless),
+//			("test_publicKeysFromComplexPEMFileWorksCorrectly", test_publicKeysFromComplexPEMFileWorksCorrectly),
             ("test_publicKeysFromEmptyPEMFileReturnsEmptyArray", test_publicKeysFromEmptyPEMFileReturnsEmptyArray),
             ("test_public_initWithCertificateName", test_public_initWithCertificateName),
             ("test_public_initWithCertificateName2", test_public_initWithCertificateName2),
             ("test_private_initWithPEMString", test_private_initWithPEMString),
 
-//            ("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
+//			("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
             ("test_private_initWithPEMName", test_private_initWithPEMName),
             ("test_private_initWithDERName", test_private_initWithDERName),
-//            ("test_simpleEncryption", test_simpleEncryption),
-//            ("test_longStringEncryption", test_longStringEncryption),
-//            ("test_randomByteEncryption", test_randomByteEncryption),
-//            ("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
-//            ("test_signVerifyBase64", test_signVerifyBase64),
+//			("test_simpleEncryption", test_simpleEncryption),
+//			("test_longStringEncryption", test_longStringEncryption),
+//			("test_randomByteEncryption", test_randomByteEncryption),
+//			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
+//			("test_signVerifyBase64", test_signVerifyBase64),
         ]
     }
 }
