@@ -53,7 +53,7 @@ public extension CryptorRSA {
 	public static let ERR_EXTRACT_PUBLIC_KEY_FAILED		= -9983
 	public static let ERR_EXTRACT_PRIVATE_KEY_FAILED	= -9983
 	public static let ERR_NOT_IMPLEMENTED				= -9982
-	
+    
 	// MARK: -- Error
 	
 	///
