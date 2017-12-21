@@ -320,6 +320,7 @@ public class CryptorRSA {
                 
                 // EVP_MD_CTX_create() renamed to _new
                 let md_ctx = EVP_MD_CTX_create()
+				
                 defer {
                     EVP_MD_CTX_destroy(md_ctx)
                 }
@@ -345,7 +346,7 @@ public class CryptorRSA {
                 
                 EVP_DigestSignInit(md_ctx, nil, md, nil, evp_key)
 
-                // convert Data to UnsafeRawPointer!
+                // Convert Data to UnsafeRawPointer!
                 _ = self.data.withUnsafeBytes({ (message: UnsafePointer<UInt8>) -> Int32 in
                     return EVP_DigestUpdate(md_ctx, message, self.data.count)
                 })

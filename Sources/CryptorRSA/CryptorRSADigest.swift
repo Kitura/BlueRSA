@@ -180,6 +180,7 @@ public extension Data {
 		/// The platform/alogorithm dependent function to be used.
 		/// (UnsafePointer<UInt8>!, Int, UnsafeMutablePointer<UInt8>!) -> UnsafeMutablePointer<UInt8>!
 		#if os(Linux)
+		
 			public var engine: (_ data: UnsafePointer<UInt8>, _ len: CC_LONG, _ md: UnsafeMutablePointer<UInt8>) -> UnsafeMutablePointer<UInt8>! {
 			
 				switch self {

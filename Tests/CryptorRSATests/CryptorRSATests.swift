@@ -510,8 +510,8 @@ class CryptorRSATests: XCTestCase {
 //			("test_simpleEncryption", test_simpleEncryption),
 //			("test_longStringEncryption", test_longStringEncryption),
 //			("test_randomByteEncryption", test_randomByteEncryption),
-			  ("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
-			  ("test_signVerifyBase64", test_signVerifyBase64),
+			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
+			("test_signVerifyBase64", test_signVerifyBase64),
         ]
     }
 }
