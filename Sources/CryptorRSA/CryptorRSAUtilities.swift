@@ -52,11 +52,12 @@ public extension CryptorRSA {
 	
 		// Create a memory BIO...
 		let bio = BIO_new(BIO_s_mem())
+	
         defer {
             BIO_free(bio)
         }
 	
-		// create a BIO object with the key data
+		// Create a BIO object with the key data...
 		try keyData.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
 			
 			let len = BIO_write(bio, buffer, Int32(keyData.count))
@@ -73,20 +74,22 @@ public extension CryptorRSA {
 		}
     
         var evp_key: UnsafeMutablePointer<EVP_PKEY>
+	
         defer {
-        EVP_PKEY_free(evp_key)
+        	EVP_PKEY_free(evp_key)
         }
 
-        // Read in the key data and process depending on key type
+        // Read in the key data and process depending on key type...
         if type == .publicType {
             evp_key = PEM_read_bio_PUBKEY(bio, nil, nil, nil)
 
         } else {
+	
             evp_key = PEM_read_bio_PrivateKey(bio, nil, nil, nil)
         }
 
         let key = EVP_PKEY_get1_RSA( evp_key)
-        if ( key == nil ) {
+        if key == nil {
             let source = "Couldn't create key reference from key data"
             if let reason = CryptorRSA.getLastError(source: source) {
     

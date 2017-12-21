@@ -57,8 +57,11 @@ public extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(with data: Data) throws -> PublicKey {
+		
         #if os(Linux)
+			
             let data = CryptorRSA.convertDerToPem(from: data, type: .publicType)
+			
         #endif
 
         return try PublicKey(with: data)
@@ -74,9 +77,8 @@ public extension CryptorRSA {
 	///
 	public class func createPublicKey(extractingFrom data: Data) throws -> PublicKey {
 		
-        #if os(Linux)
-            return try CryptorRSA.createPublicKey(data: data)
-        #else
+        #if !os(Linux)
+			
             // Extact the data as a base64 string...
             let str = String(data: data, encoding: .utf8)
             guard let tmp = str else {
@@ -84,13 +86,15 @@ public extension CryptorRSA {
                 throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data, incorrect format.")
             }
             
-            // Get the Base64 representation of the PEM encoded string after stripping off the PEM markers
+            // Get the Base64 representation of the PEM encoded string after stripping off the PEM markers...
             let base64 = try CryptorRSA.base64String(for: tmp)
             let data = Data(base64Encoded: base64)!
             
-            // Call the internal function to finish up...
-            return try CryptorRSA.createPublicKey(data: data)
         #endif
+		
+		// Call the internal function to finish up...
+		return try CryptorRSA.createPublicKey(data: data)
+		
 	}
 	
 	///
@@ -109,9 +113,12 @@ public extension CryptorRSA {
 		}
         
         #if os(Linux)
-            // OpenSSL uses the PEM version when importing key
+			
+            // OpenSSL uses the PEM version when importing key...
             data = CryptorRSA.convertDerToPem(from: data, type: .publicType)
+			
         #endif
+		
         return try PublicKey(with: data)
 	}
 	
@@ -126,16 +133,19 @@ public extension CryptorRSA {
 	public class func createPublicKey(withPEM pemString: String) throws -> PublicKey {
 		
         #if os(Linux)
-            // openssl takes the full PEM format
+			
+            // OpenSSL takes the full PEM format...
             let keyData = pemString.data(using: String.Encoding.utf8)!
 
             return try PublicKey(with: keyData)
             
         #else
+			
             // Get the Base64 representation of the PEM encoded string after stripping off the PEM markers
             let base64String = try CryptorRSA.base64String(for: pemString)
             
             return try createPublicKey(withBase64: base64String)
+			
         #endif
 	}
 	
@@ -185,9 +195,13 @@ public extension CryptorRSA {
 		let dataIn = try Data(contentsOf: fullPath)
 		
 		#if os(Linux)
+			
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
+			
 		#else
+			
 			let data = dataIn
+			
 		#endif
 		
 		return try PublicKey(with: data)
@@ -215,17 +229,20 @@ public extension CryptorRSA {
 		
 		// Import the data from the file...
         #if os(Linux)
+			
             // In OpenSSL, we can just get the data and don't have to worry about stripping off headers etc.
             let data = try Data(contentsOf: fullPath)
-            return try CryptorRSA.createPublicKey(data: data)
+			
         #else
-            // Get the Base64 representation of the PEM encoded string after stripping off the PEM markers
+			
+            // Get the Base64 representation of the PEM encoded string after stripping off the PEM markers...
             let tmp = try String(contentsOf: fullPath, encoding: .utf8)
             let base64 = try CryptorRSA.base64String(for: tmp)
             let data = Data(base64Encoded: base64)!
             
-            return try CryptorRSA.createPublicKey(data: data)
         #endif
+		
+		return try CryptorRSA.createPublicKey(data: data)
 	}
 	
 	///
@@ -268,9 +285,13 @@ public extension CryptorRSA {
 		let dataIn = try Data(contentsOf: URL(fileURLWithPath: path))
 		
 		#if os(Linux)
+			
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
+			
 		#else
+			
 			let data = dataIn
+			
 		#endif
 		
 		return try PublicKey(with: data)
@@ -352,14 +373,13 @@ public extension CryptorRSA {
                 throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error getting public key from certificate")
             }
             defer {
-//                RSA_free(key)
+//				RSA_free(key)
                 EVP_PKEY_free(evp_key)
             }
-            return PublicKey(with: key!)
 
 		#else
 		
-			// Create a DER-encoded X.509 certificate object from the DER data
+			// Create a DER-encoded X.509 certificate object from the DER data...
 			let certificateData = SecCertificateCreateWithData(nil, data as CFData)
 			guard let certData = certificateData else {
 			
@@ -370,7 +390,7 @@ public extension CryptorRSA {
 			var key: SecKey? = nil
 			let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
                 
-                // Retrieves the public key from a certificate
+                // Retrieves the public key from a certificate...
 				SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
 			}
 			if status != errSecSuccess || key == nil {
@@ -378,9 +398,10 @@ public extension CryptorRSA {
 				throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
 			}
 			
-			return PublicKey(with: key!)
-		
 		#endif
+
+		return PublicKey(with: key!)
+		
 	}
 
 	// MARK: -- Private Key Creation
@@ -427,17 +448,19 @@ public extension CryptorRSA {
 	public class func createPrivateKey(withPEM pemString: String) throws -> PrivateKey {
 		
         #if os(Linux)
-            // openssl takes the full PEM format
+			
+            // OpenSSL takes the full PEM format...
             let keyData = pemString.data(using: String.Encoding.utf8)!
             
             return try PrivateKey(with: keyData)
 
         #else
-            // SecKey needs the PEM format stripped off the header info and converted to base64
-
+			
+            // SecKey needs the PEM format stripped of the header info and converted to base64...
             let base64String = try CryptorRSA.base64String(for: pemString)
             
             return try CryptorRSA.createPrivateKey(withBase64: base64String)
+			
         #endif
 	}
 	
@@ -485,9 +508,13 @@ public extension CryptorRSA {
 		let dataIn = try Data(contentsOf: fullPath)
 		
 		#if os(Linux)
+			
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .privateType)
+			
 		#else
+			
 			let data = dataIn
+			
 		#endif
 		
 		return try PrivateKey(with: data)
@@ -583,10 +610,13 @@ public extension CryptorRSA {
 			
 			self.type = type
 
-            // On macOS, we need to strip off the X509 header if it exists.
+            // On macOS, we need to strip off the X509 header if it exists...
 			#if !os(Linux)
+				
 				let data = try CryptorRSA.stripX509CertificateHeader(for: data)
+				
 			#endif
+			
 			reference = try CryptorRSA.createKey(from: data, type: type)
 		}
 		
