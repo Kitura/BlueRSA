@@ -439,7 +439,7 @@ public class CryptorRSA {
                     return EVP_DigestUpdate(md_ctx, message, self.data.count)
                 })
                 guard rc == 1 else {
-                    let source = "Couldn't create key reference from key data"
+                    let source = "Signature verification failed."
                     if let reason = CryptorRSA.getLastError(source: source) {
                         
                         throw Error(code: ERR_VERIFICATION_FAILED, reason: reason)
