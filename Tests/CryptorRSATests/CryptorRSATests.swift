@@ -507,9 +507,9 @@ class CryptorRSATests: XCTestCase {
 //			("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
             ("test_private_initWithPEMName", test_private_initWithPEMName),
             ("test_private_initWithDERName", test_private_initWithDERName),
-//			("test_simpleEncryption", test_simpleEncryption),
-//			("test_longStringEncryption", test_longStringEncryption),
-//			("test_randomByteEncryption", test_randomByteEncryption),
+            ("test_simpleEncryption", test_simpleEncryption),
+            ("test_longStringEncryption", test_longStringEncryption),
+            ("test_randomByteEncryption", test_randomByteEncryption),
 			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
 			("test_signVerifyBase64", test_signVerifyBase64),
         ]
