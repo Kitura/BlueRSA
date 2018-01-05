@@ -263,7 +263,7 @@ public class CryptorRSA {
                 var encLength: Int32 = 0
                 
                 // Initializes a cipher context ctx for encryption with cipher type using a random secret key and IV.
-                // The secret key is encrypted using the public key (can be a set of public keys)
+                // The secret key is encrypted using the public key (evp_key can be an array of public keys)
                 // Here we are using just 1 public key
                 var status = EVP_SealInit(rsaEncryptCtx, enc, ekPtr, &encKeyLength, iv, &evp_key, 1)
                 
