@@ -216,6 +216,8 @@ Once the `EncryptedData` object is created, there is an instance function that c
 
 - `decrypted(with key: PrivateKey, algorithm: Data.Algorithm) throws -> DecryptedData?` - This function allows you to decrypt containing data using the public `key` and `algorithm` specified.  This function returns an optional `DecryptedData` object containing the encryped data.
 
+BlueRSA currently supports `OAEP` padding, which is the recommended padding algorithm. 
+
 **Example**
 
 - *Decryption*: **Note**: Exception handling omitted for brevity.

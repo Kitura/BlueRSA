@@ -105,6 +105,8 @@ public extension Data {
 		}
 		
 		#if os(Linux)
+        
+            // Hash, padding type
             public var algorithmForSignature: (UnsafePointer<EVP_MD>, Int32) {
         
                 switch self {
@@ -124,6 +126,29 @@ public extension Data {
                 case .sha512:
                     return (EVP_sha512(), RSA_PKCS1_PADDING)
 
+                }
+            }
+
+            // HMAC type, symmetric encryption, padding type
+            public var alogrithmForEncryption: (UnsafePointer<EVP_MD>, UnsafePointer<EVP_CIPHER>, Int32) {
+        
+                switch self {
+        
+                case .sha1:
+                    return (EVP_sha1(), EVP_aes_256_cbc(), RSA_PKCS1_OAEP_PADDING)
+        
+                case .sha224:
+                    return (EVP_sha224(), EVP_aes_256_cbc(), RSA_PKCS1_OAEP_PADDING)
+        
+                case .sha256:
+                    return (EVP_sha256(), EVP_aes_256_cbc(), RSA_PKCS1_OAEP_PADDING)
+        
+                case .sha384:
+                    return (EVP_sha384(), EVP_aes_256_cbc(), RSA_PKCS1_OAEP_PADDING)
+        
+                case .sha512:
+                    return (EVP_sha512(), EVP_aes_128_gcm(), RSA_PKCS1_OAEP_PADDING)
+        
                 }
             }
 
