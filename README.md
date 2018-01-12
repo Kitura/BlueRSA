@@ -9,7 +9,7 @@
 # BlueRSA
 
 ## Overview
-Swift cross-platform RSA wrapper library for RSA encryption and signing. Works on supported Apple platforms (using Security framework).  Linux (using OpenSSL) to come.
+Swift cross-platform RSA wrapper library for RSA encryption and signing. Works on supported Apple platforms (using Security framework).  Linux (using OpenSSL) is working but is still a work in progress.
 
 ## Contents
 
