@@ -728,7 +728,7 @@ public class CryptorRSA {
 		///
 		/// - Returns:				Newly initialized EncryptedData`.
 		///
-		internal init(with data: Data) {
+		public init(with data: Data) {
 			
 			super.init(with: data, type: .encryptedType)
 		}
@@ -741,7 +741,7 @@ public class CryptorRSA {
 		///
 		/// - Returns:				Newly initialized `RSAData`.
 		///
-		internal override init(withBase64 base64String: String) throws {
+		public override init(withBase64 base64String: String) throws {
 		
 			try super.init(withBase64: base64String)
 		}
@@ -764,7 +764,7 @@ public class CryptorRSA {
 		///
 		/// - Returns:				Newly initialized `SignedData`.
 		///
-		internal init(with data: Data) {
+		public init(with data: Data) {
 			
 			super.init(with: data, type: .signedType)
 		}
