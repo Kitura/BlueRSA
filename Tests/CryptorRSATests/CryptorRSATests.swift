@@ -473,7 +473,7 @@ class CryptorRSATests: XCTestCase {
 	
 	static public func randomData(count: Int) -> Data {
 		
-		var data = Data(capacity: count)
+		var data = Data(count: count)
 		data.withUnsafeMutableBytes { (bytes: UnsafeMutablePointer<UInt8>) -> Void in
 			
             #if os(Linux)
