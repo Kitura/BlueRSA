@@ -561,6 +561,7 @@ class CryptorRSATests: XCTestCase {
             ("test_randomByteEncryption", test_randomByteEncryption),
 			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
 			("test_signVerifyBase64", test_signVerifyBase64),
+            ("test_verifyAppIDToken", test_verifyAppIDToken),
         ]
     }
 }
