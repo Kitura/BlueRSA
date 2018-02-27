@@ -40,6 +40,7 @@ Swift cross-platform RSA wrapper library for RSA encryption and signing. Works o
 * **Work in progress**
 * Ubuntu 16.04 (or 16.10 but only tested on 16.04)
 * One of the Swift Open Source toolchains listed above
+* OpenSSL 1.0.x is provided by the distribution.  **Note:** Only the 1.0.x releases of OpenSSL are currently supported.
 
 ## Build
 
