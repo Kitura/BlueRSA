@@ -430,7 +430,56 @@ class CryptorRSATests: XCTestCase {
 			print("Test of algorithm: \(name) succeeded")
 		}
 	}
-	
+
+    func test_verifyAppIDToken() throws {
+        
+        let certificatePEM = """
+            -----BEGIN PUBLIC KEY-----
+            MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAn4Tw7golPpKj+VSQIiRT
+            RApbtCMyn28btLu9nHQzf32J1niY/uJZZbo5O+MsekNPHu5qmLBFCS0M3HcYeKAk
+            OZtu7z9W1Lkronpt7WBWu+7qnGZm2vPw9rOUflZjGS5Qh9RinPJ9S5tnOrO5VapA
+            7Rb2Q6EU3scgsDFvVaxBERf6IuDXgwYZp+tCcmBccEDBIfQ44mvu/6dHPwAUICJw
+            3y/S4hqv2VEDslEdAJm2kj+WRIYooFBPVlp7371iVZtmV9cStBLW5igBvePe5ots
+            lU7tI2NCoSxFONjF+kGxO2S8mbBzADTBXaAE7clHorp6nRj8rIxHzD0V3+W8mp2W
+            1QIDAQAB
+            -----END PUBLIC KEY-----
+            """
+        
+        let tokenPublicKey = try? CryptorRSA.createPublicKey(withPEM: certificatePEM)
+        XCTAssertNotNil(tokenPublicKey)
+        XCTAssertTrue(tokenPublicKey!.type == .publicType)
+        
+        let token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpPU0UiLCJraWQiOiJhcHBJZC0xNTA0Njg1OTYxMDAwIn0.eyJpc3MiOiJhcHBpZC1vYXV0aC5uZy5ibHVlbWl4Lm5ldCIsImF1ZCI6IjUzOGU4NTI2YTcwNDdjMWM5ZTEzNDZhYzQ1MjA2NmQxYmE1ZmQzNTEiLCJleHAiOjE1MTgxOTkzNTgsInRlbmFudCI6ImQ3YmMzMjJjLWIyMjQtNDFjMS05MWVhLWZjNjM4YWUyYWQ0ZCIsImlhdCI6MTUxODE5NTc1OCwiZW1haWwiOiJhYXJvbi5saWJlcmF0b3JlQGdtYWlsLmNvbSIsIm5hbWUiOiJBYXJvbiBMaWJlcmF0b3JlIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS8tWGRVSXFkTWtDV0EvQUFBQUFBQUFBQUkvQUFBQUFBQUFBQUEvNDI1MnJzY2J2NU0vcGhvdG8uanBnIiwic3ViIjoiNGZiOTY0NDUtMGIzYy00Mzg2LWI3MmEtNTk2YmIzYTlkNDUwIiwiaWRlbnRpdGllcyI6W3sicHJvdmlkZXIiOiJnb29nbGUiLCJpZCI6IjEwODQ2MDkwMTMxMTMxNzgyOTg4NCJ9XSwiYW1yIjpbImdvb2dsZSJdLCJvYXV0aF9jbGllbnQiOnsibmFtZSI6IldhdHNvbiBUb25lIEFuYWx5emVyIFJLQUpHIiwidHlwZSI6Im1vYmlsZWFwcCIsInNvZnR3YXJlX2lkIjoiY29tLmlibS5XYXRzb25Ub25lQW5hbHl6ZXJSS0FKRyIsInNvZnR3YXJlX3ZlcnNpb24iOiIxLjAiLCJkZXZpY2VfaWQiOiI3QTk2QjJDQi1DNkI4LTRCNTYtQjA0Ri1FMTMwQjZDMkUxMUMiLCJkZXZpY2VfbW9kZWwiOiJpUGhvbmUiLCJkZXZpY2Vfb3MiOiJpT1MiLCJkZXZpY2Vfb3NfdmVyc2lvbiI6IjExLjIifX0.RTK5wV0b0mtbRayKg9IdGCnGXoA7bn4Gdx-YIQjaaELWJwpla2x1R1hMvL5It-MKMt_pyejzkdoTKR3v_VF4IMwnBWz83d0u6TVs28TbrgHAkXy6sAypIfEKc4gLOSHXkUBYREH2pbJSguxZNTwqKe_PKRSYtG0QrtffPUsESfnGkdfHdUsSigMjX5s5En8fLCGiNSQF2uyYREDFE6T0w5P3W5MR_Scloyhik1q7nv91PzlJ6Rn9_0F12zjzvPMTt7bobTdokaFVPcqjFWHJc4YCw-bzdBCxtzHxf3oVXeJzCzPNb_nOehZu-u7ue54NbYwcoZ_bokmsjCnQbFE_QA";
+        
+        let tokenParts = token.split(separator: ".")
+        // JWT token should have 3 parts
+        XCTAssertTrue(tokenParts.count == 3)
+        
+        // Signed message is the first two components of the token
+        let messageData = (String(tokenParts[0] + "." + tokenParts[1]).data(using: String.Encoding(rawValue: String.Encoding.utf8.rawValue))!)
+        XCTAssertNotNil(messageData)
+        
+        // signature is 3rd component
+        let sigStr = String(tokenParts[2])
+        // JWT gets rid of any base64 padding, so add padding to allow for proper decoding
+        var sig = sigStr.padding(toLength: ((sigStr.count+3)/4)*4, withPad: "=", startingAt: 0)
+        
+        // JWT also does base64url encoding, so make the proper replacements so its proper base64 encoding
+        sig = sig.replacingOccurrences(of: "-", with: "+")
+        sig = sig.replacingOccurrences(of: "_", with: "/")
+        let sigData = Data(base64Encoded: sig)!
+        XCTAssertNotNil(sigData)
+        
+        let message = CryptorRSA.createPlaintext(with: messageData)
+        XCTAssertNotNil(message)
+        
+        let signature = CryptorRSA.createSigned(with: sigData)
+        XCTAssertNotNil(signature)
+        
+        let verificationResult = try message.verify(with: tokenPublicKey!, signature: signature, algorithm: .sha256)
+        XCTAssertTrue(verificationResult)
+    }
+
 	// MARK: Test Utilities
 	
 	struct TestError: Error {
@@ -473,7 +522,7 @@ class CryptorRSATests: XCTestCase {
 	
 	static public func randomData(count: Int) -> Data {
 		
-		var data = Data(capacity: count)
+		var data = Data(count: count)
 		data.withUnsafeMutableBytes { (bytes: UnsafeMutablePointer<UInt8>) -> Void in
 			
             #if os(Linux)
@@ -512,6 +561,7 @@ class CryptorRSATests: XCTestCase {
             ("test_randomByteEncryption", test_randomByteEncryption),
 			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
 			("test_signVerifyBase64", test_signVerifyBase64),
+            ("test_verifyAppIDToken", test_verifyAppIDToken),
         ]
     }
 }
