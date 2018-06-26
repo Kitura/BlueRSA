@@ -33,7 +33,12 @@ before_install:
 
 script:
   - openssl version
-  - sudo apt-get update
-  - sudo apt-get upgrade openssl
+  - wget http://www.openssl.org/source/openssl-1.0.2g.tar.gz
+  - tar -xvzf openssl-1.0.2g.tar.gz
+  - cd openssl-1.0.2g
+  - ./config --prefix=/usr/
+  - make
+  - sudo make install
+  - cd ..
   - openssl version
   - ./Package-Builder/build-package.sh -projectDir $TRAVIS_BUILD_DIR
