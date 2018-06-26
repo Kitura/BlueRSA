@@ -32,4 +32,5 @@ before_install:
   - git clone https://github.com/IBM-Swift/Package-Builder.git
 
 script:
+  - openssl version
   - ./Package-Builder/build-package.sh -projectDir $TRAVIS_BUILD_DIR
