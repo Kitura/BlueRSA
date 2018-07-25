@@ -693,7 +693,7 @@ public extension CryptorRSA {
 				let start = pemString.index(pemString.startIndex, offsetBy: match.location)
 				let end = pemString.index(start, offsetBy: match.length)
 				
-				let range = Range<String.Index>(start..<end)
+				let range = start..<end
 				
 				let thisKey = pemString[range]
 				
