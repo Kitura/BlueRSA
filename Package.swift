@@ -30,7 +30,7 @@ import PackageDescription
 #elseif os(Linux)
 	
 	let CryptoLibUrl = "https://github.com/IBM-Swift/OpenSSL.git"
-    let CryptoLibVersion: Version = "1.0.0"
+    let CryptoLibVersion: String = "issue.BlueRSAFailure"
 	
 #else
 	
@@ -48,7 +48,7 @@ let package = Package(
         )
     ],
 	dependencies: [
-        .package(url: CryptoLibUrl, from: CryptoLibVersion)
+        .package(url: CryptoLibUrl, .branch(CryptoLibVersion))
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
