@@ -48,7 +48,7 @@ let package = Package(
         )
     ],
 	dependencies: [
-        .package(url: CryptoLibUrl, .branch(CryptoLibVersion))
+        .package(url: CryptoLibUrl, CryptoLibVersion)
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
