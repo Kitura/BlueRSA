@@ -525,10 +525,21 @@ class CryptorRSATests: XCTestCase {
 	
 	static public func pemKeyString(name: String) -> String {
 		
-        let path = CryptorRSATests.getFilePath(for: name, ofType: "pem")
+        guard let path = CryptorRSATests.getFilePath(for: name, ofType: "pem") else {
+            XCTFail("Could not create pemKeyString")
+            return "Error"
+        }
+        
         XCTAssertNotNil(path)
         
-        return (try! String(contentsOfFile: path!.path, encoding: String.Encoding.utf8))
+        guard let returnValue: String = try? String(contentsOfFile: path.path, encoding: String.Encoding.utf8) else {
+            XCTFail("Could not create returnValue")
+            return "Error"
+        }
+        
+        XCTAssertNotNil(returnValue)
+        
+        return returnValue
 	}
 	
 	static public func derKeyData(name: String) -> Data {
