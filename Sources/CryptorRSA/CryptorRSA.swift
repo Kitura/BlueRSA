@@ -224,7 +224,7 @@ public class CryptorRSA {
 			#if os(Linux)
                 
                 // Convert RSA key to EVP
-                var  evp_key = EVP_PKEY_new()
+                var evp_key = EVP_PKEY_new()
                 var rc = EVP_PKEY_set1_RSA(evp_key, key.reference)
                 guard rc == 1 else {
                     let source = "Couldn't create key reference from key data"
@@ -275,7 +275,7 @@ public class CryptorRSA {
                         
                         throw Error(code: ERR_ENCRYPTION_FAILED, reason: reason)
                     }
-                    throw Error(code: ERR_ENCRYPTION_FAILED , reason: source + ": No OpenSSL error reported.")
+                    throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
                 }
                 
                 // EVP_SealUpdate is a complex macros and therefore the compiler doesnt
@@ -292,9 +292,9 @@ public class CryptorRSA {
                         
                         throw Error(code: ERR_ENCRYPTION_FAILED, reason: reason)
                     }
-                    throw Error(code: ERR_ENCRYPTION_FAILED , reason: source + ": No OpenSSL error reported.")
+                    throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
                 }
-                encLength = encLength + processedLength
+                encLength += processedLength
                 
                 let cipher = Data(bytes: encrypted, count: Int(encLength))
                 let ekFinal = Data(bytes: ek!, count: Int(encKeyLength))
@@ -347,7 +347,7 @@ public class CryptorRSA {
 			#if os(Linux)
 				
                 // Convert RSA key to EVP
-                var  evp_key = EVP_PKEY_new()
+                var evp_key = EVP_PKEY_new()
                 var status = EVP_PKEY_set1_RSA(evp_key, key.reference)
                 guard status == 1 else {
                     let source = "Couldn't create key reference from key data"
@@ -402,7 +402,7 @@ public class CryptorRSA {
                         
                         throw Error(code: ERR_DECRYPTION_FAILED, reason: reason)
                     }
-                    throw Error(code: ERR_DECRYPTION_FAILED , reason: source + ": No OpenSSL error reported.")
+                    throw Error(code: ERR_DECRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
                 }
                 
                 // EVP_OpenUpdate is a complex macros and therefore the compiler doesnt
@@ -419,9 +419,9 @@ public class CryptorRSA {
                         
                         throw Error(code: ERR_DECRYPTION_FAILED, reason: reason)
                     }
-                    throw Error(code: ERR_DECRYPTION_FAILED , reason: source + ": No OpenSSL error reported.")
+                    throw Error(code: ERR_DECRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
                 }
-                decMsgLen = decMsgLen + processedLen
+                decMsgLen += processedLen
                 
                 return PlaintextData(with: Data(bytes: decrypted, count: Int(decMsgLen)))
                 
@@ -479,7 +479,7 @@ public class CryptorRSA {
                 }
                 
                 // convert RSA key to EVP
-                let  evp_key = EVP_PKEY_new()
+                let evp_key = EVP_PKEY_new()
                 var rc = EVP_PKEY_set1_RSA(evp_key, key.reference)
                 guard rc == 1 else {
                     let source = "Couldn't create key reference from key data"
@@ -579,7 +579,7 @@ public class CryptorRSA {
                 }
                 
                 // convert RSA key to EVP
-                let  evp_key = EVP_PKEY_new()
+                let evp_key = EVP_PKEY_new()
                 var rc = EVP_PKEY_set1_RSA(evp_key, key.reference)
                 guard rc == 1 else {
                     let source = "Couldn't create key reference from key data"
