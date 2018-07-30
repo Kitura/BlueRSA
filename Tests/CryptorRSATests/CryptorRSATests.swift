@@ -203,7 +203,11 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_publicKeysFromComplexPEMFileWorksCorrectly() {
 		
-		let input = CryptorRSATests.pemKeyString(name: "multiple-keys-testcase")
+        guard let input = CryptorRSATests.pemKeyString(name: "multiple-keys-testcase") else {
+            XCTFail()
+            return
+        }
+        
 		let keys = CryptorRSA.PublicKey.publicKeys(withPEM: input)
 		XCTAssertEqual(keys.count, 9)
 		
@@ -523,18 +527,18 @@ class CryptorRSATests: XCTestCase {
 		let description: String
 	}
 	
-	static public func pemKeyString(name: String) -> String {
+	static public func pemKeyString(name: String) -> String? {
 		
         guard let path = CryptorRSATests.getFilePath(for: name, ofType: "pem") else {
             XCTFail("Could not create pemKeyString")
-            return "Error"
+            return nil
         }
         
         XCTAssertNotNil(path)
         
         guard let returnValue: String = try? String(contentsOfFile: path.path, encoding: String.Encoding.utf8) else {
             XCTFail("Could not create returnValue")
-            return "Error"
+            return nil
         }
         
         XCTAssertNotNil(returnValue)
@@ -542,29 +546,42 @@ class CryptorRSATests: XCTestCase {
         return returnValue
 	}
 	
-	static public func derKeyData(name: String) -> Data {
+	static public func derKeyData(name: String) -> Data? {
 		
-        let path = CryptorRSATests.getFilePath(for: name, ofType: "der")
-        XCTAssertNotNil(path)
+        guard let path = CryptorRSATests.getFilePath(for: name, ofType: "der") else {
+            XCTFail("Could not get file path")
+            return nil
+        }
         
-        return (try! Data(contentsOf: URL(fileURLWithPath: path!.path)))
+        guard let returnValue: Data = try? Data(contentsOf: URL(fileURLWithPath: path.path)) else {
+            XCTFail("Could not create derKeyData")
+            return nil
+        }
+        
+        return returnValue
 	}
+    
+    enum MyError : Error {
+        case invalidPath()
+    }
 	
 	static public func publicKey(name: String) throws -> CryptorRSA.PublicKey {
 		
-        let path = CryptorRSATests.getFilePath(for: name, ofType: "pem")
-        XCTAssertNotNil(path)
+        guard let path = CryptorRSATests.getFilePath(for: name, ofType: "pem") else {
+            throw MyError.invalidPath()
+        }
         
-        let pemString = try String(contentsOf: path!, encoding: String.Encoding.ascii)
+        let pemString = try String(contentsOf: path, encoding: String.Encoding.ascii)
         return try CryptorRSA.createPublicKey(withPEM: pemString)
 	}
 	
 	static public func privateKey(name: String) throws -> CryptorRSA.PrivateKey {
 		
-        let path = CryptorRSATests.getFilePath(for: name, ofType: "pem")
-        XCTAssertNotNil(path)
+        guard let path = CryptorRSATests.getFilePath(for: name, ofType: "pem") else {
+            throw MyError.invalidPath()
+        }
         
-        let pemString = try String(contentsOf: path!, encoding: String.Encoding.ascii)
+        let pemString = try String(contentsOf: path, encoding: String.Encoding.ascii)
         return try CryptorRSA.createPrivateKey(withPEM: pemString)
 	}
 	
