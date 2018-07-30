@@ -614,7 +614,7 @@ public class CryptorRSA {
                 }
 
                 // Unlike other return values above, this return indicates if signature verifies or not
-                rc = signature.data.withUnsafeBytes({ (sig: UnsafePointer<UInt8>) -> Int32 in
+                rc = signature.data.withUnsafeBytes({ (sig: UnsafeMutablePointer<UInt8>) -> Int32 in
                     return EVP_DigestVerifyFinal(md_ctx, sig, signature.data.count)
                 })
                 
