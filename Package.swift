@@ -30,11 +30,7 @@ import PackageDescription
 #elseif os(Linux)
 	
 	let CryptoLibUrl = "https://github.com/IBM-Swift/OpenSSL.git"
-<<<<<<< HEAD
-    let CryptoLibVersion: Version = "1.0.0"
-=======
     let CryptoLibVersion: Package.Dependency.Requirement = .upToNextMajor(from: "1.0.1")
->>>>>>> 6c68b9e... Updated dependency for new OpenSSL version
 	
 #else
 	
