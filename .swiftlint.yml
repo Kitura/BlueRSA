@@ -2,10 +2,11 @@ included:
     - Sources
     - Tests
 disabled_rules:
+    - nesting
     - trailing_newline
     - force_cast
     - function_body_length
-    - variable_name
+    - identifier_name
     - line_length
     - trailing_whitespace
     - type_name

@@ -357,19 +357,19 @@ public extension CryptorRSA {
             }
             let cert = PEM_read_bio_X509(certbio, nil, nil, nil)
             
-            if (cert == nil) {
+            if cert == nil {
                 print("Error loading cert into memory\n")
                 throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error loading cert into memory.")
             }
             
             // Extract the certificate's public key data.
             let evp_key = X509_get_pubkey(cert)
-            if ( evp_key == nil) {
+            if evp_key == nil {
                 throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error getting public key from certificate")
             }
 
             let key = EVP_PKEY_get1_RSA( evp_key)
-            if ( key == nil) {
+            if key == nil {
                 throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error getting public key from certificate")
             }
             defer {
@@ -693,7 +693,7 @@ public extension CryptorRSA {
 				let start = pemString.index(pemString.startIndex, offsetBy: match.location)
 				let end = pemString.index(start, offsetBy: match.length)
 				
-				let range = Range<String.Index>(start..<end)
+				let range = start..<end
 				
 				let thisKey = pemString[range]
 				
