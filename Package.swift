@@ -30,7 +30,7 @@ import PackageDescription
 #elseif os(Linux)
 	
 	let CryptoLibUrl = "https://github.com/IBM-Swift/OpenSSL.git"
-    let CryptoLibVersion: Package.Dependency.Requirement = .branch("issue.BlueRSAFailure")
+    let CryptoLibVersion: Package.Dependency.Requirement = .upToNextMajor(from: "1.0.1")
 	
 #else
 	
