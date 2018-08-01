@@ -203,7 +203,11 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_publicKeysFromComplexPEMFileWorksCorrectly() {
 		
-		let input = CryptorRSATests.pemKeyString(name: "multiple-keys-testcase")
+        guard let input = CryptorRSATests.pemKeyString(name: "multiple-keys-testcase") else {
+            XCTFail()
+            return
+        }
+        
 		let keys = CryptorRSA.PublicKey.publicKeys(withPEM: input)
 		XCTAssertEqual(keys.count, 9)
 		
@@ -308,9 +312,9 @@ class CryptorRSATests: XCTestCase {
 	}
 
 	// MARK: Encyption/Decryption Tests
-	
-    let publicKey: CryptorRSA.PublicKey = try! CryptorRSATests.publicKey(name: "public")
-    let privateKey: CryptorRSA.PrivateKey = try! CryptorRSATests.privateKey(name: "private")
+    
+    let publicKey: CryptorRSA.PublicKey? = try? CryptorRSATests.publicKey(name: "public")
+    let privateKey: CryptorRSA.PrivateKey? = try? CryptorRSATests.privateKey(name: "private")
 	
 	func test_simpleEncryption() throws {
 		
@@ -326,7 +330,13 @@ class CryptorRSATests: XCTestCase {
 			print("Testing algorithm: \(name)")
 			let str = "Plain Text"
 			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
-		
+            
+            guard let publicKey = self.publicKey,
+                  let privateKey = self.privateKey else {
+                XCTFail("Could not find key")
+                return
+            }
+            
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
 			let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: algorithm)
@@ -352,6 +362,12 @@ class CryptorRSATests: XCTestCase {
 			let str = [String](repeating: "a", count: 9999).joined(separator: "")
 			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
 		
+            guard let publicKey = self.publicKey,
+                let privateKey = self.privateKey else {
+                    XCTFail("Could not find key")
+                    return
+            }
+            
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
 			let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: algorithm)
@@ -377,6 +393,12 @@ class CryptorRSATests: XCTestCase {
 			let data = CryptorRSATests.randomData(count: 2048)
 			let plainData = CryptorRSA.createPlaintext(with: data)
 		
+            guard let publicKey = self.publicKey,
+                let privateKey = self.privateKey else {
+                    XCTFail("Could not find key")
+                    return
+            }
+            
 			let encrypted = try plainData.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
 			let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: algorithm)
@@ -395,6 +417,12 @@ class CryptorRSATests: XCTestCase {
 		                                              (.sha256, ".sha256"),
 		                                              (.sha384, ".sha384"),
 		                                              (.sha512, ".sha512")]
+        guard let publicKey = self.publicKey,
+            let privateKey = self.privateKey else {
+                XCTFail("Could not find key")
+                return
+        }
+        
 		// Test all the algorithms available...
 		for (algorithm, name) in algorithms {
 			
@@ -416,6 +444,13 @@ class CryptorRSATests: XCTestCase {
 		                                              (.sha256, ".sha256"),
 		                                              (.sha384, ".sha384"),
 		                                              (.sha512, ".sha512")]
+        
+        guard let publicKey = self.publicKey,
+            let privateKey = self.privateKey else {
+                XCTFail("Could not find key")
+                return
+        }
+        
 		// Test all the algorithms available...
 		for (algorithm, name) in algorithms {
 			
@@ -445,11 +480,14 @@ class CryptorRSATests: XCTestCase {
             -----END PUBLIC KEY-----
             """
         
-        let tokenPublicKey = try? CryptorRSA.createPublicKey(withPEM: certificatePEM)
-        XCTAssertNotNil(tokenPublicKey)
-        XCTAssertTrue(tokenPublicKey!.type == .publicType)
+        guard let tokenPublicKey = try? CryptorRSA.createPublicKey(withPEM: certificatePEM) else {
+            XCTFail("Public ket not made")
+            return
+        }
+
+        XCTAssertTrue(tokenPublicKey.type == .publicType)
         
-        let token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpPU0UiLCJraWQiOiJhcHBJZC0xNTA0Njg1OTYxMDAwIn0.eyJpc3MiOiJhcHBpZC1vYXV0aC5uZy5ibHVlbWl4Lm5ldCIsImF1ZCI6IjUzOGU4NTI2YTcwNDdjMWM5ZTEzNDZhYzQ1MjA2NmQxYmE1ZmQzNTEiLCJleHAiOjE1MTgxOTkzNTgsInRlbmFudCI6ImQ3YmMzMjJjLWIyMjQtNDFjMS05MWVhLWZjNjM4YWUyYWQ0ZCIsImlhdCI6MTUxODE5NTc1OCwiZW1haWwiOiJhYXJvbi5saWJlcmF0b3JlQGdtYWlsLmNvbSIsIm5hbWUiOiJBYXJvbiBMaWJlcmF0b3JlIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS8tWGRVSXFkTWtDV0EvQUFBQUFBQUFBQUkvQUFBQUFBQUFBQUEvNDI1MnJzY2J2NU0vcGhvdG8uanBnIiwic3ViIjoiNGZiOTY0NDUtMGIzYy00Mzg2LWI3MmEtNTk2YmIzYTlkNDUwIiwiaWRlbnRpdGllcyI6W3sicHJvdmlkZXIiOiJnb29nbGUiLCJpZCI6IjEwODQ2MDkwMTMxMTMxNzgyOTg4NCJ9XSwiYW1yIjpbImdvb2dsZSJdLCJvYXV0aF9jbGllbnQiOnsibmFtZSI6IldhdHNvbiBUb25lIEFuYWx5emVyIFJLQUpHIiwidHlwZSI6Im1vYmlsZWFwcCIsInNvZnR3YXJlX2lkIjoiY29tLmlibS5XYXRzb25Ub25lQW5hbHl6ZXJSS0FKRyIsInNvZnR3YXJlX3ZlcnNpb24iOiIxLjAiLCJkZXZpY2VfaWQiOiI3QTk2QjJDQi1DNkI4LTRCNTYtQjA0Ri1FMTMwQjZDMkUxMUMiLCJkZXZpY2VfbW9kZWwiOiJpUGhvbmUiLCJkZXZpY2Vfb3MiOiJpT1MiLCJkZXZpY2Vfb3NfdmVyc2lvbiI6IjExLjIifX0.RTK5wV0b0mtbRayKg9IdGCnGXoA7bn4Gdx-YIQjaaELWJwpla2x1R1hMvL5It-MKMt_pyejzkdoTKR3v_VF4IMwnBWz83d0u6TVs28TbrgHAkXy6sAypIfEKc4gLOSHXkUBYREH2pbJSguxZNTwqKe_PKRSYtG0QrtffPUsESfnGkdfHdUsSigMjX5s5En8fLCGiNSQF2uyYREDFE6T0w5P3W5MR_Scloyhik1q7nv91PzlJ6Rn9_0F12zjzvPMTt7bobTdokaFVPcqjFWHJc4YCw-bzdBCxtzHxf3oVXeJzCzPNb_nOehZu-u7ue54NbYwcoZ_bokmsjCnQbFE_QA";
+        let token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpPU0UiLCJraWQiOiJhcHBJZC0xNTA0Njg1OTYxMDAwIn0.eyJpc3MiOiJhcHBpZC1vYXV0aC5uZy5ibHVlbWl4Lm5ldCIsImF1ZCI6IjUzOGU4NTI2YTcwNDdjMWM5ZTEzNDZhYzQ1MjA2NmQxYmE1ZmQzNTEiLCJleHAiOjE1MTgxOTkzNTgsInRlbmFudCI6ImQ3YmMzMjJjLWIyMjQtNDFjMS05MWVhLWZjNjM4YWUyYWQ0ZCIsImlhdCI6MTUxODE5NTc1OCwiZW1haWwiOiJhYXJvbi5saWJlcmF0b3JlQGdtYWlsLmNvbSIsIm5hbWUiOiJBYXJvbiBMaWJlcmF0b3JlIiwicGljdHVyZSI6Imh0dHBzOi8vbGgzLmdvb2dsZXVzZXJjb250ZW50LmNvbS8tWGRVSXFkTWtDV0EvQUFBQUFBQUFBQUkvQUFBQUFBQUFBQUEvNDI1MnJzY2J2NU0vcGhvdG8uanBnIiwic3ViIjoiNGZiOTY0NDUtMGIzYy00Mzg2LWI3MmEtNTk2YmIzYTlkNDUwIiwiaWRlbnRpdGllcyI6W3sicHJvdmlkZXIiOiJnb29nbGUiLCJpZCI6IjEwODQ2MDkwMTMxMTMxNzgyOTg4NCJ9XSwiYW1yIjpbImdvb2dsZSJdLCJvYXV0aF9jbGllbnQiOnsibmFtZSI6IldhdHNvbiBUb25lIEFuYWx5emVyIFJLQUpHIiwidHlwZSI6Im1vYmlsZWFwcCIsInNvZnR3YXJlX2lkIjoiY29tLmlibS5XYXRzb25Ub25lQW5hbHl6ZXJSS0FKRyIsInNvZnR3YXJlX3ZlcnNpb24iOiIxLjAiLCJkZXZpY2VfaWQiOiI3QTk2QjJDQi1DNkI4LTRCNTYtQjA0Ri1FMTMwQjZDMkUxMUMiLCJkZXZpY2VfbW9kZWwiOiJpUGhvbmUiLCJkZXZpY2Vfb3MiOiJpT1MiLCJkZXZpY2Vfb3NfdmVyc2lvbiI6IjExLjIifX0.RTK5wV0b0mtbRayKg9IdGCnGXoA7bn4Gdx-YIQjaaELWJwpla2x1R1hMvL5It-MKMt_pyejzkdoTKR3v_VF4IMwnBWz83d0u6TVs28TbrgHAkXy6sAypIfEKc4gLOSHXkUBYREH2pbJSguxZNTwqKe_PKRSYtG0QrtffPUsESfnGkdfHdUsSigMjX5s5En8fLCGiNSQF2uyYREDFE6T0w5P3W5MR_Scloyhik1q7nv91PzlJ6Rn9_0F12zjzvPMTt7bobTdokaFVPcqjFWHJc4YCw-bzdBCxtzHxf3oVXeJzCzPNb_nOehZu-u7ue54NbYwcoZ_bokmsjCnQbFE_QA"
         
         let tokenParts = token.split(separator: ".")
         // JWT token should have 3 parts
@@ -467,8 +505,11 @@ class CryptorRSATests: XCTestCase {
         // JWT also does base64url encoding, so make the proper replacements so its proper base64 encoding
         sig = sig.replacingOccurrences(of: "-", with: "+")
         sig = sig.replacingOccurrences(of: "_", with: "/")
-        let sigData = Data(base64Encoded: sig)!
-        XCTAssertNotNil(sigData)
+        
+        guard let sigData = Data(base64Encoded: sig) else {
+            XCTFail("Unable to create Signature Data")
+            return
+        }
         
         let message = CryptorRSA.createPlaintext(with: messageData)
         XCTAssertNotNil(message)
@@ -476,7 +517,7 @@ class CryptorRSATests: XCTestCase {
         let signature = CryptorRSA.createSigned(with: sigData)
         XCTAssertNotNil(signature)
         
-        let verificationResult = try message.verify(with: tokenPublicKey!, signature: signature, algorithm: .sha256)
+        let verificationResult = try message.verify(with: tokenPublicKey, signature: signature, algorithm: .sha256)
         XCTAssertTrue(verificationResult)
     }
 
@@ -486,37 +527,61 @@ class CryptorRSATests: XCTestCase {
 		let description: String
 	}
 	
-	static public func pemKeyString(name: String) -> String {
+	static public func pemKeyString(name: String) -> String? {
 		
-        let path = CryptorRSATests.getFilePath(for: name, ofType: "pem")
+        guard let path = CryptorRSATests.getFilePath(for: name, ofType: "pem") else {
+            XCTFail("Could not create pemKeyString")
+            return nil
+        }
+        
         XCTAssertNotNil(path)
         
-        return (try! String(contentsOfFile: path!.path, encoding: String.Encoding.utf8))
+        guard let returnValue: String = try? String(contentsOfFile: path.path, encoding: String.Encoding.utf8) else {
+            XCTFail("Could not create returnValue")
+            return nil
+        }
+        
+        XCTAssertNotNil(returnValue)
+        
+        return returnValue
 	}
 	
-	static public func derKeyData(name: String) -> Data {
+	static public func derKeyData(name: String) -> Data? {
 		
-        let path = CryptorRSATests.getFilePath(for: name, ofType: "der")
-        XCTAssertNotNil(path)
+        guard let path = CryptorRSATests.getFilePath(for: name, ofType: "der") else {
+            XCTFail("Could not get file path")
+            return nil
+        }
         
-        return (try! Data(contentsOf: URL(fileURLWithPath: path!.path)))
+        guard let returnValue: Data = try? Data(contentsOf: URL(fileURLWithPath: path.path)) else {
+            XCTFail("Could not create derKeyData")
+            return nil
+        }
+        
+        return returnValue
 	}
+    
+    enum MyError : Error {
+        case invalidPath()
+    }
 	
 	static public func publicKey(name: String) throws -> CryptorRSA.PublicKey {
 		
-        let path = CryptorRSATests.getFilePath(for: name, ofType: "pem")
-        XCTAssertNotNil(path)
+        guard let path = CryptorRSATests.getFilePath(for: name, ofType: "pem") else {
+            throw MyError.invalidPath()
+        }
         
-        let pemString = try String(contentsOf: path!, encoding: String.Encoding.ascii)
+        let pemString = try String(contentsOf: path, encoding: String.Encoding.ascii)
         return try CryptorRSA.createPublicKey(withPEM: pemString)
 	}
 	
 	static public func privateKey(name: String) throws -> CryptorRSA.PrivateKey {
 		
-        let path = CryptorRSATests.getFilePath(for: name, ofType: "pem")
-        XCTAssertNotNil(path)
+        guard let path = CryptorRSATests.getFilePath(for: name, ofType: "pem") else {
+            throw MyError.invalidPath()
+        }
         
-        let pemString = try String(contentsOf: path!, encoding: String.Encoding.ascii)
+        let pemString = try String(contentsOf: path, encoding: String.Encoding.ascii)
         return try CryptorRSA.createPrivateKey(withPEM: pemString)
 	}
 	
