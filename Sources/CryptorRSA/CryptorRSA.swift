@@ -613,7 +613,11 @@ public class CryptorRSA {
                     throw Error(code: ERR_VERIFICATION_FAILED, reason: source + ": No OpenSSL error reported.")
                 }
 
-                // Unlike other return values above, this return indicates if signature verifies or not
+		// Wrapper for OpenSSL EVP_DigestVerifyFinal function defined in
+		// IBM-Swift/OpenSSL/shim.h, to provide compatibility with OpenSSL
+		// 1.0.1 and 1.0.2 on Ubuntu 14.04 and 16.04, respectively.
+
+		// Unlike other return values above, this return indicates if signature verifies or not
                 rc = signature.data.withUnsafeBytes({ (sig: UnsafePointer<UInt8>) -> Int32 in
                     return SSL_EVP_digestVerifyFinal_wrapper(md_ctx, sig, signature.data.count)
                 })

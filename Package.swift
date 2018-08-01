@@ -25,7 +25,7 @@ import PackageDescription
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 	
     let CryptoLibUrl = "https://github.com/IBM-Swift/CommonCrypto.git"
-    let CryptoLibVersion: Version = "1.0.0"
+    let CryptoLibVersion: Package.Dependency.Requirement = .upToNextMajor(from: "1.0.0")
 	
 #elseif os(Linux)
 	
