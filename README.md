@@ -1,14 +1,21 @@
-![macOS](https://img.shields.io/badge/os-macOS-green.svg?style=flat)
-![iOS](https://img.shields.io/badge/os-iOS-green.svg?style=flat)
-![Linux](https://img.shields.io/badge/os-linux-green.svg?style=flat)
-![Apache 2](https://img.shields.io/badge/license-Apache2-blue.svg?style=flat)
-![](https://img.shields.io/badge/Swift-3.0-orange.svg?style=flat)
-![](https://img.shields.io/badge/Swift-4.0-orange.svg?style=flat)
-[![Build Status - Master](https://travis-ci.org/IBM-Swift/BlueRSA.svg?branch=master)](https://travis-ci.org/IBM-Swift/BlueRSA)
+<p align="center">
+    <a href="https://www.kitura.io/packages.html#all">
+    <img src="https://img.shields.io/badge/docs-kitura.io-1FBCE4.svg" alt="APIDoc">
+    </a>
+    <a href="https://travis-ci.org/IBM-Swift/BlueRSA">
+    <img src="https://travis-ci.org/IBM-Swift/BlueRSA.svg?branch=master" alt="Build Status - Master">
+    </a>
+    <img src="https://img.shields.io/badge/os-macOS-green.svg?style=flat" alt="macOS">
+    <img src="https://img.shields.io/badge/os-iOS-green.svg?style=flat" alt="iOS">
+    <img src="https://img.shields.io/badge/os-linux-green.svg?style=flat" alt="Linux">
+    <img src="https://img.shields.io/badge/license-Apache2-blue.svg?style=flat" alt="Apache 2">
+    <a href="http://swift-at-ibm-slack.mybluemix.net/">
+    <img src="http://swift-at-ibm-slack.mybluemix.net/badge.svg" alt="Slack Status">
+    </a>
+</p>
 
 # BlueRSA
 
-## Overview
 Swift cross-platform RSA wrapper library for RSA encryption and signing. Works on supported Apple platforms (using Security framework).  Linux (using OpenSSL) is working but is still a work in progress.
 
 ## Contents
@@ -302,5 +309,10 @@ All three of the data handling types have two common utility instance functions.
 - `digest(using algorithm: Data.Algorithm) throws -> Data` - This function returns a `Data` object containing a digest constructed using the specified `algorithm`.
 - `string(using encoding: String.Encoding) throws -> String` - This functions returns a `String` representation of the data using the specified `encoding`.
 
+## Community
 
+We love to talk server-side Swift and Kitura. Join our [Slack](http://swift-at-ibm-slack.mybluemix.net/) to meet the team!
 
+## License
+
+This library is licensed under Apache 2.0. Full license text is available in [LICENSE](https://github.com/IBM-Swift/BlueRSA/blob/master/LICENSE).
