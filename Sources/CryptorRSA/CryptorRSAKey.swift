@@ -682,7 +682,7 @@ public extension CryptorRSA {
                 options: NSRegularExpression.MatchingOptions(rawValue: 0),
                 range: all
             )
-			
+            #if swift(>=4.1)
 			let keys = matches.compactMap { result -> PublicKey? in
 				
 				#if swift(>=4.0)
@@ -699,6 +699,25 @@ public extension CryptorRSA {
 				
 				return try? CryptorRSA.createPublicKey(withPEM: String(thisKey))
 			}
+            #else
+            
+                let keys = matches.flatMap { result -> PublicKey? in
+            
+                #if swift(>=4.0)
+                let match = result.range(at: 1)
+                #else
+                let match = result.rangeAt( 1)
+                #endif
+                let start = pemString.index(pemString.startIndex, offsetBy: match.location)
+                let end = pemString.index(start, offsetBy: match.length)
+            
+                let range = start..<end
+            
+                let thisKey = pemString[range]
+            
+                return try? CryptorRSA.createPublicKey(withPEM: String(thisKey))
+                }
+            #endif
 			
 			return keys
 		}
