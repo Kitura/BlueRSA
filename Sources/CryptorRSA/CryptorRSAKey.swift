@@ -685,11 +685,7 @@ public extension CryptorRSA {
             #if swift(>=4.1)
 			let keys = matches.compactMap { result -> PublicKey? in
 				
-				#if swift(>=4.0)
-					let match = result.range(at: 1)
-				#else
-					let match = result.rangeAt( 1)
-				#endif
+                let match = result.range(at: 1)
 				let start = pemString.index(pemString.startIndex, offsetBy: match.location)
 				let end = pemString.index(start, offsetBy: match.length)
 				
@@ -703,11 +699,7 @@ public extension CryptorRSA {
             
                 let keys = matches.flatMap { result -> PublicKey? in
             
-                #if swift(>=4.0)
-                let match = result.range(at: 1)
-                #else
                 let match = result.rangeAt( 1)
-                #endif
                 let start = pemString.index(pemString.startIndex, offsetBy: match.location)
                 let end = pemString.index(start, offsetBy: match.length)
             
