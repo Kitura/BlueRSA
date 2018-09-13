@@ -29,7 +29,7 @@ import Foundation
 
 // MARK: -
 
-@available(macOS 10.12, iOS 10.0, *)
+@available(macOS 10.12, iOS 10.3, *)
 public extension CryptorRSA {
 	
 	// MARK: Type Aliases
@@ -388,13 +388,20 @@ public extension CryptorRSA {
 		
 		// Now extract the public key from it...
 		var key: SecKey? = nil
-		let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
-			
-			// Retrieves the public key from a certificate...
-			SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
-		}
-		if status != errSecSuccess || key == nil {
-			
+        
+        // Retrieves the public key from a certificate...
+        #if os(iOS)
+        key = SecCertificateCopyPublicKey(certData)
+        #else
+        let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
+            SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
+        }
+        if status != errSecSuccess {
+            throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
+        }
+        #endif
+        
+		if key == nil {
 			throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
 		}
 		

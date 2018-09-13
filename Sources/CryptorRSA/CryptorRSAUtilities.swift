@@ -32,7 +32,7 @@ import Foundation
 ///
 /// Various RSA Related Utility Functions
 ///
-@available(macOS 10.12, iOS 10.0, *)
+@available(macOS 10.12, iOS 10.3, *)
 public extension CryptorRSA {
 	
 #if os(Linux)

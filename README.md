@@ -38,7 +38,7 @@ Swift cross-platform RSA wrapper library for RSA encryption and signing. Works o
 
 ### iOS
 
-* iOS 10.0 or higher
+* iOS 10.3 or higher
 * Xcode Version 9.0 (9A325) or higher using the included toolchain (**Minimum REQUIRED for latest release**).
 * Xcode Version 9.2 (9C40b) or higher using the included toolchain (**Recommended**).
 
