@@ -154,7 +154,7 @@ public extension Data {
 
         #else
 			
-			@available(macOS 10.12, iOS 10.0, *)
+			@available(macOS 10.12, iOS 10.3, *)
 			public var algorithmForSignature: SecKeyAlgorithm {
 					
 				switch self {
@@ -177,7 +177,7 @@ public extension Data {
 				}
 			}
 				
-			@available(macOS 10.12, iOS 10.0, *)
+			@available(macOS 10.12, iOS 10.3, *)
 			public var alogrithmForEncryption: SecKeyAlgorithm {
 			
 				switch self {
