@@ -52,6 +52,7 @@
 		8C7925CD1E32566D00C1369E /* public.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = public.pem; path = keys/public.pem; sourceTree = "<group>"; };
 		8C9174C51E37BAD3004A801E /* staging.cer */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = staging.cer; path = keys/staging.cer; sourceTree = "<group>"; };
 		8CB8EDC61E40CB990073783A /* staging2.cer */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = staging2.cer; path = keys/staging2.cer; sourceTree = "<group>"; };
+		8CC225C921543A0700CBAB67 /* BlueRSA.podspec */ = {isa = PBXFileReference; lastKnownFileType = text; path = BlueRSA.podspec; sourceTree = "<group>"; };
 		8CF9FB6F1E2E6ADD00F23746 /* LinuxMain.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinuxMain.swift; sourceTree = "<group>"; };
 		8CF9FB711E2E6AF200F23746 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		8CF9FB731E2E6E8C00F23746 /* LICENSE */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
@@ -136,6 +137,7 @@
 		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
+				8CC225C921543A0700CBAB67 /* BlueRSA.podspec */,
 				8CF9FB731E2E6E8C00F23746 /* LICENSE */,
 				OBJ_6 /* Package.swift */,
 				8CF9FB711E2E6AF200F23746 /* README.md */,
