@@ -322,7 +322,7 @@
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;
 				SWIFT_INCLUDE_PATHS = "\"$SRCROOT/CommonCrypto\"";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGET_NAME = CryptorRSA;
 			};
 			name = Debug;
@@ -346,7 +346,7 @@
 				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;
 				SWIFT_INCLUDE_PATHS = "\"$SRCROOT/CommonCrypto\"";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGET_NAME = CryptorRSA;
 			};
 			name = Release;
