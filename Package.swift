@@ -1,11 +1,11 @@
-// swift-tools-version:4.0
+// swift-tools-version:4.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 //
 //  Package.swift
 //  CryptorRSA
 //
-//  Copyright © 2017 IBM. All rights reserved.
+//  Copyright © 2017,2018 IBM. All rights reserved.
 //
 // 	Licensed under the Apache License, Version 2.0 (the "License");
 // 	you may not use this file except in compliance with the License.
@@ -22,19 +22,14 @@
 
 import PackageDescription
 
-#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+var dependencies: [Package.Dependency] = []
+var targetDependencies: [Target.Dependency] = []
+
 	
-    let CryptoLibUrl = "https://github.com/IBM-Swift/CommonCrypto.git"
-    let CryptoLibVersion: Package.Dependency.Requirement = .upToNextMajor(from: "1.0.0")
+#if os(Linux)
 	
-#elseif os(Linux)
-	
-	let CryptoLibUrl = "https://github.com/IBM-Swift/OpenSSL.git"
-    let CryptoLibVersion: Package.Dependency.Requirement = .upToNextMajor(from: "1.0.1")
-	
-#else
-	
-	fatalError("Unsupported OS")
+dependencies.append(.package(url: "https://github.com/IBM-Swift/OpenSSL.git", from: "2.0.0"))
+targetDependencies.append(.byName(name: "OpenSSL"))
 	
 #endif
 
@@ -47,15 +42,13 @@ let package = Package(
             targets: ["CryptorRSA"]
         )
     ],
-	dependencies: [
-        .package(url: CryptoLibUrl, CryptoLibVersion)
-    ],
+	dependencies: dependencies,
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "CryptorRSA",
-            dependencies: []
+            dependencies: targetDependencies
         ),
         .testTarget(
             name: "CryptorRSATests",
