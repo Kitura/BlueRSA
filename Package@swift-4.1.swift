@@ -22,6 +22,8 @@
 
 import PackageDescription
 
+var targetDependencies: [Target.Dependency] = []
+
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 	
     let CryptoLibUrl = "https://github.com/IBM-Swift/CommonCrypto.git"
@@ -29,12 +31,13 @@ import PackageDescription
 	
 #elseif os(Linux)
 	
-	let CryptoLibUrl = "https://github.com/IBM-Swift/OpenSSL.git"
+    let CryptoLibUrl = "https://github.com/IBM-Swift/OpenSSL.git"
     let CryptoLibVersion: Package.Dependency.Requirement = .upToNextMajor(from: "1.0.1")
+    targetDependencies.append(.byName(name: "OpenSSL"))
 	
 #else
 	
-	fatalError("Unsupported OS")
+    fatalError("Unsupported OS")
 	
 #endif
 
@@ -55,7 +58,7 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "CryptorRSA",
-            dependencies: []
+            dependencies: targetDependencies
         ),
         .testTarget(
             name: "CryptorRSATests",
