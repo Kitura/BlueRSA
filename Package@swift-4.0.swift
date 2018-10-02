@@ -22,14 +22,22 @@
 
 import PackageDescription
 
-var dependencies: [Package.Dependency] = []
 var targetDependencies: [Target.Dependency] = []
 
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 	
-#if os(Linux)
+    let CryptoLibUrl = "https://github.com/IBM-Swift/CommonCrypto.git"
+    let CryptoLibVersion: Package.Dependency.Requirement = .upToNextMajor(from: "1.0.0")
 	
-dependencies.append(Package.Dependency.package(url: "https://github.com/IBM-Swift/OpenSSL.git", .upToNextMajor(from: "1.0.1")))
-    targetDependencies.append(Target.Dependency.byName(name: "OpenSSL"))
+#elseif os(Linux)
+	
+    let CryptoLibUrl = "https://github.com/IBM-Swift/OpenSSL.git"
+    let CryptoLibVersion: Package.Dependency.Requirement = .upToNextMajor(from: "1.0.1")
+    targetDependencies.append(.byName(name: "OpenSSL"))
+	
+#else
+	
+    fatalError("Unsupported OS")
 	
 #endif
 
@@ -42,7 +50,9 @@ let package = Package(
             targets: ["CryptorRSA"]
         )
     ],
-	dependencies: dependencies,
+	dependencies: [
+        .package(url: CryptoLibUrl, CryptoLibVersion)
+    ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
