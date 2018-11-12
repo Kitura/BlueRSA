@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8C7111F12199B9F5003CF4B3 /* SSLPointerTricks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C7111F02199B9F5003CF4B3 /* SSLPointerTricks.swift */; };
 		8C7925D81E32570300C1369E /* multiple-keys-testcase.pem in Resources */ = {isa = PBXBuildFile; fileRef = 8C7925C41E32566D00C1369E /* multiple-keys-testcase.pem */; };
 		8C7925D91E32570300C1369E /* multiple-keys-testcase.sh in Resources */ = {isa = PBXBuildFile; fileRef = 8C7925C51E32566D00C1369E /* multiple-keys-testcase.sh */; };
 		8C7925DA1E32570300C1369E /* private-headerless.pem in Resources */ = {isa = PBXBuildFile; fileRef = 8C7925C61E32566D00C1369E /* private-headerless.pem */; };
@@ -40,6 +41,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8C7111F02199B9F5003CF4B3 /* SSLPointerTricks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SSLPointerTricks.swift; path = CryptorRSA/SSLPointerTricks.swift; sourceTree = "<group>"; };
 		8C7925C41E32566D00C1369E /* multiple-keys-testcase.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "multiple-keys-testcase.pem"; path = "keys/multiple-keys-testcase.pem"; sourceTree = "<group>"; };
 		8C7925C51E32566D00C1369E /* multiple-keys-testcase.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "multiple-keys-testcase.sh"; path = "keys/multiple-keys-testcase.sh"; sourceTree = "<group>"; };
 		8C7925C61E32566D00C1369E /* private-headerless.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "private-headerless.pem"; path = "keys/private-headerless.pem"; sourceTree = "<group>"; };
@@ -156,6 +158,7 @@
 				8CF9FB7C1E2FC14F00F23746 /* CryptorRSAErrors.swift */,
 				8CF9FB781E2FBFB600F23746 /* CryptorRSAKey.swift */,
 				8CF9FB741E2E75F800F23746 /* CryptorRSAUtilities.swift */,
+				8C7111F02199B9F5003CF4B3 /* SSLPointerTricks.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -277,6 +280,7 @@
 			files = (
 				8CF9FB791E2FBFB600F23746 /* CryptorRSAKey.swift in Sources */,
 				8CF9FB751E2E75F800F23746 /* CryptorRSAUtilities.swift in Sources */,
+				8C7111F12199B9F5003CF4B3 /* SSLPointerTricks.swift in Sources */,
 				8CF9FB7B1E2FC07500F23746 /* CryptorRSAConstants.swift in Sources */,
 				OBJ_21 /* CryptorRSA.swift in Sources */,
 				8CF9FB991E302A4900F23746 /* CryptorRSADigest.swift in Sources */,
