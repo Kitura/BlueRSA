@@ -342,78 +342,79 @@ public extension CryptorRSA {
 		
 		#if os(Linux)
 		
-		let certbio = BIO_new(BIO_s_mem())
-		defer {
-			BIO_free(certbio)
-		}
-		
-		// Move the key data to BIO
-		try data.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
-			
-			let len = BIO_write(certbio, buffer, Int32(data.count))
-			guard len != 0 else {
-				let source = "Couldn't create BIO reference from key data"
-				if let reason = CryptorRSA.getLastError(source: source) {
-					
-					throw Error(code: ERR_ADD_KEY, reason: reason)
-				}
-				throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+			let certbio = BIO_new(BIO_s_mem())
+			defer {
+				BIO_free(certbio)
 			}
-			
-			// The below is equivalent of BIO_flush...
-			BIO_ctrl(certbio, BIO_CTRL_FLUSH, 0, nil)
-		}
-		let cert = PEM_read_bio_X509(certbio, nil, nil, nil)
 		
-		if cert == nil {
-			print("Error loading cert into memory\n")
-			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error loading cert into memory.")
-		}
+			// Move the key data to BIO
+			try data.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
+				
+				let len = BIO_write(certbio, buffer, Int32(data.count))
+				guard len != 0 else {
+					let source = "Couldn't create BIO reference from key data"
+					if let reason = CryptorRSA.getLastError(source: source) {
+						
+						throw Error(code: ERR_ADD_KEY, reason: reason)
+					}
+					throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+				}
+				
+				// The below is equivalent of BIO_flush...
+				BIO_ctrl(certbio, BIO_CTRL_FLUSH, 0, nil)
+			}
+			let cert = PEM_read_bio_X509(certbio, nil, nil, nil)
 		
-		// Extract the certificate's public key data.
-		let evp_key = X509_get_pubkey(cert)
-		if evp_key == nil {
-			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error getting public key from certificate")
-		}
+			if cert == nil {
+				print("Error loading cert into memory\n")
+				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error loading cert into memory.")
+			}
 		
-		let key = EVP_PKEY_get1_RSA( evp_key)
-		if key == nil {
-			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error getting public key from certificate")
-		}
-		defer {
-			//	RSA_free(key)
-			EVP_PKEY_free(evp_key)
-		}
+			// Extract the certificate's public key data.
+			let evp_key = X509_get_pubkey(cert)
+			if evp_key == nil {
+				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error getting public key from certificate")
+			}
 		
+			let key = EVP_PKEY_get1_RSA( evp_key)
+			if key == nil {
+				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error getting public key from certificate")
+			}
+			defer {
+				//	RSA_free(key)
+				EVP_PKEY_free(evp_key)
+			}
+		
+			#if swift(>=4.1)
+				return PublicKey(with: .make(optional: key!)!)
+			#else
+				return PublicKey(with: key!)
+			#endif
+	
 		#else
 		
-		// Create a DER-encoded X.509 certificate object from the DER data...
-		let certificateData = SecCertificateCreateWithData(nil, data as CFData)
-		guard let certData = certificateData else {
-			
-			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data.")
-		}
+			// Create a DER-encoded X.509 certificate object from the DER data...
+			let certificateData = SecCertificateCreateWithData(nil, data as CFData)
+			guard let certData = certificateData else {
+				
+				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data.")
+			}
 		
-		// Now extract the public key from it...
-		var key: SecKey? = nil
-		let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
-			
-			// Retrieves the public key from a certificate...
-			SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
-		}
-		if status != errSecSuccess || key == nil {
-			
-			throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
-		}
+			// Now extract the public key from it...
+			var key: SecKey? = nil
+			let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
+				
+				// Retrieves the public key from a certificate...
+				SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
+			}
+			if status != errSecSuccess || key == nil {
+				
+				throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
+			}
 		
-		#endif
-		
-		#if os(Linux)
-			return PublicKey(with: .make(optional: key!)!)
-		#else
 			return PublicKey(with: key!)
-		#endif
 		
+		#endif		
 	}
 	
 	// MARK: -- Private Key Creation
