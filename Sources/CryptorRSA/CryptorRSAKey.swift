@@ -408,7 +408,11 @@ public extension CryptorRSA {
 		
 		#endif
 		
-		return PublicKey(with: .make(optional: key!)!)
+		#if os(Linux)
+			return PublicKey(with: .make(optional: key!)!)
+		#else
+			return PublicKey(with: key!)
+		#endif
 		
 	}
 	
