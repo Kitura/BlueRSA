@@ -36,7 +36,15 @@ public extension CryptorRSA {
 	
 	#if os(Linux)
 	
-	typealias NativeKey = UnsafeMutablePointer<RSA>
+		#if swift(>=4.2)
+	
+			typealias NativeKey = OpaquePointer?
+	
+		#else
+	
+			typealias NativeKey = UnsafeMutablePointer<RSA>
+	
+		#endif
 	
 	#else
 	
@@ -373,7 +381,7 @@ public extension CryptorRSA {
 			throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error getting public key from certificate")
 		}
 		defer {
-			//				RSA_free(key)
+			//	RSA_free(key)
 			EVP_PKEY_free(evp_key)
 		}
 		
@@ -400,7 +408,7 @@ public extension CryptorRSA {
 		
 		#endif
 		
-		return PublicKey(with: key!)
+		return PublicKey(with: .make(optional: key!)!)
 		
 	}
 	

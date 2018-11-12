@@ -72,23 +72,40 @@ public extension CryptorRSA {
 			// The below is equivalent of BIO_flush...
             BIO_ctrl(bio, BIO_CTRL_FLUSH, 0, nil)
 		}
-    
-        var evp_key: UnsafeMutablePointer<EVP_PKEY>
+		
+		#if swift(>=4.2)
+		
+			var evp_key: OpaquePointer?
+		
+		#else
+		
+	        var evp_key: UnsafeMutablePointer<EVP_PKEY>
+		
+		#endif
 	
         defer {
-        	EVP_PKEY_free(evp_key)
+			EVP_PKEY_free(.make(optional: evp_key))
         }
 
         // Read in the key data and process depending on key type...
         if type == .publicType {
-            evp_key = PEM_read_bio_PUBKEY(bio, nil, nil, nil)
+			
+			#if swift(>=4.2)
+				evp_key = .init(PEM_read_bio_PUBKEY(bio, nil, nil, nil))
+			#else
+	            evp_key = PEM_read_bio_PUBKEY(bio, nil, nil, nil)
+			#endif
 
         } else {
-	
-            evp_key = PEM_read_bio_PrivateKey(bio, nil, nil, nil)
+			
+			#if swift(>=4.2)
+				evp_key = .init(PEM_read_bio_PrivateKey(bio, nil, nil, nil))
+			#else
+	            evp_key = PEM_read_bio_PrivateKey(bio, nil, nil, nil)
+			#endif
         }
 
-        let key = EVP_PKEY_get1_RSA( evp_key)
+		let key = EVP_PKEY_get1_RSA(.make(optional: evp_key))
         if key == nil {
             let source = "Couldn't create key reference from key data"
             if let reason = CryptorRSA.getLastError(source: source) {
@@ -98,7 +115,7 @@ public extension CryptorRSA {
             throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
         }
 
-		return key!
+		return .init(key!)
 	}
 	
 	///
