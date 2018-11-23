@@ -49,8 +49,8 @@
 
 /* Begin PBXFileReference section */
 		8C208BD321A86E9400DDD50E /* CryptorRSA.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CryptorRSA.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		8C208BD821A8701E00DDD50E /* CryptorRSA-iOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CryptorRSA-iOS.h"; sourceTree = "<group>"; };
 		8C208BD921A8701E00DDD50E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8C208BDA21A878C100DDD50E /* CryptorRSA-iOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CryptorRSA-iOS.h"; sourceTree = "<group>"; };
 		8C7111F02199B9F5003CF4B3 /* SSLPointerTricks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SSLPointerTricks.swift; path = CryptorRSA/SSLPointerTricks.swift; sourceTree = "<group>"; };
 		8C7925C41E32566D00C1369E /* multiple-keys-testcase.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "multiple-keys-testcase.pem"; path = "keys/multiple-keys-testcase.pem"; sourceTree = "<group>"; };
 		8C7925C51E32566D00C1369E /* multiple-keys-testcase.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "multiple-keys-testcase.sh"; path = "keys/multiple-keys-testcase.sh"; sourceTree = "<group>"; };
@@ -109,7 +109,7 @@
 		8C208BD721A86F8800DDD50E /* CryptorRSA-iOS */ = {
 			isa = PBXGroup;
 			children = (
-				8C208BD821A8701E00DDD50E /* CryptorRSA-iOS.h */,
+				8C208BDA21A878C100DDD50E /* CryptorRSA-iOS.h */,
 				8C208BD921A8701E00DDD50E /* Info.plist */,
 			);
 			path = "CryptorRSA-iOS";
@@ -172,8 +172,8 @@
 				8CF9FB711E2E6AF200F23746 /* README.md */,
 				OBJ_7 /* Sources */,
 				OBJ_10 /* Tests */,
-				OBJ_13 /* Products */,
 				8C208BD721A86F8800DDD50E /* CryptorRSA-iOS */,
+				OBJ_13 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
