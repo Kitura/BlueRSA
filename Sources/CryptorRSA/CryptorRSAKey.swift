@@ -399,17 +399,25 @@ public extension CryptorRSA {
 				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data.")
 			}
 		
-			// Now extract the public key from it...
-			var key: SecKey? = nil
-			let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
-				
-				// Retrieves the public key from a certificate...
-				SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
-			}
-			if status != errSecSuccess || key == nil {
-				
-				throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
-			}
+			#if os(macOS)
+		
+				// Now extract the public key from it...
+				var key: SecKey? = nil
+				let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
+					
+					// Retrieves the public key from a certificate...
+					SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
+				}
+				if status != errSecSuccess || key == nil {
+					
+					throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
+				}
+		
+			#else
+		
+				let key = SecCertificateCopyPublicKey(certData)
+		
+			#endif
 		
 			return PublicKey(with: key!)
 		
