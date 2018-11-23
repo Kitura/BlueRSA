@@ -7,6 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8C208BC821A86E9400DDD50E /* CryptorRSAKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CF9FB781E2FBFB600F23746 /* CryptorRSAKey.swift */; };
+		8C208BC921A86E9400DDD50E /* CryptorRSAUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CF9FB741E2E75F800F23746 /* CryptorRSAUtilities.swift */; };
+		8C208BCA21A86E9400DDD50E /* SSLPointerTricks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C7111F02199B9F5003CF4B3 /* SSLPointerTricks.swift */; };
+		8C208BCB21A86E9400DDD50E /* CryptorRSAConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CF9FB7A1E2FC07500F23746 /* CryptorRSAConstants.swift */; };
+		8C208BCC21A86E9400DDD50E /* CryptorRSA.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_9 /* CryptorRSA.swift */; };
+		8C208BCD21A86E9400DDD50E /* CryptorRSADigest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CF9FB981E302A4900F23746 /* CryptorRSADigest.swift */; };
+		8C208BCE21A86E9400DDD50E /* CryptorRSAErrors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CF9FB7C1E2FC14F00F23746 /* CryptorRSAErrors.swift */; };
 		8C7111F12199B9F5003CF4B3 /* SSLPointerTricks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C7111F02199B9F5003CF4B3 /* SSLPointerTricks.swift */; };
 		8C7925D81E32570300C1369E /* multiple-keys-testcase.pem in Resources */ = {isa = PBXBuildFile; fileRef = 8C7925C41E32566D00C1369E /* multiple-keys-testcase.pem */; };
 		8C7925D91E32570300C1369E /* multiple-keys-testcase.sh in Resources */ = {isa = PBXBuildFile; fileRef = 8C7925C51E32566D00C1369E /* multiple-keys-testcase.sh */; };
@@ -41,6 +48,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8C208BD321A86E9400DDD50E /* CryptorRSA.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CryptorRSA.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8C208BD821A8701E00DDD50E /* CryptorRSA-iOS.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CryptorRSA-iOS.h"; sourceTree = "<group>"; };
+		8C208BD921A8701E00DDD50E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8C7111F02199B9F5003CF4B3 /* SSLPointerTricks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SSLPointerTricks.swift; path = CryptorRSA/SSLPointerTricks.swift; sourceTree = "<group>"; };
 		8C7925C41E32566D00C1369E /* multiple-keys-testcase.pem */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "multiple-keys-testcase.pem"; path = "keys/multiple-keys-testcase.pem"; sourceTree = "<group>"; };
 		8C7925C51E32566D00C1369E /* multiple-keys-testcase.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; name = "multiple-keys-testcase.sh"; path = "keys/multiple-keys-testcase.sh"; sourceTree = "<group>"; };
@@ -71,6 +81,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		8C208BCF21A86E9400DDD50E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		OBJ_22 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 0;
@@ -89,6 +106,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8C208BD721A86F8800DDD50E /* CryptorRSA-iOS */ = {
+			isa = PBXGroup;
+			children = (
+				8C208BD821A8701E00DDD50E /* CryptorRSA-iOS.h */,
+				8C208BD921A8701E00DDD50E /* Info.plist */,
+			);
+			path = "CryptorRSA-iOS";
+			sourceTree = "<group>";
+		};
 		8C7925C31E32565200C1369E /* Keys */ = {
 			isa = PBXGroup;
 			children = (
@@ -132,6 +158,7 @@
 			children = (
 				OBJ_14 /* CryptorRSA.framework */,
 				OBJ_15 /* CryptorRSATests.xctest */,
+				8C208BD321A86E9400DDD50E /* CryptorRSA.framework */,
 			);
 			name = Products;
 			sourceTree = BUILT_PRODUCTS_DIR;
@@ -146,6 +173,7 @@
 				OBJ_7 /* Sources */,
 				OBJ_10 /* Tests */,
 				OBJ_13 /* Products */,
+				8C208BD721A86F8800DDD50E /* CryptorRSA-iOS */,
 			);
 			sourceTree = "<group>";
 		};
@@ -166,6 +194,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		8C208BC521A86E9400DDD50E /* CryptorRSA-iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8C208BD021A86E9400DDD50E /* Build configuration list for PBXNativeTarget "CryptorRSA-iOS" */;
+			buildPhases = (
+				8C208BC621A86E9400DDD50E /* ShellScript */,
+				8C208BC721A86E9400DDD50E /* Sources */,
+				8C208BCF21A86E9400DDD50E /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "CryptorRSA-iOS";
+			productName = CryptorRSA;
+			productReference = 8C208BD321A86E9400DDD50E /* CryptorRSA.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		OBJ_16 /* CryptorRSA */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = OBJ_17 /* Build configuration list for PBXNativeTarget "CryptorRSA" */;
@@ -231,6 +276,7 @@
 			targets = (
 				OBJ_16 /* CryptorRSA */,
 				OBJ_23 /* CryptorRSATests */,
+				8C208BC521A86E9400DDD50E /* CryptorRSA-iOS */,
 			);
 		};
 /* End PBXProject section */
@@ -258,6 +304,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		8C208BC621A86E9400DDD50E /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\nCC_PATH=\"$SRCROOT/CommonCrypto\"\necho \"$CC_PATH\"\n\nCCMODMAP=$SDKROOT/usr/include/CommonCrypto/module.modulemap\nif [ -e \"$CCMODMAP\" ] ; then\nif [ -e \"$CC_PATH\" ] ; then\nrm -rf \"$CC_PATH\"\nfi\necho \"Modulemap already exists. Skipping generation...\"\nexit 0\nfi\n\nHEADER_FILE1=$SDKROOT/usr/include/CommonCrypto/CommonCrypto.h\nif [ ! -e $HEADER_FILE1 ] ; then\necho \"ERROR: The CommonCrypto.h header file could not be found.\"\nexit 1\nfi\n\nHEADER_FILE2=$SDKROOT/usr/include/CommonCrypto/CommonRandom.h\nif [ ! -e $HEADER_FILE2 ] ; then\necho \"ERROR: The CommonRandom.h header file could not be found.\"\nexit 1\nfi\n\nif [ -e \"$CC_PATH\" ] ; then\necho \"$CC_PATH exists...\"\nelse\nmkdir -p \"$CC_PATH\"\nfi\n\n# Write the module.map file\ncat <<_EOF_ > \"$CC_PATH/module.map\"\nmodule CommonCrypto [system] {\n    header \"$HEADER_FILE1\"\n    header \"$HEADER_FILE2\"\n    export *\n}\n\nmodule OpenSSL [system] {\n    header \"/usr/local/opt/openssl/include/openssl/conf.h\"\n    header \"/usr/local/opt/openssl/include/openssl/evp.h\"\n    header \"/usr/local/opt/openssl/include/openssl/err.h\"\n    header \"/usr/local/opt/openssl/include/openssl/bio.h\"\n    header \"/usr/local/opt/openssl/include/openssl/ssl.h\"\n    header \"/usr/local/opt/openssl/include/openssl/md4.h\"\n    header \"/usr/local/opt/openssl/include/openssl/md5.h\"\n    header \"/usr/local/opt/openssl/include/openssl/sha.h\"\n    header \"/usr/local/opt/openssl/include/openssl/hmac.h\"\n    header \"/usr/local/opt/openssl/include/openssl/rand.h\"\n    link \"ssl\"\n    link \"crypto\"\n}\n_EOF_\necho \"Created CommonCrypto Module Map.  CommonCrypto Framework now available.\"\n";
+		};
 		8CF9FB971E30295600F23746 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -274,6 +333,20 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		8C208BC721A86E9400DDD50E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 0;
+			files = (
+				8C208BC821A86E9400DDD50E /* CryptorRSAKey.swift in Sources */,
+				8C208BC921A86E9400DDD50E /* CryptorRSAUtilities.swift in Sources */,
+				8C208BCA21A86E9400DDD50E /* SSLPointerTricks.swift in Sources */,
+				8C208BCB21A86E9400DDD50E /* CryptorRSAConstants.swift in Sources */,
+				8C208BCC21A86E9400DDD50E /* CryptorRSA.swift in Sources */,
+				8C208BCD21A86E9400DDD50E /* CryptorRSADigest.swift in Sources */,
+				8C208BCE21A86E9400DDD50E /* CryptorRSAErrors.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		OBJ_20 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
@@ -307,6 +380,56 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		8C208BD121A86E9400DDD50E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_SEARCH_PATHS = "$(PLATFORM_DIR)/Developer/Library/Frameworks";
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = "CryptorRSA-iOS/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				OTHER_LDFLAGS = "$(inherited)";
+				OTHER_SWIFT_FLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibm.oss.CryptorRSA;
+				PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;
+				SWIFT_INCLUDE_PATHS = "\"$SRCROOT/CommonCrypto\"";
+				SWIFT_VERSION = 4.2;
+				TARGET_NAME = CryptorRSA;
+			};
+			name = Debug;
+		};
+		8C208BD221A86E9400DDD50E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				ENABLE_TESTABILITY = YES;
+				FRAMEWORK_SEARCH_PATHS = "$(PLATFORM_DIR)/Developer/Library/Frameworks";
+				HEADER_SEARCH_PATHS = "";
+				INFOPLIST_FILE = "CryptorRSA-iOS/Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
+				LD_RUNPATH_SEARCH_PATHS = "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx";
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				OTHER_LDFLAGS = "$(inherited)";
+				OTHER_SWIFT_FLAGS = "$(inherited)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.ibm.oss.CryptorRSA;
+				PRODUCT_MODULE_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = SWIFT_PACKAGE;
+				SWIFT_INCLUDE_PATHS = "\"$SRCROOT/CommonCrypto\"";
+				SWIFT_VERSION = 4.2;
+				TARGET_NAME = CryptorRSA;
+			};
+			name = Release;
+		};
 		OBJ_18 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -485,6 +608,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		8C208BD021A86E9400DDD50E /* Build configuration list for PBXNativeTarget "CryptorRSA-iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8C208BD121A86E9400DDD50E /* Debug */,
+				8C208BD221A86E9400DDD50E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		OBJ_17 /* Build configuration list for PBXNativeTarget "CryptorRSA" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
