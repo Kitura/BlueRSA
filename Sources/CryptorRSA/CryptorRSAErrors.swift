@@ -24,7 +24,7 @@ import Foundation
 // MARK: -
 
 @available(macOS 10.12, iOS 10.0, *)
-public extension CryptorRSA {
+extension CryptorRSA {
 	
 	// MARK: Constants
 	
@@ -98,7 +98,7 @@ public extension CryptorRSA {
 		///
 		/// - Returns: Error instance
 		///
-		init(code: Int, reason: String?) {
+		public init(code: Int, reason: String?) {
 			
 			self.errorCode = Int32(code)
 			self.errorReason = reason

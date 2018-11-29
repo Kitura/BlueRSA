@@ -32,7 +32,7 @@ import Foundation
 ///
 /// Digest Handling Extension
 ///
-public extension Data {
+extension Data {
 	
 	// MARK: Enums
 	

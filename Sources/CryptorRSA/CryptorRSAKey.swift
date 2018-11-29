@@ -30,7 +30,7 @@ import Foundation
 // MARK: -
 
 @available(macOS 10.12, iOS 10.0, *)
-public extension CryptorRSA {
+extension CryptorRSA {
 	
 	// MARK: Type Aliases
 	
@@ -38,17 +38,17 @@ public extension CryptorRSA {
 	
 		#if swift(>=4.2)
 	
-			typealias NativeKey = OpaquePointer?
+			public typealias NativeKey = OpaquePointer?
 	
 		#else
 	
-			typealias NativeKey = UnsafeMutablePointer<RSA>
+			public typealias NativeKey = UnsafeMutablePointer<RSA>
 	
 		#endif
 	
 	#else
 	
-		typealias NativeKey = SecKey
+		public typealias NativeKey = SecKey
 	
 	#endif
 	
