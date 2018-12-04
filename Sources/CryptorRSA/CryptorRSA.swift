@@ -414,7 +414,7 @@ public class CryptorRSA {
                         return EVP_OpenInit(rsaDecryptCtx, .make(optional: encType), ek, Int32(encryptedKey.count), iv, evp_key)
                     })
                 })
-                guard status != EVP_CIPHER_key_length(.make(optional: encType)) else {
+                guard status != 0 else {
                     let source = "Decryption failed"
                     if let reason = CryptorRSA.getLastError(source: source) {
                         
