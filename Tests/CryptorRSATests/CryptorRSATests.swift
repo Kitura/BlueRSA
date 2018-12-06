@@ -407,7 +407,73 @@ class CryptorRSATests: XCTestCase {
 			print("Test of algorithm: \(name) succeeded")
 		}
 	}
+    
+    func test_ExistingKey() throws {
+        let encryptedString = "yDgwwJ9fwIpfGshFsgsi1Kr4I8827tuMc8N0yMXSAHX21kpF2+RqtCVZnlJuWwSIkBchI7pxFKUhNhke0RA/tw5nrF/eIREuGabLFWfJ4MhcKKOnkdJqp/J7/pMIU7+Gei3pgpZCcDdCjYWJV0p+Jq20TrS2UYrtDSA22EmPKt7WdKDu+jrurTX5QB7jdGDNOguAxfkkAJakuDH/Q1edx6+r1+Eww77oh0HQYbB6ZlNk8+4l"
+        let key =
+"""
+-----BEGIN RSA PRIVATE KEY-----
+MIICXQIBAAKBgQDpbnF5g5bt9mjweE5nZioLAPKIl31qj5/ht4i62gsEg/6R/GMB
+IAhUEgfr9n3H0jIKRoI0BvVH6+fUB9pKoMUdRu3VsAF9ExkuhwazpE1uIfRbf2IJ
+HIAz5zX3emUdymHaPZPucQUF7G/XmOMK86qKl8Zdd8Gl8cTFpRVMoSs4lwIDAQAB
+AoGAcs/ZjDTGxWAPGUdy+LRtNWBP6hLoosLllnVZEN4x0RTC3zbN0z3YGtGLh+mC
+0Ad4iUlIvSI2/hrvuX/rRA1zJRSWqmUi+K/IQtRqH4L29xfDT9yxVd5X61vb5dGs
+nruBHBSdcfsLKrQZClAqGKNElVfLn5+vaf48hsm9de5lSRECQQD+WcQHRSEyuuWl
+dW0qhfRBXjtqnvS1VQ+CmS4nzeAVfNLV8KzJvx/evoQ9KxbnwfN/fQkyniK0RzNs
+kcXNZFsLAkEA6vHzWrQVtiQ5b8itwn3er7FWWy53SFLiy2MJCUBmm0Z2uJXox4Ym
+nH2SoUVMHJOvqgdqcwz53RJIlMPkAMgwJQJAbYTDZon6qHhXR65PSh8RtE/Z76fw
+IGA25HoGqLb6BOaRdfNCwz/bfjK0iA4Ut8gIi92P5062DMAXwWjnLfBHTwJBAM0E
+p2xeO5f+0lQ2lVJkDj/Yi1f0G0j0c04yNL9rAF69RXpb7o62BNmIRr0OQJWrVp4T
+7JNLHnsIqmeO7Va1WjUCQQDcY8s947hfiISXQ9o6auz33WyIRQWt/x0WdujVsxjM
+JNHkkGxCfEjy9Z74EO8MoSddiM4+u7gPZsr5f6AZvMsj
+-----END RSA PRIVATE KEY-----
+"""
+        print("Testing algorithm: \(name)")
+        guard let privateKey = try? CryptorRSA.createPrivateKey(withPEM: key) else {
+                XCTFail("Could not find key")
+                return
+        }
+        let encrypted = try CryptorRSA.createEncrypted(with: encryptedString)
+        let decrypted = try encrypted.decrypted(with: privateKey, algorithm: .sha256)
+        XCTAssertNotNil(decrypted)
+        let decryptedString = try decrypted!.string(using: .utf8)
+        print(decryptedString)
+        print("Test of algorithm: \(name) succeeded")
+    }
 	
+    func test_DataDecryption() throws {
+        let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
+                                                      (.sha224, ".sha224"),
+                                                      (.sha256, ".sha256"),
+                                                      (.sha384, ".sha384"),
+                                                      /*(.sha512, ".sha512")*/]
+        // Test all the algorithms available...
+        //    Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
+        for (algorithm, name) in algorithms {
+        
+        print("Testing algorithm: \(name)")
+        let str = "Plain Text"
+        let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
+        
+        guard let publicKey = self.publicKey,
+        let privateKey = self.privateKey else {
+        XCTFail("Could not find key")
+        return
+        }
+        
+        guard let plaintextEncrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm) else {
+        return XCTFail("Failed to encrypt plaintext")
+        }
+        let encryptedString = plaintextEncrypted.base64String
+        let encrypted = try CryptorRSA.createEncrypted(with: encryptedString)
+        let decrypted = try encrypted.decrypted(with: privateKey, algorithm: algorithm)
+        XCTAssertNotNil(decrypted)
+        let decryptedString = try decrypted!.string(using: .utf8)
+        XCTAssertEqual(decryptedString, str)
+        print("Test of algorithm: \(name) succeeded")
+        }
+    }
+
 	// MARK: Signing/Verification Tests
 	
 	func test_signVerifyAllDigestTypes() throws {
