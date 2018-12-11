@@ -238,19 +238,11 @@ public class CryptorRSA {
                 // TODO: hash type option is not being used right now.
                 let ( _, enc, padding) = algorithm.alogrithmForEncryption
 
-				#if swift(>=4.2)
-					let rsaEncryptCtx = EVP_CIPHER_CTX_new_wrapper()
-				#else
-    	            let rsaEncryptCtx = UnsafeMutablePointer<EVP_CIPHER_CTX>.allocate(capacity: 1)
-				#endif
-                
+				let rsaEncryptCtx = EVP_CIPHER_CTX_new_wrapper()
+			
                 defer {
-					#if swift(>=4.2)
-						EVP_CIPHER_CTX_reset_wrapper(rsaEncryptCtx)
-						EVP_CIPHER_CTX_free_wrapper(rsaEncryptCtx)
-					#else
-	                    EVP_CIPHER_CTX_cleanup(rsaEncryptCtx)
-					#endif
+					EVP_CIPHER_CTX_reset_wrapper(rsaEncryptCtx)
+					EVP_CIPHER_CTX_free_wrapper(rsaEncryptCtx)
                     EVP_PKEY_free(evp_key)
                 }
 
@@ -383,19 +375,11 @@ public class CryptorRSA {
                 let encryptedData = self.data.subdata(in: encKeyLength..<encKeyLength+encryptedDataLength)
                 let encryptedIV = self.data.subdata(in: encKeyLength+encryptedDataLength..<self.data.count)
                 
-				#if swift(>=4.2)
-					let rsaDecryptCtx = EVP_CIPHER_CTX_new_wrapper()
-				#else
-    	            let rsaDecryptCtx = UnsafeMutablePointer<EVP_CIPHER_CTX>.allocate(capacity: 1)
-				#endif
+				let rsaDecryptCtx = EVP_CIPHER_CTX_new_wrapper()
 			
                 defer {
-					#if swift(>=4.2)
-						EVP_CIPHER_CTX_reset_wrapper(rsaDecryptCtx)
-						EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
-					#else
-	                    EVP_CIPHER_CTX_cleanup(rsaDecryptCtx)
-					#endif
+					EVP_CIPHER_CTX_reset_wrapper(rsaDecryptCtx)
+					EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
                     EVP_PKEY_free(evp_key)
                 }
 			
@@ -490,18 +474,10 @@ public class CryptorRSA {
 			
 			#if os(Linux)
 			
-				#if swift(>=4.2)
-					let md_ctx = EVP_MD_CTX_new_wrapper()
-				#else
-    	            let md_ctx = EVP_MD_CTX_create()
-				#endif
+				let md_ctx = EVP_MD_CTX_new_wrapper()
 
                 defer {
-					#if swift(>=4.2)
-						EVP_MD_CTX_free_wrapper(md_ctx)
-					#else
-	                    EVP_MD_CTX_destroy(md_ctx)
-					#endif
+					EVP_MD_CTX_free_wrapper(md_ctx)
                 }
                 
                 // convert RSA key to EVP
@@ -599,18 +575,10 @@ public class CryptorRSA {
 			
 			#if os(Linux)
 				
-				#if swift(>=4.2)
-					let md_ctx = EVP_MD_CTX_new_wrapper()
-				#else
-    	            let md_ctx = EVP_MD_CTX_create()
-				#endif
+				let md_ctx = EVP_MD_CTX_new_wrapper()
 
                 defer {
-					#if swift(>=4.2)
-						EVP_MD_CTX_free_wrapper(md_ctx)
-					#else
-	                    EVP_MD_CTX_destroy(md_ctx)
-					#endif
+					EVP_MD_CTX_free_wrapper(md_ctx)
                 }
 
                 // convert RSA key to EVP

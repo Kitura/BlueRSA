@@ -36,15 +36,7 @@ extension CryptorRSA {
 	
 	#if os(Linux)
 	
-		#if swift(>=4.2)
-	
-			public typealias NativeKey = OpaquePointer?
-	
-		#else
-	
-			public typealias NativeKey = UnsafeMutablePointer<RSA>
-	
-		#endif
+		public typealias NativeKey = OpaquePointer?
 	
 	#else
 	
@@ -658,6 +650,25 @@ extension CryptorRSA {
 			self.type = type
 			self.reference = nativeKey
 		}
+		
+		#if os(Linux) && !swift(>=4.1)
+		
+			///
+			/// Create a key using a native key.
+			///
+			/// - Parameters:
+			///		- nativeKey:		Pointer to RSA key structure.
+			///		- type:				Type of key.
+			///
+			/// - Returns:				New `RSAKey` instance.
+			///
+			internal init(with nativeKey: UnsafeMutablePointer<rsa_st>, type: KeyType) {
+				
+				self.type = type
+				self.reference = .make(optional: nativeKey)
+			}
+		
+		#endif
 	}
 	
 	// MARK: -
@@ -768,6 +779,23 @@ extension CryptorRSA {
 			
 			super.init(with: nativeKey, type: .publicType)
 		}
+
+		#if os(Linux) && !swift(>=4.1)
+		
+			///
+			/// Create a key using a native key.
+			///
+			/// - Parameters:
+			///		- nativeKey:		Pointer to RSA key structure.
+			///
+			/// - Returns:				New `RSAKey` instance.
+			///
+			public init(with nativeKey: UnsafeMutablePointer<rsa_st>) {
+				
+				super.init(with: nativeKey, type: .publicType)
+			}
+		
+		#endif
 	}
 	
 	// MARK: -

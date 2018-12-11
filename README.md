@@ -52,8 +52,6 @@ Swift cross-platform RSA wrapper library for RSA encryption and signing. Works o
 
 ## Build
 
-**Note:** If buiding using **OpenSSL 1.1.x**, the **4.2** release of Swift is **required**.
-
 To build CryptorRSA from the command line:
 
 ```

@@ -73,15 +73,7 @@ public extension CryptorRSA {
             BIO_ctrl(bio, BIO_CTRL_FLUSH, 0, nil)
 		}
 		
-		#if swift(>=4.2)
-		
-			var evp_key: OpaquePointer?
-		
-		#else
-		
-	        var evp_key: UnsafeMutablePointer<EVP_PKEY>
-		
-		#endif
+		var evp_key: OpaquePointer?
 	
         defer {
 			EVP_PKEY_free(.make(optional: evp_key))
@@ -90,19 +82,11 @@ public extension CryptorRSA {
         // Read in the key data and process depending on key type...
         if type == .publicType {
 			
-			#if swift(>=4.2)
-				evp_key = .init(PEM_read_bio_PUBKEY(bio, nil, nil, nil))
-			#else
-	            evp_key = PEM_read_bio_PUBKEY(bio, nil, nil, nil)
-			#endif
+			evp_key = .init(PEM_read_bio_PUBKEY(bio, nil, nil, nil))
 
         } else {
 			
-			#if swift(>=4.2)
-				evp_key = .init(PEM_read_bio_PrivateKey(bio, nil, nil, nil))
-			#else
-	            evp_key = PEM_read_bio_PrivateKey(bio, nil, nil, nil)
-			#endif
+			evp_key = .init(PEM_read_bio_PrivateKey(bio, nil, nil, nil))
         }
 
 		let key = EVP_PKEY_get1_RSA(.make(optional: evp_key))
