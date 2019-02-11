@@ -346,7 +346,60 @@ class CryptorRSATests: XCTestCase {
 			print("Test of algorithm: \(name) succeeded")
 		}
 	}
+    
+    func test_simpleGCMEncryption() throws {
+            
+        print("Testing GCM algorithm")
+        let str = "Plain Text"
+        let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
+        
+        guard let publicKey = self.publicKey,
+            let privateKey = self.privateKey else {
+                XCTFail("Could not find key")
+                return
+        }
+        
+        let encrypted = try plainText.encryptedGCM(with: publicKey)
+        XCTAssertNotNil(encrypted)
+        let decrypted = try encrypted?.decryptedGCM(with: privateKey)
+        XCTAssertNotNil(decrypted)
+        let decryptedString = try decrypted?.string(using: .utf8)
+        XCTAssertEqual(decryptedString, str)
+        print("Test of GCM algorithm succeeded")
+    }
 	
+    func test_linuxEncryptedGCM() throws {
+        
+        print("Testing linux encrypted GCM")
+        let linuxEncrypted = try CryptorRSA.createEncrypted(with: "toylrkUlMuNyqERzkUTl/kX88eYnaZFO2cD7vO3LUqZJ/GhsSmgDudQhS5CsZGEwPVnrrZ77S7j5ksikouJm9MpurBZZYJN1iOGLjDfam8Vtz6iYpZ7fLdrGMWz/ytrqxcUTeHkXKJ+Hx/XHf+SLQN79Yw8XWAE5qowRnTdZy9x16J7czi4MJW5URO/cFA/nkKStvOSzZRgd9WiqOos=")
+        
+        guard let privateKey = self.privateKey else {
+                XCTFail("Could not find key")
+                return
+        }
+        let decrypted = try linuxEncrypted.decryptedGCM(with: privateKey)
+        XCTAssertNotNil(decrypted)
+        let decryptedString = try decrypted?.string(using: .utf8)
+        XCTAssertEqual(decryptedString, "LinuxEncrypted")
+        print("Test of GCM algorithm succeeded")
+    }
+    
+    func test_MacEncryptedGCM() throws {
+        
+        print("Testing MacOS encrypted GCM")
+        let macEncrypted = try CryptorRSA.createEncrypted(with: "SfM0Tg3M4mU0EFoz1ZiriUShCQbyT+aITE8FO+vvIwoNHyI/OWsOxyVxIv4K86tFuDrR9ORSiYcc8O29pOPbpcpGQEo+0EsVjiDwvbrDsIXdOWtiX8hbe/vjvuC8QfYaA5K8OiSlLyMtZGpyegKiROjHXxuVQfk4EgGI2IANARgrO191bar87742fgO0w55ILuNLXvU+/kYXe7DV")
+        
+        guard let privateKey = self.privateKey else {
+            XCTFail("Could not find key")
+            return
+        }
+        let decrypted = try macEncrypted.decryptedGCM(with: privateKey)
+        XCTAssertNotNil(decrypted)
+        let decryptedString = try decrypted?.string(using: .utf8)
+        XCTAssertEqual(decryptedString, "MacEncrypted")
+        print("Test of GCM algorithm succeeded")
+    }
+    
 	func test_longStringEncryption() throws {
 		
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
@@ -622,6 +675,9 @@ class CryptorRSATests: XCTestCase {
             ("test_private_initWithPEMName", test_private_initWithPEMName),
             ("test_private_initWithDERName", test_private_initWithDERName),
             ("test_simpleEncryption", test_simpleEncryption),
+            ("test_simpleGCMEncryption", test_simpleGCMEncryption),
+            ("test_linuxEncryptedGCM", test_linuxEncryptedGCM),
+            ("test_MacEncryptedGCM", test_MacEncryptedGCM),
             ("test_longStringEncryption", test_longStringEncryption),
             ("test_randomByteEncryption", test_randomByteEncryption),
 			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),

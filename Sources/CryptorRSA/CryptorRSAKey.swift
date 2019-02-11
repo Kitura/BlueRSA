@@ -608,6 +608,10 @@ extension CryptorRSA {
 		/// The stored key
 		internal let reference: NativeKey
 		
+        #if os(Linux)
+        let rawBytes: Data?
+        #endif
+        
 		/// Represents the type of key data contained.
 		public internal(set) var type: KeyType = .publicType
 		
@@ -627,13 +631,14 @@ extension CryptorRSA {
 			self.type = type
 			
 			// On macOS, we need to strip off the X509 header if it exists...
-			#if !os(Linux)
-			
-				let data = try CryptorRSA.stripX509CertificateHeader(for: data)
-			
-			#endif
-			
-			reference = try CryptorRSA.createKey(from: data, type: type)
+            let strippedData = try CryptorRSA.stripX509CertificateHeader(for: data)
+            
+            #if os(Linux)
+            rawBytes = strippedData
+            reference = try CryptorRSA.createKey(from: data, type: type)
+            #else
+            reference = try CryptorRSA.createKey(from: strippedData, type: type)
+            #endif
 		}
 		
 		///
@@ -646,7 +651,9 @@ extension CryptorRSA {
 		/// - Returns:				New `RSAKey` instance.
 		///
 		internal init(with nativeKey: NativeKey, type: KeyType) {
-			
+            #if os(Linux)
+            rawBytes = nil
+            #endif
 			self.type = type
 			self.reference = nativeKey
 		}
