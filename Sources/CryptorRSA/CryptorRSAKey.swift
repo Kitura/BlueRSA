@@ -113,13 +113,15 @@ extension CryptorRSA {
 		}
 		
 		#if os(Linux)
-		
+            let strippedData = try CryptorRSA.stripX509CertificateHeader(for: data)
 			// OpenSSL uses the PEM version when importing key...
 			data = CryptorRSA.convertDerToPem(from: data, type: .publicType)
-		
+            let key = try PublicKey(with: data)
+            key.rawBytes = strippedData
+            return key
+        #else
+            return try PublicKey(with: data)
 		#endif
-		
-		return try PublicKey(with: data)
 	}
 	
 	///
@@ -607,10 +609,6 @@ extension CryptorRSA {
 		
 		/// The stored key
 		internal let reference: NativeKey
-		
-        #if os(Linux)
-        let rawBytes: Data?
-        #endif
         
 		/// Represents the type of key data contained.
 		public internal(set) var type: KeyType = .publicType
@@ -630,15 +628,14 @@ extension CryptorRSA {
 			
 			self.type = type
 			
-			// On macOS, we need to strip off the X509 header if it exists...
-            let strippedData = try CryptorRSA.stripX509CertificateHeader(for: data)
+            // On macOS, we need to strip off the X509 header if it exists...
+            #if !os(Linux)
+    
+            let data = try CryptorRSA.stripX509CertificateHeader(for: data)
             
-            #if os(Linux)
-            rawBytes = strippedData
-            reference = try CryptorRSA.createKey(from: data, type: type)
-            #else
-            reference = try CryptorRSA.createKey(from: strippedData, type: type)
             #endif
+            
+            reference = try CryptorRSA.createKey(from: data, type: type)
 		}
 		
 		///
@@ -651,9 +648,7 @@ extension CryptorRSA {
 		/// - Returns:				New `RSAKey` instance.
 		///
 		internal init(with nativeKey: NativeKey, type: KeyType) {
-            #if os(Linux)
-            rawBytes = nil
-            #endif
+            
 			self.type = type
 			self.reference = nativeKey
 		}
@@ -684,7 +679,11 @@ extension CryptorRSA {
 	/// Public Key - Represents public key data.
 	///
 	public class PublicKey: RSAKey {
-		
+        
+        #if os(Linux)
+        let rawBytes: Data
+        #endif
+        
 		/// MARK: Statics
 		
 		/// Regular expression for the PK using the begin and end markers.
@@ -772,6 +771,14 @@ extension CryptorRSA {
 		///
 		public init(with data: Data) throws {
 			try super.init(with: data, type: .publicType)
+            #if os(Linux)
+            if let pemString = String(data: data, encoding: .utf8),
+                let base64String = try? CryptorRSA.base64String(for: pemString),
+                let derData = Data(base64Encoded: base64String)
+            {
+                rawBytes = try? stripX509CertificateHeader(for: derData)
+            }
+            #endif
 		}
 		
 		///
@@ -812,6 +819,10 @@ extension CryptorRSA {
 	///
 	public class PrivateKey: RSAKey {
 		
+        #if os(Linux)
+        let rawBytes: Data
+        #endif
+        
 		// MARK: -- Initializers
 		
 		///
@@ -823,8 +834,15 @@ extension CryptorRSA {
 		/// - Returns:				New `PrivateKey` instance.
 		///
 		public init(with data: Data) throws {
-			
 			try super.init(with: data, type: .privateType)
+            #if os(Linux)
+            if let pemString = String(data: data, encoding: .utf8),
+                let base64String = try? CryptorRSA.base64String(for: pemString),
+                let derData = Data(base64Encoded: base64String)
+            {
+                rawBytes = try? getPublicKeyDataFrom(privateKey: derData)
+            }
+            #endif
 		}
 		
 		///

@@ -366,14 +366,15 @@ public class CryptorRSA {
                 tag.deallocate(capacity: 16)
                 encrypted.deallocate(capacity: data.count + 16)
                 #endif
-                EVP_PKEY_free(evp_key)
             }
             
+            var processedLength: Int32 = 0
+            var encLength: Int32 = 0
             guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1,
                 EVP_CIPHER_CTX_ctrl(rsaEncryptCtx, EVP_CTRL_GCM_SET_IVLEN, 16, nil) == 1,
                 EVP_CIPHER_CTX_rand_key(rsaEncryptCtx, aeskey) == 1,
                 EVP_EncryptInit_ex(rsaEncryptCtx, nil, nil, aeskey, iv) == 1,
-                RSA_public_encrypt(16, aeskey, encryptedKey, key.reference, RSA_PKCS1_OAEP_PADDING) == 1,
+                RSA_public_encrypt(16, aeskey, encryptedKey, .make(optional: key.reference), RSA_PKCS1_OAEP_PADDING) == 128,
                 let aad = key.rawBytes,
                 EVP_EncryptUpdate(rsaEncryptCtx, nil, &processedLength, [UInt8](aad), Int32(aad.count)) == 1
                 else {
@@ -383,10 +384,6 @@ public class CryptorRSA {
                     }
                     throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
             }
-            
-            var processedLength: Int32 = 0
-            var encLength: Int32 = 0
-            
             // EVP_SealUpdate is a complex macros and therefore the compiler doesnt
             // convert it directly to swift. From /usr/local/opt/openssl/include/openssl/evp.h:
             guard(self.data.withUnsafeBytes({ (plaintext: UnsafePointer<UInt8>) -> Int32 in
@@ -418,7 +415,7 @@ public class CryptorRSA {
             let ekFinal = Data(bytes: encryptedKey, count: 128)
             let cipher = Data(bytes: encrypted, count: Int(encLength))
             let tagFinal = Data(bytes: tag, count: 16)
-            return ekFinal + cipher + tagFinal
+            return EncryptedData(with: ekFinal + cipher + tagFinal)
             #else
             var response: Unmanaged<CFError>? = nil
             guard let eData = SecKeyCreateEncryptedData(key.reference,
@@ -581,8 +578,6 @@ public class CryptorRSA {
             }
             
             #if os(Linux)
-            Log.info("In linux section")
-            // Convert RSA key to EVP
             let encKeyLength = 128
             let encIVLength = 16
             let encryptedDataLength = Int(data.count) - encKeyLength - 16
@@ -594,39 +589,39 @@ public class CryptorRSA {
             let encryptedData = data.subdata(in: encKeyLength..<encKeyLength+encryptedDataLength)
             var tagData = data.subdata(in: encKeyLength+encryptedDataLength..<data.count)
             
-            let key = UnsafeMutablePointer<UInt8>.allocate(capacity: 16)
+            let aeskey = UnsafeMutablePointer<UInt8>.allocate(capacity: 16)
             let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(encryptedData.count + encryptedIV.count))
             #if swift(>=4.2)
             let rsaDecryptCtx = EVP_CIPHER_CTX_new_wrapper()
-            Log.info("Swift 4.2: \(rsaDecryptCtx)")
             #else
             let rsaDecryptCtx = UnsafeMutablePointer<EVP_CIPHER_CTX>.allocate(capacity: 1)
-            Log.info("Not Swift 4.2: \(rsaDecryptCtx)")
             #endif
             
             defer {
                 #if swift(>=4.2)
-                EVP_CIPHER_CTX_reset_wrapper(rsaDecryptCtx)
                 EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
-                key.deallocate()
+                aeskey.deallocate()
                 decrypted.deallocate()
                 #else
                 EVP_CIPHER_CTX_cleanup(rsaDecryptCtx)
-                key.deallocate(capacity: 16)
+                aeskey.deallocate(capacity: 16)
                 decrypted.deallocate(capacity: Int(encryptedData.count + encryptedIV.count))
                 #endif
-                EVP_PKEY_free(evp_key)
             }
-            guard RSA_private_decrypt(Int32(encryptedKey.count), [UInt8](encryptedKey), key, nativeKey, RSA_PKCS1_OAEP_PADDING) == 1,
+            // processedLen is the number of bytes that each EVP_DecryptUpdate/EVP_DecryptFinal decrypts.
+            // The sum of processedLen is the total size of the decrypted message (decMsgLen)
+            var processedLen: Int32 = 0
+            var decMsgLen: Int32 = 0
+            
+            guard RSA_private_decrypt(Int32(encryptedKey.count), [UInt8](encryptedKey), aeskey, .make(optional: key.reference), RSA_PKCS1_OAEP_PADDING) != 0,
                 EVP_DecryptInit_ex(rsaDecryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1,
                 EVP_CIPHER_CTX_ctrl(rsaDecryptCtx, EVP_CTRL_GCM_SET_IVLEN, 16, nil) == 1,
                 EVP_CIPHER_CTX_set_padding(rsaDecryptCtx, RSA_PKCS1_OAEP_PADDING) == 1,
                 EVP_CIPHER_CTX_set_key_length(rsaDecryptCtx, 16) == 1,
-                EVP_DecryptInit_ex(rsaDecryptCtx, nil, nil, key, encryptedIV) == 1,
+                EVP_DecryptInit_ex(rsaDecryptCtx, nil, nil, aeskey, encryptedIV) == 1,
                 let aad = key.rawBytes,
-                EVP_DecryptUpdate(rsaDecryptCtx, nil, &processedLen, [UInt8](aad), Int32(aad.count))
+                EVP_DecryptUpdate(rsaDecryptCtx, nil, &processedLen, [UInt8](aad), Int32(aad.count)) == 1
                 else {
-                    Log.info("Decryption failed, status: \(status)")
                     let source = "Decryption failed"
                     if let reason = CryptorRSA.getLastError(source: source) {
                         
@@ -634,17 +629,11 @@ public class CryptorRSA {
                     }
                     throw Error(code: ERR_DECRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
             }
-            
-            // processedLen is the number of bytes that each EVP_DecryptUpdate/EVP_DecryptFinal decrypts.
-            // The sum of processedLen is the total size of the decrypted message (decMsgLen)
-            var processedLen: Int32 = 0
-            var decMsgLen: Int32 = 0
-            
+            print("aadDecrypt: \(aad.base64EncodedString())")
             // EVP_OpenInit returns 0 on error or the recovered secret key size if successful
             guard encryptedData.withUnsafeBytes({ (enc: UnsafePointer<UInt8>) -> Int32 in
                 return EVP_DecryptUpdate(rsaDecryptCtx, decrypted, &processedLen, enc, Int32(encryptedData.count))
             }) != 0 else {
-                Log.info("Decryption failed, status: \(status)")
                 let source = "Decryption failed"
                 if let reason = CryptorRSA.getLastError(source: source) {
                     throw Error(code: ERR_DECRYPTION_FAILED, reason: reason)
@@ -658,7 +647,6 @@ public class CryptorRSA {
             }) == 1,
                 EVP_DecryptFinal_ex(rsaDecryptCtx, decrypted.advanced(by: Int(decMsgLen)), &processedLen) == 1
                 else {
-                    Log.info("Decryption failed, status: \(status)")
                     let source = "Decryption failed"
                     if let reason = CryptorRSA.getLastError(source: source) {
                         throw Error(code: ERR_DECRYPTION_FAILED, reason: reason)
