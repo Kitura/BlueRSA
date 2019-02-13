@@ -112,16 +112,14 @@ extension CryptorRSA {
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string")
 		}
 		
-		#if os(Linux)
-            let strippedData = try CryptorRSA.stripX509CertificateHeader(for: data)
-			// OpenSSL uses the PEM version when importing key...
-			data = CryptorRSA.convertDerToPem(from: data, type: .publicType)
-            let key = try PublicKey(with: data)
-            key.rawBytes = strippedData
-            return key
-        #else
+        #if os(Linux)
+        
+        // OpenSSL uses the PEM version when importing key...
+        data = CryptorRSA.convertDerToPem(from: data, type: .publicType)
+        
+        #endif
+        
             return try PublicKey(with: data)
-		#endif
 	}
 	
 	///
@@ -610,6 +608,10 @@ extension CryptorRSA {
 		/// The stored key
 		internal let reference: NativeKey
         
+        #if os(Linux)
+        let publicKeyBytes: Data?
+        #endif
+        
 		/// Represents the type of key data contained.
 		public internal(set) var type: KeyType = .publicType
 		
@@ -624,16 +626,33 @@ extension CryptorRSA {
 		///
 		/// - Returns:				New `RSAKey` instance.
 		///
-		internal init(with data: Data, type: KeyType) throws {
+        internal init(with data: Data, type: KeyType) throws {
 			
 			self.type = type
 			
+            #if os(Linux)
+            if type == publicType {
+                if let pemString = String(data: data, encoding: .utf8),
+                    let base64String = try? CryptorRSA.base64String(for: pemString),
+                    let derData = Data(base64Encoded: base64String)
+                {
+                    publicKeyBytes = try? stripX509CertificateHeader(for: derData)
+                }
+            } else {
+                if let pemString = String(data: data, encoding: .utf8),
+                    let base64String = try? CryptorRSA.base64String(for: pemString),
+                    let derData = Data(base64Encoded: base64String)
+                {
+                    publicKeyBytes = try? getPublicKeyDataFrom(privateKey: derData)
+                }
+            }
             // On macOS, we need to strip off the X509 header if it exists...
-            #if !os(Linux)
+            #else
     
             let data = try CryptorRSA.stripX509CertificateHeader(for: data)
             
             #endif
+
             
             reference = try CryptorRSA.createKey(from: data, type: type)
 		}
@@ -668,6 +687,7 @@ extension CryptorRSA {
 				
 				self.type = type
 				self.reference = .make(optional: nativeKey)
+                self.publicKeyBytes = nil
 			}
 		
 		#endif
@@ -680,9 +700,6 @@ extension CryptorRSA {
 	///
 	public class PublicKey: RSAKey {
         
-        #if os(Linux)
-        var rawBytes: Data?
-        #endif
         
 		/// MARK: Statics
 		
@@ -771,14 +788,6 @@ extension CryptorRSA {
 		///
 		public init(with data: Data) throws {
 			try super.init(with: data, type: .publicType)
-            #if os(Linux)
-            if let pemString = String(data: data, encoding: .utf8),
-                let base64String = try? CryptorRSA.base64String(for: pemString),
-                let derData = Data(base64Encoded: base64String)
-            {
-                rawBytes = try? stripX509CertificateHeader(for: derData)
-            }
-            #endif
 		}
 		
 		///
@@ -819,9 +828,6 @@ extension CryptorRSA {
 	///
 	public class PrivateKey: RSAKey {
 		
-        #if os(Linux)
-        var publicKeyBytes: Data?
-        #endif
         
 		// MARK: -- Initializers
 		
@@ -835,14 +841,6 @@ extension CryptorRSA {
 		///
 		public init(with data: Data) throws {
 			try super.init(with: data, type: .privateType)
-            #if os(Linux)
-            if let pemString = String(data: data, encoding: .utf8),
-                let base64String = try? CryptorRSA.base64String(for: pemString),
-                let derData = Data(base64Encoded: base64String)
-            {
-                publicKeyBytes = try? getPublicKeyDataFrom(privateKey: derData)
-            }
-            #endif
 		}
 		
 		///
