@@ -629,9 +629,9 @@ extension CryptorRSA {
         internal init(with data: Data, type: KeyType) throws {
 			
 			self.type = type
-			
+
             #if os(Linux)
-            if type == publicType {
+            if type == .publicType {
                 if let pemString = String(data: data, encoding: .utf8),
                     let base64String = try? CryptorRSA.base64String(for: pemString),
                     let derData = Data(base64Encoded: base64String)

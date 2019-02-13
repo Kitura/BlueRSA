@@ -375,7 +375,7 @@ public class CryptorRSA {
                 EVP_CIPHER_CTX_rand_key(rsaEncryptCtx, aeskey) == 1,
                 EVP_EncryptInit_ex(rsaEncryptCtx, nil, nil, aeskey, iv) == 1,
                 RSA_public_encrypt(16, aeskey, encryptedKey, .make(optional: key.reference), RSA_PKCS1_OAEP_PADDING) == 128,
-                let aad = key.rawBytes,
+                let aad = key.publicKeyBytes,
                 EVP_EncryptUpdate(rsaEncryptCtx, nil, &processedLength, [UInt8](aad), Int32(aad.count)) == 1
                 else {
                     let source = "Encryption failed"
