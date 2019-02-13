@@ -119,7 +119,7 @@ extension CryptorRSA {
         
         #endif
         
-            return try PublicKey(with: data)
+        return try PublicKey(with: data)
 	}
 	
 	///

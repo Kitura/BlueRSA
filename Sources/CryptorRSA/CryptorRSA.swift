@@ -355,12 +355,16 @@ public class CryptorRSA {
                 #if swift(>=4.2)
                 EVP_CIPHER_CTX_reset_wrapper(rsaEncryptCtx)
                 EVP_CIPHER_CTX_free_wrapper(rsaEncryptCtx)
+                #else
+                EVP_CIPHER_CTX_cleanup(rsaEncryptCtx)
+                #endif
+                
+                #if swift(>=4.1)
                 aeskey.deallocate()
                 encryptedKey.deallocate()
                 tag.deallocate()
                 encrypted.deallocate()
                 #else
-                EVP_CIPHER_CTX_cleanup(rsaEncryptCtx)
                 aeskey.deallocate(capacity: 16)
                 encryptedKey.deallocate(capacity: 128)
                 tag.deallocate(capacity: 16)
@@ -600,10 +604,14 @@ public class CryptorRSA {
             defer {
                 #if swift(>=4.2)
                 EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
+                #else
+                EVP_CIPHER_CTX_cleanup(rsaDecryptCtx)
+                #endif
+                
+                #if swift(>=4.1)
                 aeskey.deallocate()
                 decrypted.deallocate()
                 #else
-                EVP_CIPHER_CTX_cleanup(rsaDecryptCtx)
                 aeskey.deallocate(capacity: 16)
                 decrypted.deallocate(capacity: Int(encryptedData.count + encryptedIV.count))
                 #endif
