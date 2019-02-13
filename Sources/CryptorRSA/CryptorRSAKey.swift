@@ -681,7 +681,7 @@ extension CryptorRSA {
 	public class PublicKey: RSAKey {
         
         #if os(Linux)
-        let rawBytes: Data
+        var rawBytes: Data?
         #endif
         
 		/// MARK: Statics
@@ -820,7 +820,7 @@ extension CryptorRSA {
 	public class PrivateKey: RSAKey {
 		
         #if os(Linux)
-        let rawBytes: Data
+        var publicKeyBytes: Data?
         #endif
         
 		// MARK: -- Initializers
@@ -840,7 +840,7 @@ extension CryptorRSA {
                 let base64String = try? CryptorRSA.base64String(for: pemString),
                 let derData = Data(base64Encoded: base64String)
             {
-                rawBytes = try? getPublicKeyDataFrom(privateKey: derData)
+                publicKeyBytes = try? getPublicKeyDataFrom(privateKey: derData)
             }
             #endif
 		}
