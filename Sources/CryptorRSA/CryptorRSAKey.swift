@@ -609,7 +609,7 @@ extension CryptorRSA {
 		internal let reference: NativeKey
         
         #if os(Linux)
-        let publicKeyBytes: Data?
+        var publicKeyBytes: Data?
         #endif
         
 		/// Represents the type of key data contained.
@@ -687,7 +687,6 @@ extension CryptorRSA {
 				
 				self.type = type
 				self.reference = .make(optional: nativeKey)
-                self.publicKeyBytes = nil
 			}
 		
 		#endif
