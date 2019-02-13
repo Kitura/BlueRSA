@@ -347,26 +347,26 @@ class CryptorRSATests: XCTestCase {
 		}
 	}
     
-    func test_simpleGCMEncryption() throws {
-            
-        print("Testing GCM algorithm")
-        let str = "Plain Text"
-        let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
-        
-        guard let publicKey = self.publicKey,
-            let privateKey = self.privateKey else {
-                XCTFail("Could not find key")
-                return
-        }
-        
-        let encrypted = try plainText.encryptedGCM(with: publicKey)
-        XCTAssertNotNil(encrypted)
-        let decrypted = try encrypted?.decryptedGCM(with: privateKey)
-        XCTAssertNotNil(decrypted)
-        let decryptedString = try decrypted?.string(using: .utf8)
-        XCTAssertEqual(decryptedString, str)
-        print("Test of GCM algorithm succeeded")
-    }
+//    func test_simpleGCMEncryption() throws {
+//
+//        print("Testing GCM algorithm")
+//        let str = "Plain Text"
+//        let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
+//
+//        guard let publicKey = self.publicKey,
+//            let privateKey = self.privateKey else {
+//                XCTFail("Could not find key")
+//                return
+//        }
+//
+//        let encrypted = try plainText.encryptedGCM(with: publicKey)
+//        XCTAssertNotNil(encrypted)
+//        let decrypted = try encrypted?.decryptedGCM(with: privateKey)
+//        XCTAssertNotNil(decrypted)
+//        let decryptedString = try decrypted?.string(using: .utf8)
+//        XCTAssertEqual(decryptedString, str)
+//        print("Test of GCM algorithm succeeded")
+//    }
 	
     func test_linuxEncryptedGCM() throws {
         
@@ -675,7 +675,7 @@ class CryptorRSATests: XCTestCase {
             ("test_private_initWithPEMName", test_private_initWithPEMName),
             ("test_private_initWithDERName", test_private_initWithDERName),
             ("test_simpleEncryption", test_simpleEncryption),
-            ("test_simpleGCMEncryption", test_simpleGCMEncryption),
+            //("test_simpleGCMEncryption", test_simpleGCMEncryption),
             ("test_linuxEncryptedGCM", test_linuxEncryptedGCM),
             ("test_MacEncryptedGCM", test_MacEncryptedGCM),
             ("test_longStringEncryption", test_longStringEncryption),
