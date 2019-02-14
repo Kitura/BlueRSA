@@ -345,13 +345,7 @@ public class CryptorRSA {
                 throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not public")
             }
             #if os(Linux)
-            #if swift(>=4.2)
-            fputs("-------SWIFT 4.2---------", stderr)
             let rsaEncryptCtx = EVP_CIPHER_CTX_new_wrapper()
-            #else
-            fputs("-------NOT SWIFT 4.2---------", stderr)
-            let rsaEncryptCtx = UnsafeMutablePointer<EVP_CIPHER_CTX>.allocate(capacity: 1)
-            #endif
             let aeskey = UnsafeMutablePointer<UInt8>.allocate(capacity: 16)
             let iv = [UInt8](repeating: 0, count: 16)
             let encryptedKey = UnsafeMutablePointer<UInt8>.allocate(capacity: 128)
@@ -360,12 +354,8 @@ public class CryptorRSA {
             fputs("-------ALLOCATED MEMORY---------", stderr)
             defer {
                 fputs("-------IN ENCYPTED DEFER---------", stderr)
-//                #if swift(>=4.2)
-//                EVP_CIPHER_CTX_reset_wrapper(rsaEncryptCtx)
-//                EVP_CIPHER_CTX_free_wrapper(rsaEncryptCtx)
-//                #else
-//                EVP_CIPHER_CTX_cleanup(rsaEncryptCtx)
-//                #endif
+                EVP_CIPHER_CTX_reset_wrapper(rsaEncryptCtx)
+                EVP_CIPHER_CTX_free_wrapper(rsaEncryptCtx)
                 
                 #if swift(>=4.1)
                 aeskey.deallocate()
@@ -383,7 +373,15 @@ public class CryptorRSA {
             
             var processedLength: Int32 = 0
             var encLength: Int32 = 0
-            fputs("-------BEGIN ENCRYPTINT AES KEY---------", stderr)
+            fputs("-------BEGIN ENCRYPTING AES KEY---------", stderr)
+            guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1 else {
+                let source = "Encryption failed"
+                if let reason = CryptorRSA.getLastError(source: source) {
+                    throw Error(code: ERR_ENCRYPTION_FAILED, reason: reason)
+                }
+                throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
+            }
+            fputs("-------Completed EVP_EncryptInit_ex---------", stderr)
             guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1,
                 EVP_CIPHER_CTX_ctrl(rsaEncryptCtx, EVP_CTRL_GCM_SET_IVLEN, 16, nil) == 1,
                 EVP_CIPHER_CTX_rand_key(rsaEncryptCtx, aeskey) == 1,
@@ -612,19 +610,12 @@ public class CryptorRSA {
             fputs("-------EXTRACTED KEYS---------", stderr)
             let aeskey = UnsafeMutablePointer<UInt8>.allocate(capacity: 16)
             let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(encryptedData.count + encryptedIV.count))
-            #if swift(>=4.2)
             let rsaDecryptCtx = EVP_CIPHER_CTX_new_wrapper()
-            #else
-            let rsaDecryptCtx = UnsafeMutablePointer<EVP_CIPHER_CTX>.allocate(capacity: 1)
-            #endif
             fputs("-------ALLOCATED MEMORY---------", stderr)
             defer {
                 fputs("-------IN DECRYPTED DEFER---------", stderr)
-//                #if swift(>=4.2)
-//                EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
-//                #else
-//                EVP_CIPHER_CTX_cleanup(rsaDecryptCtx)
-//                #endif
+                EVP_CIPHER_CTX_reset_wrapper(rsaDecryptCtx)
+                EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
                 
                 #if swift(>=4.1)
                 aeskey.deallocate()
