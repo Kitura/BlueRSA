@@ -374,6 +374,8 @@ public class CryptorRSA {
             var processedLength: Int32 = 0
             var encLength: Int32 = 0
             fputs("-------BEGIN ENCRYPTING AES KEY---------", stderr)
+            EVP_CIPHER_CTX_init(rsaEncryptCtx)
+            fputs("-------EVP_CIPHER_CTX_init---------", stderr)
             guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1 else {
                 let source = "Encryption failed"
                 if let reason = CryptorRSA.getLastError(source: source) {
@@ -610,13 +612,13 @@ public class CryptorRSA {
             fputs("-------EXTRACTED KEYS---------", stderr)
             let aeskey = UnsafeMutablePointer<UInt8>.allocate(capacity: 16)
             let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(encryptedData.count + encryptedIV.count))
-            let rsaDecryptCtx = EVP_CIPHER_CTX_new_wrapper()
             fputs("-------ALLOCATED MEMORY---------", stderr)
+            let rsaDecryptCtx = EVP_CIPHER_CTX_new()
+            EVP_CIPHER_CTX_init(rsaEncryptCtx)
+            fputs("-------EVP_CIPHER_CTX_init---------", stderr)
             defer {
                 fputs("-------IN DECRYPTED DEFER---------", stderr)
-                EVP_CIPHER_CTX_reset_wrapper(rsaDecryptCtx)
                 EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
-                
                 #if swift(>=4.1)
                 aeskey.deallocate()
                 decrypted.deallocate()
