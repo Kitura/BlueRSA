@@ -593,7 +593,7 @@ public class CryptorRSA {
             let aeskey = UnsafeMutablePointer<UInt8>.allocate(capacity: 16)
             let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(encryptedData.count + encryptedIV.count))
             let rsaDecryptCtx = EVP_CIPHER_CTX_new()
-            EVP_CIPHER_CTX_init(rsaDecryptCtx)
+            EVP_CIPHER_CTX_init_wrapper(rsaDecryptCtx)
             defer {
                 EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
                 #if swift(>=4.1)
