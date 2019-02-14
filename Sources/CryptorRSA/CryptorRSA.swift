@@ -614,7 +614,7 @@ public class CryptorRSA {
             let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(encryptedData.count + encryptedIV.count))
             fputs("-------ALLOCATED MEMORY---------", stderr)
             let rsaDecryptCtx = EVP_CIPHER_CTX_new()
-            EVP_CIPHER_CTX_init(rsaEncryptCtx)
+            EVP_CIPHER_CTX_init(rsaDecryptCtx)
             fputs("-------EVP_CIPHER_CTX_init---------", stderr)
             defer {
                 fputs("-------IN DECRYPTED DEFER---------", stderr)
