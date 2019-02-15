@@ -113,12 +113,12 @@ extension CryptorRSA {
 		}
 		
 		#if os(Linux)
-
+		
 			// OpenSSL uses the PEM version when importing key...
 			data = CryptorRSA.convertDerToPem(from: data, type: .publicType)
-
+		
 		#endif
-
+		
 		return try PublicKey(with: data)
 	}
 	
@@ -698,6 +698,7 @@ extension CryptorRSA {
 	/// Public Key - Represents public key data.
 	///
 	public class PublicKey: RSAKey {
+
 		/// MARK: Statics
 		
 		/// Regular expression for the PK using the begin and end markers.
@@ -836,7 +837,7 @@ extension CryptorRSA {
 		/// - Returns:				New `PrivateKey` instance.
 		///
 		public init(with data: Data) throws {
-            
+			
 			try super.init(with: data, type: .privateType)
 		}
 		

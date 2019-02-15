@@ -22,7 +22,7 @@
 import Foundation
 
 #if os(Linux)
-import OpenSSL
+    import OpenSSL
 #endif
 
 // MARK: -

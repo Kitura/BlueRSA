@@ -130,10 +130,10 @@ class CryptorRSATests: XCTestCase {
             XCTAssertTrue(publicKey!.type == .publicType)
         }
 	}
-
+	
 
 	func test_public_initWithBase64StringWhichContainsNewLines() throws {
-
+		
         let path = CryptorRSATests.getFilePath(for: "public-base64-newlines", ofType: "txt")
         XCTAssertNotNil(path)
 		
@@ -178,8 +178,8 @@ class CryptorRSATests: XCTestCase {
 			
 			let publicKey = try? CryptorRSA.createPublicKey(withDERNamed: "public", in: bundle)
 			XCTAssertNotNil(publicKey)
-		
-	} else {
+			
+		} else {
 			
 			let publicKey = try? CryptorRSA.createPublicKey(withDERNamed: "public", onPath: "../../../Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(publicKey)
@@ -210,53 +210,53 @@ class CryptorRSATests: XCTestCase {
 		
 		let keys = CryptorRSA.PublicKey.publicKeys(withPEM: input)
 		XCTAssertEqual(keys.count, 9)
-
+		
 		for publicKey in keys {
 			XCTAssertTrue(publicKey.type == .publicType)
 		}
 	}
-
+	
 	func test_publicKeysFromEmptyPEMFileReturnsEmptyArray() {
-
+		
 		let keys = CryptorRSA.PublicKey.publicKeys(withPEM: "")
 		XCTAssertEqual(keys.count, 0)
 	}
-
+	
 
 	func test_public_initWithCertificateName() throws {
-
+		
 		if CryptorRSATests.useBundles, let bundle = CryptorRSATests.bundle {
-
+			
 			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging", in: bundle)
 			XCTAssertNotNil(publicKey)
-
+			
 		} else {
-
+			
 			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging", onPath: "../../../Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(publicKey)
 		}
-
+		
 	}
-
+	
 	func test_public_initWithCertificateName2() throws {
-
+		
 		if CryptorRSATests.useBundles, let bundle = CryptorRSATests.bundle {
-
+			
 			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging2", in: bundle)
 			XCTAssertNotNil(publicKey)
-
+			
 		} else {
-
+			
 			let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: "staging2", onPath: "../../../Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(publicKey)
 		}
-
+		
 	}
-
+	
 	// MARK: Private Key Tests
-
+	
 	func test_private_initWithPEMString() throws {
-
+		
         let path = CryptorRSATests.getFilePath(for: "private", ofType: "pem")
         XCTAssertNotNil(path)
 		
@@ -280,35 +280,35 @@ class CryptorRSATests: XCTestCase {
             XCTAssertTrue(privateKey!.type == .privateType)
         }
 	}
-
+	
 	func test_private_initWithPEMName() throws {
-
+		
 		if CryptorRSATests.useBundles, let bundle = CryptorRSATests.bundle {
-
+			
 			let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", in: bundle)
 			XCTAssertNotNil(privateKey)
-
+			
 		} else {
-
+			
 			let privateKey = try? CryptorRSA.createPrivateKey(withPEMNamed: "private", onPath: "../../../Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(privateKey)
 		}
-
+		
 	}
-
+	
 	func test_private_initWithDERName() throws {
-
+		
 		if CryptorRSATests.useBundles, let bundle = CryptorRSATests.bundle {
-
+			
 			let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", in: bundle)
 			XCTAssertNotNil(privateKey)
-
+			
 		} else {
-
+			
 			let privateKey = try? CryptorRSA.createPrivateKey(withDERNamed: "private", onPath: "../../../Tests/CryptorRSATests/keys/")
 			XCTAssertNotNil(privateKey)
 		}
-
+		
 	}
 
 	// MARK: Encyption/Decryption Tests
@@ -317,27 +317,27 @@ class CryptorRSATests: XCTestCase {
     let privateKey: CryptorRSA.PrivateKey? = try? CryptorRSATests.privateKey(name: "private")
 	
 	func test_simpleEncryption() throws {
-
+		
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-													  (.sha224, ".sha224"),
-													  (.sha256, ".sha256"),
-													  (.sha384, ".sha384"),
-													  (.gcm, "gcm"),
-													  /*(.sha512, ".sha512")*/]
+                                                      (.sha224, ".sha224"),
+                                                      (.sha256, ".sha256"),
+                                                      (.sha384, ".sha384"),
+                                                      (.gcm, "gcm"),
+                                                      /*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
-		//    Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
+		//	Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
 		for (algorithm, name) in algorithms {
-
+			
 			print("Testing algorithm: \(name)")
 			let str = "Plain Text"
 			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
-
+			
             guard let publicKey = self.publicKey,
                   let privateKey = self.privateKey else {
                 XCTFail("Could not find key")
                 return
             }
-
+			
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
 			let decrypted = try encrypted?.decrypted(with: privateKey, algorithm: algorithm)
@@ -347,7 +347,7 @@ class CryptorRSATests: XCTestCase {
 			print("Test of algorithm: \(name) succeeded")
 		}
 	}
-
+	
 	func test_linuxEncryptedGCM() throws {
 		
 		print("Testing linux encrypted GCM")
@@ -383,23 +383,24 @@ class CryptorRSATests: XCTestCase {
 	func test_longStringEncryption() throws {
 		
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-													  (.sha224, ".sha224"),
-													  (.sha256, ".sha256"),
-													  (.sha384, ".sha384"),
-													  /*(.sha512, ".sha512")*/]
+                                                      (.sha224, ".sha224"),
+                                                      (.sha256, ".sha256"),
+                                                      (.sha384, ".sha384"),
+                                                      (.gcm, "gcm"),
+                                                      /*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
-		//    Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
+		//	Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
 		for (algorithm, name) in algorithms {
 			
 			print("Testing algorithm: \(name)")
 			let str = [String](repeating: "a", count: 9999).joined(separator: "")
 			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
 		
-			guard let publicKey = self.publicKey,
-				let privateKey = self.privateKey else {
-					XCTFail("Could not find key")
-					return
-			}
+            guard let publicKey = self.publicKey,
+                let privateKey = self.privateKey else {
+                    XCTFail("Could not find key")
+                    return
+            }
 			
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
@@ -410,16 +411,17 @@ class CryptorRSATests: XCTestCase {
 			print("Test of algorithm: \(name) succeeded")
 		}
 	}
-
+	
 	func test_randomByteEncryption() throws {
 		
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-													  (.sha224, ".sha224"),
-													  (.sha256, ".sha256"),
-													  (.sha384, ".sha384"),
-													  /*(.sha512, ".sha512")*/]
+                                                      (.sha224, ".sha224"),
+                                                      (.sha256, ".sha256"),
+                                                      (.sha384, ".sha384"),
+                                                      (.gcm, "gcm"),
+                                                      /*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
-		//    Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
+		//	Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
 		for (algorithm, name) in algorithms {
 			
 			print("Testing algorithm: \(name)")
@@ -440,16 +442,17 @@ class CryptorRSATests: XCTestCase {
 			print("Test of algorithm: \(name) succeeded")
 		}
 	}
-
+	
 	// MARK: Signing/Verification Tests
-
+	
 	func test_signVerifyAllDigestTypes() throws {
 		
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-													  (.sha224, ".sha224"),
-													  (.sha256, ".sha256"),
-													  (.sha384, ".sha384"),
-													  (.sha512, ".sha512")]
+                                                      (.sha224, ".sha224"),
+                                                      (.sha256, ".sha256"),
+                                                      (.sha384, ".sha384"),
+                                                      (.sha512, ".sha512"),
+                                                      (.gcm, ".gcm")]
         guard let publicKey = self.publicKey,
             let privateKey = self.privateKey else {
                 XCTFail("Could not find key")
@@ -469,14 +472,15 @@ class CryptorRSATests: XCTestCase {
 			print("Test of algorithm: \(name) succeeded")
 		}
 	}
-
+	
 	func test_signVerifyBase64() throws {
 		
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-													  (.sha224, ".sha224"),
-													  (.sha256, ".sha256"),
-													  (.sha384, ".sha384"),
-													  (.sha512, ".sha512")]
+                                                      (.sha224, ".sha224"),
+                                                      (.sha256, ".sha256"),
+                                                      (.sha384, ".sha384"),
+                                                      (.sha512, ".sha512"),
+                                                      (.gcm, ".gcm")]
 	
         guard let publicKey = self.publicKey,
             let privateKey = self.privateKey else {
