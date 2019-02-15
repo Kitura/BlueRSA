@@ -226,7 +226,9 @@ public class CryptorRSA {
 			}
 			
 			#if os(Linux)
-                
+                if algorithm == .gcm {
+                    return try encryptedGCM(with: key)
+                }
                 // Convert RSA key to EVP
                 var evp_key = EVP_PKEY_new()
 				var rc = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
@@ -326,113 +328,7 @@ public class CryptorRSA {
 			#endif
 		}
 		
-        ///
-        /// Encrypt the data using AES GCM SHA1 for cross platform support.
-        ///
-        /// - Parameters:
-        ///        - key:                The `PublicKey`
-        ///
-        ///    - Returns:                A new optional `EncryptedData` containing the encrypted data.
-        ///
-        public func encryptedGCM(with key: PublicKey) throws -> EncryptedData? {
-            // Must be plaintext...
-            guard self.type == .plaintextType else {
-                throw Error(code: CryptorRSA.ERR_NOT_PLAINTEXT, reason: "Data is not plaintext")
-            }
-            
-            // Key must be public...
-            guard key.type == .publicType else {
-                throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not public")
-            }
-            #if os(Linux)
-            let rsaEncryptCtx = EVP_CIPHER_CTX_new_wrapper()
-            EVP_CIPHER_CTX_init_wrapper(rsaEncryptCtx)
-            let aeskey = UnsafeMutablePointer<UInt8>.allocate(capacity: 16)
-            let iv = [UInt8](repeating: 0, count: 16)
-            let encryptedKey = UnsafeMutablePointer<UInt8>.allocate(capacity: 128)
-            let tag = UnsafeMutablePointer<UInt8>.allocate(capacity: 16)
-            let encrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: data.count + 16)
-            defer {
-                EVP_CIPHER_CTX_reset_wrapper(rsaEncryptCtx)
-                EVP_CIPHER_CTX_free_wrapper(rsaEncryptCtx)
-                
-                #if swift(>=4.1)
-                aeskey.deallocate()
-                encryptedKey.deallocate()
-                tag.deallocate()
-                encrypted.deallocate()
-                #else
-                aeskey.deallocate(capacity: 16)
-                encryptedKey.deallocate(capacity: 128)
-                tag.deallocate(capacity: 16)
-                encrypted.deallocate(capacity: data.count + 16)
-                #endif
-            }
-            
-            var processedLength: Int32 = 0
-            var encLength: Int32 = 0
-            guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1,
-                EVP_CIPHER_CTX_ctrl(rsaEncryptCtx, EVP_CTRL_GCM_SET_IVLEN, 16, nil) == 1,
-                EVP_CIPHER_CTX_rand_key(rsaEncryptCtx, aeskey) == 1,
-                EVP_EncryptInit_ex(rsaEncryptCtx, nil, nil, aeskey, iv) == 1,
-                RSA_public_encrypt(16, aeskey, encryptedKey, .make(optional: key.reference), RSA_PKCS1_OAEP_PADDING) == 128,
-                let aad = key.publicKeyBytes,
-                EVP_EncryptUpdate(rsaEncryptCtx, nil, &processedLength, [UInt8](aad), Int32(aad.count)) == 1
-                else {
-                    let source = "Encryption failed"
-                    if let reason = CryptorRSA.getLastError(source: source) {
-                        throw Error(code: ERR_ENCRYPTION_FAILED, reason: reason)
-                    }
-                    throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
-            }
-            
-            // EVP_SealUpdate is a complex macros and therefore the compiler doesnt
-            // convert it directly to swift. From /usr/local/opt/openssl/include/openssl/evp.h:
-            guard(self.data.withUnsafeBytes({ (plaintext: UnsafePointer<UInt8>) -> Int32 in
-                return EVP_EncryptUpdate(rsaEncryptCtx, encrypted, &processedLength, plaintext, Int32(data.count))
-            })) == 1 else {
-                let source = "Encryption failed"
-                if let reason = CryptorRSA.getLastError(source: source) {
-                    throw Error(code: ERR_ENCRYPTION_FAILED, reason: reason)
-                }
-                throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
-            }
-            encLength += processedLength
-            guard EVP_EncryptFinal_ex(rsaEncryptCtx, encrypted.advanced(by: Int(encLength)), &processedLength) == 1 else {
-                let source = "Encryption failed"
-                if let reason = CryptorRSA.getLastError(source: source) {
-                    throw Error(code: ERR_ENCRYPTION_FAILED, reason: reason)
-                }
-                throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
-            }
-            encLength += processedLength
-            guard EVP_CIPHER_CTX_ctrl(rsaEncryptCtx, EVP_CTRL_GCM_GET_TAG, 16, tag) == 1 else {
-                let source = "Encryption failed"
-                if let reason = CryptorRSA.getLastError(source: source) {
-                    throw Error(code: ERR_ENCRYPTION_FAILED, reason: reason)
-                }
-                throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
-            }
-            
-            let ekFinal = Data(bytes: encryptedKey, count: 128)
-            let cipher = Data(bytes: encrypted, count: Int(encLength))
-            let tagFinal = Data(bytes: tag, count: 16)
-            return EncryptedData(with: ekFinal + cipher + tagFinal)
-            #else
-            var response: Unmanaged<CFError>? = nil
-            guard let eData = SecKeyCreateEncryptedData(key.reference,
-                                                        SecKeyAlgorithm.rsaEncryptionOAEPSHA1AESGCM,
-                                                        self.data as CFData,
-                                                        &response)
-                else {
-                    guard let error = response?.takeRetainedValue() else {
-                        throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed. Unable to determine error.")
-                    }
-                    throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed with error: \(error)")
-            }
-            return EncryptedData(with: eData as Data)
-            #endif
-        }
+
         
 		///
 		/// Decrypt the data.
@@ -459,6 +355,9 @@ public class CryptorRSA {
 			
 			#if os(Linux)
 				
+                if algorithm == .gcm {
+                    return decryptedGCM(with: key)
+                }
                 // Convert RSA key to EVP
                 var evp_key = EVP_PKEY_new()
 				var status = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
@@ -559,61 +458,145 @@ public class CryptorRSA {
 		}
 		
         ///
+        /// Encrypt the data using AES GCM SHA1 for cross platform support.
+        #if os(Linux)
+        func encryptedGCM(with key: PublicKey) throws -> EncryptedData? {
+            // Allocate memory for encryption
+            let rsaEncryptCtx = EVP_CIPHER_CTX_new_wrapper()
+            EVP_CIPHER_CTX_init_wrapper(rsaEncryptCtx)
+            let aeskey = UnsafeMutablePointer<UInt8>.allocate(capacity: 16)
+            let encryptedKey = UnsafeMutablePointer<UInt8>.allocate(capacity: 128)
+            let tag = UnsafeMutablePointer<UInt8>.allocate(capacity: 16)
+            let encrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: data.count + 16)
+            defer {
+                // On completion deallocate the memory
+                EVP_CIPHER_CTX_reset_wrapper(rsaEncryptCtx)
+                EVP_CIPHER_CTX_free_wrapper(rsaEncryptCtx)
+                
+                #if swift(>=4.1)
+                aeskey.deallocate()
+                encryptedKey.deallocate()
+                tag.deallocate()
+                encrypted.deallocate()
+                #else
+                aeskey.deallocate(capacity: 16)
+                encryptedKey.deallocate(capacity: 128)
+                tag.deallocate(capacity: 16)
+                encrypted.deallocate(capacity: data.count + 16)
+                #endif
+            }
+            
+            var processedLength: Int32 = 0
+            var encLength: Int32 = 0
+            // Apple use a 16 byte all 0 IV. This is allowed since a random key is generated for each encryption.
+            let iv = [UInt8](repeating: 0, count: 16)
+            
+            // TODO: change EVP_aes_128_gcm to EVP_aes_256_gcm for rsaKey > 4096 bits to match apple.
+            // Set the rsaEncryptCtx to use EVP_aes_128_gcm encryption.
+            guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1,
+                // Set the IV length to be 16 to match Apple
+                EVP_CIPHER_CTX_ctrl(rsaEncryptCtx, EVP_CTRL_GCM_SET_IVLEN, 16, nil) == 1,
+                // Generate 16 random bytes that will be used as the AES key.
+                EVP_CIPHER_CTX_rand_key(rsaEncryptCtx, aeskey) == 1,
+                // Set the aeskey and iv for the symmetric encryption.
+                EVP_EncryptInit_ex(rsaEncryptCtx, nil, nil, aeskey, iv) == 1,
+                // Encrypt the aes key using the rsa public key with SHA1, OAEP padding.
+                RSA_public_encrypt(16, aeskey, encryptedKey, .make(optional: key.reference), RSA_PKCS1_OAEP_PADDING) == 128,
+                // Set the additional authenticated data (aad) as the RSA key modulus and publicExponent in an ASN1 sequence.
+                let aad = key.publicKeyBytes,
+                // Add the aad to the encryption context.
+                // This is used in generating the GCM tag. We don't use this processedLength.
+                EVP_EncryptUpdate(rsaEncryptCtx, nil, &processedLength, [UInt8](aad), Int32(aad.count)) == 1
+                else {
+                    let source = "Encryption failed"
+                    if let reason = CryptorRSA.getLastError(source: source) {
+                        throw Error(code: ERR_ENCRYPTION_FAILED, reason: reason)
+                    }
+                    throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
+            }
+            
+            // Encrypt the plaintext into encrypted using EVP_aes_128_gcm with the random aes key and all 0 iv.
+            guard(self.data.withUnsafeBytes({ (plaintext: UnsafePointer<UInt8>) -> Int32 in
+                return EVP_EncryptUpdate(rsaEncryptCtx, encrypted, &processedLength, plaintext, Int32(data.count))
+            })) == 1 else {
+                let source = "Encryption failed"
+                if let reason = CryptorRSA.getLastError(source: source) {
+                    throw Error(code: ERR_ENCRYPTION_FAILED, reason: reason)
+                }
+                throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
+            }
+            encLength += processedLength
+            // Finalize the encryption so no more data will be added and generate the GCM tag.
+            guard EVP_EncryptFinal_ex(rsaEncryptCtx, encrypted.advanced(by: Int(encLength)), &processedLength) == 1 else {
+                let source = "Encryption failed"
+                if let reason = CryptorRSA.getLastError(source: source) {
+                    throw Error(code: ERR_ENCRYPTION_FAILED, reason: reason)
+                }
+                throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
+            }
+            encLength += processedLength
+            // Get the 16 byte GCM tag.
+            guard EVP_CIPHER_CTX_ctrl(rsaEncryptCtx, EVP_CTRL_GCM_GET_TAG, 16, tag) == 1 else {
+                let source = "Encryption failed"
+                if let reason = CryptorRSA.getLastError(source: source) {
+                    throw Error(code: ERR_ENCRYPTION_FAILED, reason: reason)
+                }
+                throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
+            }
+            
+            // Construct the envelope by combining the encrypted AES key, the encrypted date and the GCM tag.
+            let ekFinal = Data(bytes: encryptedKey, count: 128)
+            let cipher = Data(bytes: encrypted, count: Int(encLength))
+            let tagFinal = Data(bytes: tag, count: 16)
+            return EncryptedData(with: ekFinal + cipher + tagFinal)
+        }
+        
+        ///
         /// Decrypt the data using aes GCM for cross platform support.
-        ///
-        /// - Parameters:
-        ///        - key:                The `PrivateKey`
-        ///
-        ///    - Returns:                A new optional `PlaintextData` containing the decrypted data.
-        ///
-        public func decryptedGCM(with key: PrivateKey) throws -> PlaintextData? {
-            // Must be encrypted...
-            guard self.type == .encryptedType else {
-                
-                throw Error(code: CryptorRSA.ERR_NOT_ENCRYPTED, reason: "Data is plaintext")
-            }
+        func decryptedGCM(with key: PrivateKey) throws -> PlaintextData? {
             
-            // Key must be private...
-            guard key.type == .privateType else {
-                
-                throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not private")
-            }
-            
-            #if os(Linux)
             let encKeyLength = 128
-            let encIVLength = 16
-            let encryptedDataLength = Int(data.count) - encKeyLength - 16
+            let encryptedDataLength = Int(data.count) - encKeyLength - tagLength
+            let tagLength = 16
             
-            // Extract encryptedKey, encryptedData, encryptedIV from data
+            // Extract encryptedAESKey, encryptedData, GCM tag from data
             let encryptedKey = data.subdata(in: 0..<encKeyLength)
-            // 16-byte Zero IV to match Apple platform
-            let encryptedIV = [UInt8](repeating: 0, count: 16)
             let encryptedData = data.subdata(in: encKeyLength..<encKeyLength+encryptedDataLength)
             var tagData = data.subdata(in: encKeyLength+encryptedDataLength..<data.count)
+            // Allocate memory for decryption
             let aeskey = UnsafeMutablePointer<UInt8>.allocate(capacity: 16)
             let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(encryptedData.count + encryptedIV.count))
             let rsaDecryptCtx = EVP_CIPHER_CTX_new()
             EVP_CIPHER_CTX_init_wrapper(rsaDecryptCtx)
             defer {
+                // On completion deallocate the memory
                 EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
                 #if swift(>=4.1)
-                aeskey.deallocate()
-                decrypted.deallocate()
+                    aeskey.deallocate()
+                    decrypted.deallocate()
                 #else
-                aeskey.deallocate(capacity: 16)
-                decrypted.deallocate(capacity: Int(encryptedData.count + encryptedIV.count))
+                    aeskey.deallocate(capacity: 16)
+                    decrypted.deallocate(capacity: Int(encryptedData.count + encryptedIV.count))
                 #endif
             }
             // processedLen is the number of bytes that each EVP_DecryptUpdate/EVP_DecryptFinal decrypts.
             // The sum of processedLen is the total size of the decrypted message (decMsgLen)
             var processedLen: Int32 = 0
             var decMsgLen: Int32 = 0
+            // Use a 16-byte all zero initialization vector (IV) to match Apple Security.
+            let iv = [UInt8](repeating: 0, count: 16)
+            
+            // Decrypt the encryptedKey into the aeskey using the RSA private key
             guard RSA_private_decrypt(Int32(encryptedKey.count), [UInt8](encryptedKey), aeskey, .make(optional: key.reference), RSA_PKCS1_OAEP_PADDING) != 0,
+                // Set the envelope decryption algorithm as 128 bit AES-GCM.
                 EVP_DecryptInit_ex(rsaDecryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1,
+                // Set the IV length to be 16 bytes.
                 EVP_CIPHER_CTX_ctrl(rsaDecryptCtx, EVP_CTRL_GCM_SET_IVLEN, 16, nil) == 1,
-                EVP_CIPHER_CTX_set_padding(rsaDecryptCtx, RSA_PKCS1_OAEP_PADDING) == 1,
+                // Set the AES key to be 16 bytes.
                 EVP_CIPHER_CTX_set_key_length(rsaDecryptCtx, 16) == 1,
-                EVP_DecryptInit_ex(rsaDecryptCtx, nil, nil, aeskey, encryptedIV) == 1,
+                // Set the envelope decryption context AES key and IV.
+                EVP_DecryptInit_ex(rsaDecryptCtx, nil, nil, aeskey, iv) == 1,
+                // Set the additional authenticated data (aad) as the RSA key modulus and publicExponent in an ASN1 sequence.
                 let aad = key.publicKeyBytes,
                 EVP_DecryptUpdate(rsaDecryptCtx, nil, &processedLen, [UInt8](aad), Int32(aad.count)) == 1
                 else {
@@ -624,7 +607,7 @@ public class CryptorRSA {
                     }
                     throw Error(code: ERR_DECRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
             }
-            // EVP_OpenInit returns 0 on error or the recovered secret key size if successful
+            // Decrypt the encrypted data using the symmetric key.
             guard encryptedData.withUnsafeBytes({ (enc: UnsafePointer<UInt8>) -> Int32 in
                 return EVP_DecryptUpdate(rsaDecryptCtx, decrypted, &processedLen, enc, Int32(encryptedData.count))
             }) != 0 else {
@@ -636,6 +619,7 @@ public class CryptorRSA {
             }
             decMsgLen += processedLen
             
+            // Verify the provided GCM tag.
             guard tagData.withUnsafeMutableBytes({ (tag: UnsafeMutablePointer<UInt8>) -> Int32 in
                 return EVP_CIPHER_CTX_ctrl(rsaDecryptCtx, EVP_CTRL_GCM_SET_TAG, 16, tag)
             }) == 1,
@@ -648,25 +632,10 @@ public class CryptorRSA {
                     throw Error(code: ERR_DECRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
             }
             decMsgLen += processedLen
+            // return the decrypted plaintext.
             return PlaintextData(with: Data(bytes: decrypted, count: Int(decMsgLen)))
-            #else
-            var response: Unmanaged<CFError>? = nil
-            guard let pData = SecKeyCreateDecryptedData(key.reference,
-                                                        SecKeyAlgorithm.rsaEncryptionOAEPSHA1AESGCM,
-                                                        self.data as CFData,
-                                                        &response)
-                else {
-                    guard let error = response?.takeRetainedValue() else {
-                        
-                        throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed. Unable to determine error.")
-                    }
-                    
-                    throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed with error: \(error)")
-            }
-            return PlaintextData(with: pData as Data)
-            #endif
         }
-        
+        #endif
 		
 		// MARK: --- Sign/Verification
 		

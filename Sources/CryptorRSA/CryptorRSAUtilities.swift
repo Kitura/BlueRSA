@@ -295,6 +295,9 @@ public extension CryptorRSA {
 		return data
 	}
     
+    // SecKeyCreateEncrypted uses the public key and modulus as Additional authenticated data.
+    // This function extracts and creates an ASN1 sequence with these two bits of data
+    // To be used for cross platform support.
     static func getPublicKeyDataFrom(privateKey keyData: Data) throws -> Data {
         
         let count = keyData.count / MemoryLayout<CUnsignedChar>.size
@@ -304,14 +307,15 @@ public extension CryptorRSA {
             throw Error(code: ERR_STRIP_PK_HEADER, reason: "Provided public key is empty")
         }
         
+        // Get the length of the total length bytes and move to object after them.
         var byteArray = [UInt8](keyData)
         var index = 1
-        print(byteArray[index])
         if byteArray[index] > 0x80 {
             index += Int(byteArray[index]) - 0x80 + 1
         } else {
             index += 1
         }
+        // Skip the RSA version
         index += 3
         guard Int(byteArray[index]) == 0x02 else {
             throw Error(code: ERR_STRIP_PK_HEADER, reason: "Invalid private key ANS1")
@@ -319,6 +323,7 @@ public extension CryptorRSA {
         var publicKeyLength = 0
         var lengthOfLength = 0
         index += 1
+        // Add the modulus length and bytes to the stripped bytes
         if byteArray[index]  <= 0x80 { // short form
             publicKeyLength = Int(byteArray[index])
             lengthOfLength = 1
@@ -333,10 +338,12 @@ public extension CryptorRSA {
         var strippedKeyBytes = [UInt8](byteArray[(index-1)..<(index+lengthOfLength+publicKeyLength)])
         index += lengthOfLength + publicKeyLength
         
+        // Add the publicExponent length and bytes to the stripped bytes
         let exponentLength = Int(byteArray[index + 1])
         strippedKeyBytes += [UInt8](byteArray[index..<(index+2+exponentLength)])
         let sequenceCount = strippedKeyBytes.count
         
+        // Calculating the length representation and create an ASN1 sequence for the modulus and exponent.
         let sequenceBytes: [UInt8]
         if sequenceCount < 128 {
             sequenceBytes = [0x30, UInt8(sequenceCount)]
