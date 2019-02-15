@@ -556,8 +556,8 @@ public class CryptorRSA {
         func decryptedGCM(with key: PrivateKey) throws -> PlaintextData? {
             
             let encKeyLength = 128
-            let encryptedDataLength = Int(data.count) - encKeyLength - tagLength
             let tagLength = 16
+            let encryptedDataLength = Int(data.count) - encKeyLength - tagLength
             
             // Extract encryptedAESKey, encryptedData, GCM tag from data
             let encryptedKey = data.subdata(in: 0..<encKeyLength)
