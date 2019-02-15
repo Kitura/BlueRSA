@@ -356,7 +356,7 @@ public class CryptorRSA {
 			#if os(Linux)
 				
                 if algorithm == .gcm {
-                    return decryptedGCM(with: key)
+                    return try decryptedGCM(with: key)
                 }
                 // Convert RSA key to EVP
                 var evp_key = EVP_PKEY_new()
@@ -565,7 +565,7 @@ public class CryptorRSA {
             var tagData = data.subdata(in: encKeyLength+encryptedDataLength..<data.count)
             // Allocate memory for decryption
             let aeskey = UnsafeMutablePointer<UInt8>.allocate(capacity: 16)
-            let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(encryptedData.count + encryptedIV.count))
+            let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(encryptedData.count + 16))
             let rsaDecryptCtx = EVP_CIPHER_CTX_new()
             EVP_CIPHER_CTX_init_wrapper(rsaDecryptCtx)
             defer {
@@ -576,7 +576,7 @@ public class CryptorRSA {
                     decrypted.deallocate()
                 #else
                     aeskey.deallocate(capacity: 16)
-                    decrypted.deallocate(capacity: Int(encryptedData.count + encryptedIV.count))
+                    decrypted.deallocate(capacity: Int(encryptedData.count + 16))
                 #endif
             }
             // processedLen is the number of bytes that each EVP_DecryptUpdate/EVP_DecryptFinal decrypts.
