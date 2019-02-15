@@ -112,14 +112,14 @@ extension CryptorRSA {
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string")
 		}
 		
-        #if os(Linux)
-        
-        // OpenSSL uses the PEM version when importing key...
-        data = CryptorRSA.convertDerToPem(from: data, type: .publicType)
-        
-        #endif
-        
-        return try PublicKey(with: data)
+		#if os(Linux)
+
+			// OpenSSL uses the PEM version when importing key...
+			data = CryptorRSA.convertDerToPem(from: data, type: .publicType)
+
+		#endif
+
+		return try PublicKey(with: data)
 	}
 	
 	///
@@ -626,7 +626,7 @@ extension CryptorRSA {
 		///
 		/// - Returns:				New `RSAKey` instance.
 		///
-        internal init(with data: Data, type: KeyType) throws {
+		internal init(with data: Data, type: KeyType) throws {
 			
 			self.type = type
 
@@ -667,7 +667,7 @@ extension CryptorRSA {
 		/// - Returns:				New `RSAKey` instance.
 		///
 		internal init(with nativeKey: NativeKey, type: KeyType) {
-            
+			
 			self.type = type
 			self.reference = nativeKey
 		}
@@ -698,8 +698,6 @@ extension CryptorRSA {
 	/// Public Key - Represents public key data.
 	///
 	public class PublicKey: RSAKey {
-        
-        
 		/// MARK: Statics
 		
 		/// Regular expression for the PK using the begin and end markers.
@@ -827,7 +825,6 @@ extension CryptorRSA {
 	///
 	public class PrivateKey: RSAKey {
 		
-        
 		// MARK: -- Initializers
 		
 		///
@@ -839,6 +836,7 @@ extension CryptorRSA {
 		/// - Returns:				New `PrivateKey` instance.
 		///
 		public init(with data: Data) throws {
+            
 			try super.init(with: data, type: .privateType)
 		}
 		

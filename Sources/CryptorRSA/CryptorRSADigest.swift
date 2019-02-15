@@ -56,9 +56,9 @@ extension Data {
 		/// Secure Hash Algorithm 2 512-bit
 		case sha512
         
-        /// Secure Hash Algorithm 1 using AES-GCM envelope encryption.
-        /// use this algorithm for cross platform encryption/decryption.
-        case gcm
+		/// Secure Hash Algorithm 1 using AES-GCM envelope encryption.
+		/// use this algorithm for cross platform encryption/decryption.
+		case gcm
         
 		/// Digest Length
 		public var length: CC_LONG {

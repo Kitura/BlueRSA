@@ -23,11 +23,7 @@ import Foundation
 
 #if os(Linux)
 import OpenSSL
-import Glibc
-#else
-import Darwin
 #endif
-
 
 // MARK: -
 
@@ -328,8 +324,6 @@ public class CryptorRSA {
 			#endif
 		}
 		
-
-        
 		///
 		/// Decrypt the data.
 		///

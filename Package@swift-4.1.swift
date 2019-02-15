@@ -32,7 +32,7 @@ var targetDependencies: [Target.Dependency] = []
 #elseif os(Linux)
 	
     let CryptoLibUrl = "https://github.com/IBM-Swift/OpenSSL.git"
-    let CryptoLibVersion: Package.Dependency.Requirement = .branch("cipherInit1.0")
+    let CryptoLibVersion: Package.Dependency.Requirement = .upToNextMajor(from: "1.1.0")
     targetDependencies.append(.byName(name: "OpenSSL"))
 	
 #else
