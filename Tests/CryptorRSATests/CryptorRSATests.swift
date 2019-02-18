@@ -728,6 +728,7 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
             ("test_simpleEncryption", test_simpleEncryption),
             ("test_linuxEncryptedGCM", test_linuxEncryptedGCM),
             ("test_MacEncryptedGCM", test_MacEncryptedGCM),
+            ("test_4096bitRSAKeyMacEncryptedGCM", test_4096bitRSAKeyMacEncryptedGCM),
             ("test_longStringEncryption", test_longStringEncryption),
             ("test_randomByteEncryption", test_randomByteEncryption),
 			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
