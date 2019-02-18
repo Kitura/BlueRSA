@@ -80,7 +80,7 @@ class CryptorRSATests: XCTestCase {
 		
         let path = CryptorRSATests.getFilePath(for: "public", ofType: "der")
         XCTAssertNotNil(path)
-		
+        
         if let filePath = path {
             let data = try Data(contentsOf: filePath)
             let publicKey = try? CryptorRSA.createPublicKey(with: data)
@@ -94,7 +94,7 @@ class CryptorRSATests: XCTestCase {
 		
 		let path = CryptorRSATests.getFilePath(for: "staging", ofType: "cer")
         XCTAssertNotNil(path)
-		
+        
         if let filePath = path {
             let data = try Data(contentsOf: filePath)
             let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: data)
@@ -108,7 +108,7 @@ class CryptorRSATests: XCTestCase {
 		
 		let path = CryptorRSATests.getFilePath(for: "staging2", ofType: "cer")
         XCTAssertNotNil(path)
-		
+        
         if let filePath = path {
             let data = try Data(contentsOf: filePath)
             let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: data)
@@ -122,7 +122,7 @@ class CryptorRSATests: XCTestCase {
 		
         let path = CryptorRSATests.getFilePath(for: "public-base64", ofType: "txt")
         XCTAssertNotNil(path)
-		
+        
         if let filePath = path {
             let str = try String(contentsOf: filePath, encoding: .utf8)
             let publicKey = try? CryptorRSA.createPublicKey(withBase64: str)
@@ -136,7 +136,7 @@ class CryptorRSATests: XCTestCase {
 		
         let path = CryptorRSATests.getFilePath(for: "public-base64-newlines", ofType: "txt")
         XCTAssertNotNil(path)
-		
+        
         if let filePath = path {
             let str = try String(contentsOf: filePath, encoding: .utf8)
             let publicKey = try? CryptorRSA.createPublicKey(withBase64: str)
@@ -149,7 +149,7 @@ class CryptorRSATests: XCTestCase {
 		
         let path = CryptorRSATests.getFilePath(for: "public", ofType: "pem")
         XCTAssertNotNil(path)
-		
+        
         if let filePath = path {
             let str = try String(contentsOf: filePath, encoding: .utf8)
             let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
@@ -192,7 +192,7 @@ class CryptorRSATests: XCTestCase {
 		
         let path = CryptorRSATests.getFilePath(for: "public-headerless", ofType: "pem")
         XCTAssertNotNil(path)
-		
+        
         if let filePath = path {
             let str = try String(contentsOf: filePath, encoding: .utf8)
             let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
@@ -207,7 +207,7 @@ class CryptorRSATests: XCTestCase {
             XCTFail()
             return
         }
-		
+        
 		let keys = CryptorRSA.PublicKey.publicKeys(withPEM: input)
 		XCTAssertEqual(keys.count, 9)
 		
@@ -259,7 +259,7 @@ class CryptorRSATests: XCTestCase {
 		
         let path = CryptorRSATests.getFilePath(for: "private", ofType: "pem")
         XCTAssertNotNil(path)
-		
+        
         if let filePath = path {
             let str = try String(contentsOf: filePath, encoding: .utf8)
             let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str)
@@ -272,7 +272,7 @@ class CryptorRSATests: XCTestCase {
 		
         let path = CryptorRSATests.getFilePath(for: "private-headerless", ofType: "pem")
         XCTAssertNotNil(path)
-		
+        
         if let filePath = path {
             let str = try String(contentsOf: filePath, encoding: .utf8)
             let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str)
@@ -331,13 +331,13 @@ class CryptorRSATests: XCTestCase {
 			print("Testing algorithm: \(name)")
 			let str = "Plain Text"
 			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
-			
+            
             guard let publicKey = self.publicKey,
                   let privateKey = self.privateKey else {
                 XCTFail("Could not find key")
                 return
             }
-			
+            
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
 			let decrypted = try encrypted?.decrypted(with: privateKey, algorithm: algorithm)
@@ -458,17 +458,17 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
 		// Test all the algorithms available...
 		//	Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
 		for (algorithm, name) in algorithms {
-
+			
 			print("Testing algorithm: \(name)")
 			let str = [String](repeating: "a", count: 9999).joined(separator: "")
 			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
-
+		
             guard let publicKey = self.publicKey,
                 let privateKey = self.privateKey else {
                     XCTFail("Could not find key")
                     return
             }
-
+            
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
 			let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: algorithm)
