@@ -506,7 +506,7 @@ public class CryptorRSA {
             let iv = [UInt8](repeating: 0, count: 16)
 			
             // Set the rsaEncryptCtx to use EVP_aes_128_gcm encryption.
-            guard EVP_EncryptInit_ex(rsaEncryptCtx, gcmAlgorithm, nil, nil, nil) == 1,
+            guard EVP_EncryptInit_ex(rsaEncryptCtx, .make(optional: gcmAlgorithm), nil, nil, nil) == 1,
                 // Set the IV length to be 16 to match Apple
                 EVP_CIPHER_CTX_ctrl(rsaEncryptCtx, EVP_CTRL_GCM_SET_IVLEN, 16, nil) == 1,
                 // Generate 16/32 random bytes that will be used as the AES key.
@@ -618,7 +618,7 @@ public class CryptorRSA {
             // Decrypt the encryptedKey into the aeskey using the RSA private key
             guard RSA_private_decrypt(Int32(encryptedKey.count), [UInt8](encryptedKey), aeskey, .make(optional: key.reference), RSA_PKCS1_OAEP_PADDING) != 0,
                 // Set the envelope decryption algorithm as 128 bit AES-GCM.
-                EVP_DecryptInit_ex(rsaDecryptCtx, gcmAlgorithm, nil, nil, nil) == 1,
+                EVP_DecryptInit_ex(rsaDecryptCtx, .make(optional: gcmAlgorithm), nil, nil, nil) == 1,
                 // Set the IV length to be 16 bytes.
                 EVP_CIPHER_CTX_ctrl(rsaDecryptCtx, EVP_CTRL_GCM_SET_IVLEN, 16, nil) == 1,
                 // Set the AES key to be 16 bytes.
