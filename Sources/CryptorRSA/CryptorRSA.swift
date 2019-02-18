@@ -622,7 +622,7 @@ public class CryptorRSA {
                 // Set the IV length to be 16 bytes.
                 EVP_CIPHER_CTX_ctrl(rsaDecryptCtx, EVP_CTRL_GCM_SET_IVLEN, 16, nil) == 1,
                 // Set the AES key to be 16 bytes.
-                EVP_CIPHER_CTX_set_key_length(rsaDecryptCtx, keySize) == 1,
+                EVP_CIPHER_CTX_set_key_length(rsaDecryptCtx, Int32(keySize)) == 1,
                 // Set the envelope decryption context AES key and IV.
                 EVP_DecryptInit_ex(rsaDecryptCtx, nil, nil, aeskey, iv) == 1,
                 EVP_DecryptUpdate(rsaDecryptCtx, nil, &processedLen, [UInt8](aad), Int32(aad.count)) == 1
