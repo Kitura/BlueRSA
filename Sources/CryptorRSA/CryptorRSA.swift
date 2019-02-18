@@ -470,14 +470,14 @@ public class CryptorRSA {
 			let keySize: Int
 			if aad.count > 525 {
 				// Set the rsaEncryptCtx to use EVP_aes_256_gcm encryption.
-				guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_256_gcm, nil, nil, nil) == 1 else {
+				guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_256_gcm(), nil, nil, nil) == 1 else {
 					throw Error(code: ERR_ENCRYPTION_FAILED, "Encryption failed: Failed to initialize encryption context")
 				}
 				encryptedCapacity = 512
 				keySize = 32
 			} else {
 				// Set the rsaEncryptCtx to use EVP_aes_128_gcm encryption.
-				guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_128_gcm, nil, nil, nil) == 1 else {
+				guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1 else {
 					throw Error(code: ERR_ENCRYPTION_FAILED, "Encryption failed: Failed to initialize encryption context")
 				}
 				encryptedCapacity = 128
@@ -585,14 +585,14 @@ public class CryptorRSA {
 			let keySize: Int
 			if aad.count > 525 {
 				// Set the envelope decryption algorithm as 128 bit AES-GCM.
-				guard EVP_DecryptInit_ex(rsaDecryptCtx, EVP_aes_256_gcm, nil, nil, nil) == 1 else {
+				guard EVP_DecryptInit_ex(rsaDecryptCtx, EVP_aes_256_gcm(), nil, nil, nil) == 1 else {
 					throw Error(code: ERR_DECRYPTION_FAILED, reason: "Decryption failed: Failed to initialize decryption context")
 				}
 				encKeyLength = 512
 				keySize = 32
 			} else {
 				// Set the envelope decryption algorithm as 128 bit AES-GCM.
-				guard EVP_DecryptInit_ex(rsaDecryptCtx, EVP_aes_128_gcm, nil, nil, nil) == 1 else {
+				guard EVP_DecryptInit_ex(rsaDecryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1 else {
 					throw Error(code: ERR_DECRYPTION_FAILED, reason: "Decryption failed: Failed to initialize decryption context")
 				}
 				encKeyLength = 128
