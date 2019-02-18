@@ -225,8 +225,8 @@ public class CryptorRSA {
                 switch algorithm {
                 case .gcm:
                     return try encryptedGCM(with: key)
-                // Same algorithm is used regardless of sha
                 case .sha1, .sha224, .sha256, .sha384, .sha512:
+                    // Same algorithm is used regardless of sha
                     return try encyptedCBC(with: key)
                 }
 			#else
@@ -276,8 +276,8 @@ public class CryptorRSA {
                 switch algorithm {
                 case .gcm:
                     return try decryptedGCM(with: key)
-                // Same algorithm is used regardless of sha
                 case .sha1, .sha224, .sha256, .sha384, .sha512:
+                    // Same algorithm is used regardless of sha
                     return try decryptedCBC(with: key)
                 }
                 
