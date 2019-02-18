@@ -227,7 +227,7 @@ public class CryptorRSA {
                     return try encryptedGCM(with: key)
                 case .sha1, .sha224, .sha256, .sha384, .sha512:
                     // Same algorithm is used regardless of sha
-                    return try encyptedCBC(with: key)
+                    return try encryptedCBC(with: key)
                 }
 			#else
 				
@@ -430,7 +430,7 @@ public class CryptorRSA {
             }
             
             // TODO: hash type option is not being used right now.
-            let enc = EVP_aes_256_cbc
+            let enc = EVP_aes_256_cbc()
             let padding = RSA_PKCS1_OAEP_PADDING
             
             let rsaEncryptCtx = EVP_CIPHER_CTX_new_wrapper()
@@ -620,7 +620,7 @@ public class CryptorRSA {
             
             // TODO: hash type option is not being used right now.
             let encType = EVP_aes_256_cbc()
-            let padding = RSA_PKCS1_OAEP_PADDING()
+            let padding = RSA_PKCS1_OAEP_PADDING
             
             // Size of symmetric encryption
             let encKeyLength = Int(EVP_PKEY_size(evp_key))
