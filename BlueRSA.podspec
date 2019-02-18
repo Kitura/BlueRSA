@@ -10,6 +10,8 @@ s.module_name  = 'CryptorRSA'
 s.requires_arc = true
 s.osx.deployment_target = "10.12"
 s.ios.deployment_target = "10.3"
+s.tvos.deployment_target = "10.3"
+s.watchos.deployment_target = "3.3"
 s.source   = { :git => "https://github.com/IBM-Swift/BlueRSA.git", :tag => s.version }
 s.source_files = "Sources/CryptorRSA/*.swift"
 s.pod_target_xcconfig =  {
