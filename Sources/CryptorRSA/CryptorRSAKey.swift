@@ -698,7 +698,7 @@ extension CryptorRSA {
 	/// Public Key - Represents public key data.
 	///
 	public class PublicKey: RSAKey {
-
+		
 		/// MARK: Statics
 		
 		/// Regular expression for the PK using the begin and end markers.

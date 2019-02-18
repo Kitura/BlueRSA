@@ -327,7 +327,7 @@ class CryptorRSATests: XCTestCase {
 		// Test all the algorithms available...
 		//	Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
 		for (algorithm, name) in algorithms {
-			
+		
 			print("Testing algorithm: \(name)")
 			let str = "Plain Text"
 			let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
@@ -365,6 +365,22 @@ class CryptorRSATests: XCTestCase {
 	}
 
 	func test_MacEncryptedGCM() throws {
+		
+		print("Testing MacOS encrypted GCM")
+		let macEncrypted = try CryptorRSA.createEncrypted(with: "SfM0Tg3M4mU0EFoz1ZiriUShCQbyT+aITE8FO+vvIwoNHyI/OWsOxyVxIv4K86tFuDrR9ORSiYcc8O29pOPbpcpGQEo+0EsVjiDwvbrDsIXdOWtiX8hbe/vjvuC8QfYaA5K8OiSlLyMtZGpyegKiROjHXxuVQfk4EgGI2IANARgrO191bar87742fgO0w55ILuNLXvU+/kYXe7DV")
+		
+		guard let privateKey = self.privateKey else {
+			XCTFail("Could not find key")
+			return
+		}
+		let decrypted = try macEncrypted.decrypted(with: privateKey, algorithm: .gcm)
+		XCTAssertNotNil(decrypted)
+		let decryptedString = try decrypted?.string(using: .utf8)
+		XCTAssertEqual(decryptedString, "MacEncrypted")
+		print("Test of GCM algorithm succeeded")
+	}
+	
+	func test_4096bitRSAMacEncryptedGCM() throws {
 		
 		print("Testing MacOS encrypted GCM")
 		let macEncrypted = try CryptorRSA.createEncrypted(with: "SfM0Tg3M4mU0EFoz1ZiriUShCQbyT+aITE8FO+vvIwoNHyI/OWsOxyVxIv4K86tFuDrR9ORSiYcc8O29pOPbpcpGQEo+0EsVjiDwvbrDsIXdOWtiX8hbe/vjvuC8QfYaA5K8OiSlLyMtZGpyegKiROjHXxuVQfk4EgGI2IANARgrO191bar87742fgO0w55ILuNLXvU+/kYXe7DV")
