@@ -254,12 +254,26 @@ public class CryptorRSA {
                 ek = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(EVP_PKEY_size(evp_key)))
                 let ekPtr = UnsafeMutablePointer<UInt8Ptr>.allocate(capacity: MemoryLayout<UInt8Ptr>.size)
                 ekPtr.pointee = ek
-                
                 // Assign size of the corresponding cipher's IV
 				let IVLength = EVP_CIPHER_iv_length(.make(optional: enc))
                 let iv = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(IVLength))
                 
                 let encrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: self.data.count + Int(IVLength))
+            
+                defer {
+                    #if swift(>=4.1)
+                        ek.deallocate()
+                        ekPtr.deallocate()
+                        iv.deallocate()
+                        encrypted.deallocate()
+                    #else
+                        ek.deallocate(capacity: Int(EVP_PKEY_size(evp_key)))
+                        ekPtr.deallocate(capacity: MemoryLayout<UInt8Ptr>.size)
+                        iv.deallocate(capacity: Int(IVLength))
+                        encrypted.deallocate(capacity: self.data.count + Int(IVLength))
+                    #endif
+                }
+            
                 var encKeyLength: Int32 = 0
                 var processedLength: Int32 = 0
                 var encLength: Int32 = 0
@@ -391,7 +405,15 @@ public class CryptorRSA {
                 var decMsgLen: Int32 = 0
                 
                 let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(encryptedData.count + encryptedIV.count))
-                
+            
+                defer {
+                    #if swift(>=4.1)
+                    decrypted.deallocate()
+                    #else
+                    decrypted.deallocate(capacity: capacity: Int(encryptedData.count + encryptedIV.count))
+                    #endif
+                }
+            
                 // EVP_OpenInit returns 0 on error or the recovered secret key size if successful
                 status = encryptedKey.withUnsafeBytes({ (ek: UnsafePointer<UInt8>) -> Int32 in
                     return encryptedIV.withUnsafeBytes({ (iv: UnsafePointer<UInt8>) -> Int32 in
@@ -512,7 +534,15 @@ public class CryptorRSA {
                 var sig_len: Int = 0
                 EVP_DigestSignFinal(md_ctx, nil, &sig_len)
                 let sig = UnsafeMutablePointer<UInt8>.allocate(capacity: sig_len)
-                
+            
+                defer {
+                    #if swift(>=4.1)
+                        sig.deallocate()
+                    #else
+                        sig.deallocate(capacity: sig_len)
+                    #endif
+                }
+            
                 rc = EVP_DigestSignFinal(md_ctx, sig, &sig_len)
                 guard rc == 1, sig_len > 0 else {
                     let source = "Signing failed."
