@@ -304,36 +304,36 @@ public class CryptorRSA {
         /// Encrypt the data using AES GCM SHA1 for cross platform support.
         #if os(Linux)
         func encryptedGCM(with key: PublicKey) throws -> EncryptedData? {
-			
-			// Initialize encryption context
-			let rsaEncryptCtx = EVP_CIPHER_CTX_new_wrapper()
-			EVP_CIPHER_CTX_init_wrapper(rsaEncryptCtx)
-			
-			// Set the additional authenticated data (aad) as the RSA key modulus and publicExponent in an ASN1 sequence.
-			guard let aad = key.publicKeyBytes else {
-				let source = "Encryption failed"
-				throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": Failed to decode public key")
-			}
-			// if the RSA key is >= 4096 bits, use aes_256_gcm.
-			let encryptedCapacity: Int
-			let keySize: Int
-			if aad.count > 525 {
-				// Set the rsaEncryptCtx to use EVP_aes_256_gcm encryption.
-				guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_256_gcm(), nil, nil, nil) == 1 else {
-					throw Error(code: ERR_ENCRYPTION_FAILED, reason: "Encryption failed: Failed to initialize encryption context")
-				}
-				encryptedCapacity = 512
-				keySize = 32
-			} else {
-				// Set the rsaEncryptCtx to use EVP_aes_128_gcm encryption.
-				guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1 else {
-					throw Error(code: ERR_ENCRYPTION_FAILED, reason: "Encryption failed: Failed to initialize encryption context")
-				}
-				encryptedCapacity = 128
-				keySize = 16
-			}
-			
-			// Allocate encryption memory
+            
+            // Initialize encryption context
+            let rsaEncryptCtx = EVP_CIPHER_CTX_new_wrapper()
+            EVP_CIPHER_CTX_init_wrapper(rsaEncryptCtx)
+            
+            // Set the additional authenticated data (aad) as the RSA key modulus and publicExponent in an ASN1 sequence.
+            guard let aad = key.publicKeyBytes else {
+                let source = "Encryption failed"
+                throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": Failed to decode public key")
+            }
+            // if the RSA key is >= 4096 bits, use aes_256_gcm.
+            let encryptedCapacity: Int
+            let keySize: Int
+            if aad.count > 525 {
+                // Set the rsaEncryptCtx to use EVP_aes_256_gcm encryption.
+                guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_256_gcm(), nil, nil, nil) == 1 else {
+                    throw Error(code: ERR_ENCRYPTION_FAILED, reason: "Encryption failed: Failed to initialize encryption context")
+                }
+                encryptedCapacity = 512
+                keySize = 32
+            } else {
+                // Set the rsaEncryptCtx to use EVP_aes_128_gcm encryption.
+                guard EVP_EncryptInit_ex(rsaEncryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1 else {
+                    throw Error(code: ERR_ENCRYPTION_FAILED, reason: "Encryption failed: Failed to initialize encryption context")
+                }
+                encryptedCapacity = 128
+                keySize = 16
+            }
+            
+            // Allocate encryption memory
             let aeskey = UnsafeMutablePointer<UInt8>.allocate(capacity: keySize)
             let encryptedKey = UnsafeMutablePointer<UInt8>.allocate(capacity: encryptedCapacity)
             let tag = UnsafeMutablePointer<UInt8>.allocate(capacity: 16)
@@ -360,7 +360,7 @@ public class CryptorRSA {
             var encLength: Int32 = 0
             // Apple use a 16 byte all 0 IV. This is allowed since a random key is generated for each encryption.
             let iv = [UInt8](repeating: 0, count: 16)
-			
+            
             // Set the IV length to be 16 to match Apple.
             guard EVP_CIPHER_CTX_ctrl(rsaEncryptCtx, EVP_CTRL_GCM_SET_IVLEN, 16, nil) == 1,
                 // Generate 16/32 random bytes that will be used as the AES key.
@@ -501,35 +501,35 @@ public class CryptorRSA {
             
         /// Decrypt the data using aes GCM for cross platform support.
         func decryptedGCM(with key: PrivateKey) throws -> PlaintextData? {
-			
-			// Initialize the decryption context.
-			let rsaDecryptCtx = EVP_CIPHER_CTX_new()
-			EVP_CIPHER_CTX_init_wrapper(rsaDecryptCtx)
-			
-			// Set the additional authenticated data (aad) as the RSA key modulus and publicExponent in an ASN1 sequence.
-			guard let aad = key.publicKeyBytes else {
-				let source = "Encryption failed"
-				throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": Failed to decode public key")
-			}
-			// if the RSA key is larger than 4096 bits, use aes_256_gcm.
-			let encKeyLength: Int
-			let keySize: Int
-			if aad.count > 525 {
-				// Set the envelope decryption algorithm as 128 bit AES-GCM.
-				guard EVP_DecryptInit_ex(rsaDecryptCtx, EVP_aes_256_gcm(), nil, nil, nil) == 1 else {
-					throw Error(code: ERR_DECRYPTION_FAILED, reason: "Decryption failed: Failed to initialize decryption context")
-				}
-				encKeyLength = 512
-				keySize = 32
-			} else {
-				// Set the envelope decryption algorithm as 128 bit AES-GCM.
-				guard EVP_DecryptInit_ex(rsaDecryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1 else {
-					throw Error(code: ERR_DECRYPTION_FAILED, reason: "Decryption failed: Failed to initialize decryption context")
-				}
-				encKeyLength = 128
-				keySize = 16
-			}
-			
+            
+            // Initialize the decryption context.
+            let rsaDecryptCtx = EVP_CIPHER_CTX_new()
+            EVP_CIPHER_CTX_init_wrapper(rsaDecryptCtx)
+            
+            // Set the additional authenticated data (aad) as the RSA key modulus and publicExponent in an ASN1 sequence.
+            guard let aad = key.publicKeyBytes else {
+                let source = "Encryption failed"
+                throw Error(code: ERR_ENCRYPTION_FAILED, reason: source + ": Failed to decode public key")
+            }
+            // if the RSA key is larger than 4096 bits, use aes_256_gcm.
+            let encKeyLength: Int
+            let keySize: Int
+            if aad.count > 525 {
+                // Set the envelope decryption algorithm as 128 bit AES-GCM.
+                guard EVP_DecryptInit_ex(rsaDecryptCtx, EVP_aes_256_gcm(), nil, nil, nil) == 1 else {
+                    throw Error(code: ERR_DECRYPTION_FAILED, reason: "Decryption failed: Failed to initialize decryption context")
+                }
+                encKeyLength = 512
+                keySize = 32
+            } else {
+                // Set the envelope decryption algorithm as 128 bit AES-GCM.
+                guard EVP_DecryptInit_ex(rsaDecryptCtx, EVP_aes_128_gcm(), nil, nil, nil) == 1 else {
+                    throw Error(code: ERR_DECRYPTION_FAILED, reason: "Decryption failed: Failed to initialize decryption context")
+                }
+                encKeyLength = 128
+                keySize = 16
+            }
+            
             let tagLength = 16
             let encryptedDataLength = Int(data.count) - encKeyLength - tagLength
             
