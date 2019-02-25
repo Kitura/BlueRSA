@@ -743,6 +743,9 @@ public class CryptorRSA {
                 
                 // convert RSA key to EVP
                 let evp_key = EVP_PKEY_new()
+                defer {
+                    EVP_PKEY_free(evp_key)
+                }
 				var rc = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
                 guard rc == 1 else {
                     let source = "Couldn't create key reference from key data"
@@ -758,7 +761,9 @@ public class CryptorRSA {
                 // Provide a pkey_ctx to EVP_DigestSignInit so that the EVP_PKEY_CTX of the signing operation
                 // is written to it, to allow alternative signing options to be set
                 var pkey_ctx = EVP_PKEY_CTX_new(evp_key, nil)
-                
+                defer {
+                    EVP_PKEY_CTX_free(pkey_ctx)
+                }
                 EVP_DigestSignInit(md_ctx, &pkey_ctx, .make(optional: md), nil, evp_key)
                 
                 // Now that Init has initialized pkey_ctx, set the padding option
@@ -852,6 +857,9 @@ public class CryptorRSA {
 
                 // convert RSA key to EVP
                 let evp_key = EVP_PKEY_new()
+                defer {
+                    EVP_PKEY_free(evp_key)
+                }
                 var rc = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
                 guard rc == 1 else {
                     let source = "Couldn't create key reference from key data"
@@ -867,7 +875,9 @@ public class CryptorRSA {
                 // Provide a pkey_ctx to EVP_DigestSignInit so that the EVP_PKEY_CTX of the signing operation
                 // is written to it, to allow alternative signing options to be set
                 var pkey_ctx = EVP_PKEY_CTX_new(evp_key, nil)
-
+                defer {
+                    EVP_PKEY_CTX_free(pkey_ctx)
+                }
                 EVP_DigestVerifyInit(md_ctx, &pkey_ctx, .make(optional: md), nil, evp_key)
 
                 // Now that EVP_DigestVerifyInit has initialized pkey_ctx, set the padding option

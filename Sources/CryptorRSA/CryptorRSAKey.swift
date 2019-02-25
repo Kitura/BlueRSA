@@ -610,6 +610,9 @@ extension CryptorRSA {
         
         #if os(Linux)
         var publicKeyBytes: Data?
+        deinit {
+            RSA_free(reference)
+        }
         #endif
         
 		/// Represents the type of key data contained.
