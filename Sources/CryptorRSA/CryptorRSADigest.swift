@@ -55,7 +55,11 @@ extension Data {
 		
 		/// Secure Hash Algorithm 2 512-bit
 		case sha512
-		
+        
+		/// Secure Hash Algorithm 1 using AES-GCM envelope encryption.
+		/// use this algorithm for cross platform encryption/decryption.
+		case gcm
+        
 		/// Digest Length
 		public var length: CC_LONG {
 			
@@ -78,6 +82,8 @@ extension Data {
 				case .sha512:
 					return CC_LONG(SHA512_DIGEST_LENGTH)
 					
+                case .gcm:
+                    return CC_LONG(SHA_DIGEST_LENGTH)
 				}
 				
 			#else
@@ -99,6 +105,8 @@ extension Data {
 				case .sha512:
 					return CC_LONG(CC_SHA512_DIGEST_LENGTH)
 					
+                case .gcm:
+                    return CC_LONG(CC_SHA1_DIGEST_LENGTH)
 				}
 
 			#endif
@@ -125,6 +133,9 @@ extension Data {
 
 				case .sha512:
 					return (.init(EVP_sha512()), RSA_PKCS1_PADDING)
+                
+                case .gcm:
+                    return (.init(EVP_sha1()), RSA_PKCS1_PADDING)
 
 				}
 			}
@@ -148,6 +159,9 @@ extension Data {
 		
 				case .sha512:
 					return (.init(EVP_sha512()), .init(EVP_aes_128_gcm()), RSA_PKCS1_OAEP_PADDING)
+                    
+                case .gcm:
+                    return (.init(EVP_sha1()), .init(EVP_aes_128_gcm()), RSA_PKCS1_OAEP_PADDING)
 		
 				}
 			}
@@ -173,7 +187,9 @@ extension Data {
 						
 				case .sha512:
 					return .rsaSignatureMessagePKCS1v15SHA512
-						
+                    
+                case .gcm:
+                    return .rsaSignatureMessagePKCS1v15SHA1
 				}
 			}
 				
@@ -196,6 +212,9 @@ extension Data {
 				
 				case .sha512:
 					return .rsaEncryptionOAEPSHA512AESGCM
+                    
+                case .gcm:
+                    return .rsaEncryptionOAEPSHA1AESGCM
 				
 			}
 		}
@@ -224,6 +243,9 @@ extension Data {
 					
 				case .sha512:
 					return SHA512
+                    
+                case .gcm:
+                    return SHA1
 					
 				}
 			}
@@ -249,6 +271,8 @@ extension Data {
 				case .sha512:
 					return CC_SHA512
 					
+                case .gcm:
+                    return CC_SHA1
 				}
 		}
 		

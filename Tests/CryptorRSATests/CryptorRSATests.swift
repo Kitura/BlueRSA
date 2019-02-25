@@ -319,10 +319,11 @@ class CryptorRSATests: XCTestCase {
 	func test_simpleEncryption() throws {
 		
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-		                                              (.sha224, ".sha224"),
-		                                              (.sha256, ".sha256"),
-		                                              (.sha384, ".sha384"),
-		                                              /*(.sha512, ".sha512")*/]
+                                                      (.sha224, ".sha224"),
+                                                      (.sha256, ".sha256"),
+                                                      (.sha384, ".sha384"),
+                                                      (.gcm, "gcm"),
+                                                      /*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
 		//	Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
 		for (algorithm, name) in algorithms {
@@ -339,7 +340,7 @@ class CryptorRSATests: XCTestCase {
             
 			let encrypted = try plainText.encrypted(with: publicKey, algorithm: algorithm)
 			XCTAssertNotNil(encrypted)
-			let decrypted = try encrypted!.decrypted(with: privateKey, algorithm: algorithm)
+			let decrypted = try encrypted?.decrypted(with: privateKey, algorithm: algorithm)
 			XCTAssertNotNil(decrypted)
 			let decryptedString = try decrypted!.string(using: .utf8)
 			XCTAssertEqual(decryptedString, str)
@@ -347,13 +348,113 @@ class CryptorRSATests: XCTestCase {
 		}
 	}
 	
-	func test_longStringEncryption() throws {
+	func test_linuxEncryptedGCM() throws {
 		
+		print("Testing linux encrypted GCM")
+		let linuxEncrypted = try CryptorRSA.createEncrypted(with: "toylrkUlMuNyqERzkUTl/kX88eYnaZFO2cD7vO3LUqZJ/GhsSmgDudQhS5CsZGEwPVnrrZ77S7j5ksikouJm9MpurBZZYJN1iOGLjDfam8Vtz6iYpZ7fLdrGMWz/ytrqxcUTeHkXKJ+Hx/XHf+SLQN79Yw8XWAE5qowRnTdZy9x16J7czi4MJW5URO/cFA/nkKStvOSzZRgd9WiqOos=")
+		
+		guard let privateKey = self.privateKey else {
+				XCTFail("Could not find key")
+				return
+		}
+		let decrypted = try linuxEncrypted.decrypted(with: privateKey, algorithm: .gcm)
+		XCTAssertNotNil(decrypted)
+		let decryptedString = try decrypted?.string(using: .utf8)
+		XCTAssertEqual(decryptedString, "LinuxEncrypted")
+		print("Test of GCM algorithm succeeded")
+	}
+
+	func test_MacEncryptedGCM() throws {
+		
+		print("Testing MacOS encrypted GCM")
+		let macEncrypted = try CryptorRSA.createEncrypted(with: "SfM0Tg3M4mU0EFoz1ZiriUShCQbyT+aITE8FO+vvIwoNHyI/OWsOxyVxIv4K86tFuDrR9ORSiYcc8O29pOPbpcpGQEo+0EsVjiDwvbrDsIXdOWtiX8hbe/vjvuC8QfYaA5K8OiSlLyMtZGpyegKiROjHXxuVQfk4EgGI2IANARgrO191bar87742fgO0w55ILuNLXvU+/kYXe7DV")
+		
+		guard let privateKey = self.privateKey else {
+			XCTFail("Could not find key")
+			return
+		}
+		let decrypted = try macEncrypted.decrypted(with: privateKey, algorithm: .gcm)
+		XCTAssertNotNil(decrypted)
+		let decryptedString = try decrypted?.string(using: .utf8)
+		XCTAssertEqual(decryptedString, "MacEncrypted")
+		print("Test of GCM algorithm succeeded")
+	}
+	
+	func test_4096bitRSAKeyMacEncryptedGCM() throws {
+		
+		let rsaPrivKey = """
+-----BEGIN RSA PRIVATE KEY-----
+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
+-----END RSA PRIVATE KEY-----
+"""
+		
+		print("Testing MacOS encrypted GCM")
+		let macEncrypted = try CryptorRSA.createEncrypted(with: "u7SgVzag0RL3rN36FPRWwKQKZ0iCvY09Zy4FECrpOCoDHqPPmMEuzhkjVswUVceGCcN8KZ2mq/ABE8CiQId6+zhUDt8/kCkToOz8enIg8g4T6p/ZDhPbP6qPp7s75Fp3rqIxr7EwT/12drtxY3XLJZXehYysrpxRv1qkXE067Iuw+Mp8g/jP1bZF5FmL7a6CdWvG+o3kJ1xTvz+ySO2GVeErEbLf16rP+zVEfdxr/uWv6qWeyVNKf7Mn14SEbeNhRXzkFIraYFjZd4+EZBdTkFk/muL+xyxJgf+phaKWM18l1bno/wxiGmxYrfi0vMWl/6HpMvdMsGoUDhcTrGovhawF12dD8P34MpWowebon0TufA43I42MPM7eMagEdGnCNoY4QQP3m31gUfUUb6261yHQsE8cookBoE9f7+BqrWkUYjvqcTO7JsBCNEQDOyvmUzZBIra13SpvWW0gufmwJ4vDMd95kpCKw2RbRAo4+Cg9oRVln3Mo1u8hEwh4DdlCLU0y2Idc2Gml36IOwKnjBPn7PQgD7FiGarsMfNwkqkgtvQYLDcTmiGk/e7nf8Ds9ujnZquBD5xLS5Jym4j02tw4hAJQdwPiqKzlIDVF1ZYX1jd8XDPk3Iy9GcNOAUuhWd09joutu1BnnrWUaErOjVx1K0yRqrbRgELxzALCLpUoVLaf/ZbSI6q78RyRC2HgKGIs61lL7Vl1TVg==")
+		
+		let privateKey = try CryptorRSA.createPrivateKey(withPEM: rsaPrivKey)
+		let decrypted = try macEncrypted.decrypted(with: privateKey, algorithm: .gcm)
+		XCTAssertNotNil(decrypted)
+		let decryptedString = try decrypted?.string(using: .utf8)
+		XCTAssertEqual(decryptedString, "Plain Text")
+		print("Test of GCM algorithm succeeded")
+	}
+
+	func test_longStringEncryption() throws {
+
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-		                                              (.sha224, ".sha224"),
-		                                              (.sha256, ".sha256"),
-		                                              (.sha384, ".sha384"),
-		                                              /*(.sha512, ".sha512")*/]
+                                                      (.sha224, ".sha224"),
+                                                      (.sha256, ".sha256"),
+                                                      (.sha384, ".sha384"),
+                                                      (.gcm, "gcm"),
+                                                      /*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
 		//	Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
 		for (algorithm, name) in algorithms {
@@ -381,10 +482,11 @@ class CryptorRSATests: XCTestCase {
 	func test_randomByteEncryption() throws {
 		
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-		                                              (.sha224, ".sha224"),
-		                                              (.sha256, ".sha256"),
-		                                              (.sha384, ".sha384"),
-		                                              /*(.sha512, ".sha512")*/]
+                                                      (.sha224, ".sha224"),
+                                                      (.sha256, ".sha256"),
+                                                      (.sha384, ".sha384"),
+                                                      (.gcm, "gcm"),
+                                                      /*(.sha512, ".sha512")*/]
 		// Test all the algorithms available...
 		//	Note: .sha512 encryption appears to be broken internally on Apple platforms, so we skip it...
 		for (algorithm, name) in algorithms {
@@ -413,10 +515,11 @@ class CryptorRSATests: XCTestCase {
 	func test_signVerifyAllDigestTypes() throws {
 		
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-		                                              (.sha224, ".sha224"),
-		                                              (.sha256, ".sha256"),
-		                                              (.sha384, ".sha384"),
-		                                              (.sha512, ".sha512")]
+                                                      (.sha224, ".sha224"),
+                                                      (.sha256, ".sha256"),
+                                                      (.sha384, ".sha384"),
+                                                      (.sha512, ".sha512"),
+                                                      (.gcm, ".gcm")]
         guard let publicKey = self.publicKey,
             let privateKey = self.privateKey else {
                 XCTFail("Could not find key")
@@ -440,11 +543,12 @@ class CryptorRSATests: XCTestCase {
 	func test_signVerifyBase64() throws {
 		
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-		                                              (.sha224, ".sha224"),
-		                                              (.sha256, ".sha256"),
-		                                              (.sha384, ".sha384"),
-		                                              (.sha512, ".sha512")]
-        
+                                                      (.sha224, ".sha224"),
+                                                      (.sha256, ".sha256"),
+                                                      (.sha384, ".sha384"),
+                                                      (.sha512, ".sha512"),
+                                                      (.gcm, ".gcm")]
+	
         guard let publicKey = self.publicKey,
             let privateKey = self.privateKey else {
                 XCTFail("Could not find key")
@@ -622,6 +726,9 @@ class CryptorRSATests: XCTestCase {
             ("test_private_initWithPEMName", test_private_initWithPEMName),
             ("test_private_initWithDERName", test_private_initWithDERName),
             ("test_simpleEncryption", test_simpleEncryption),
+            ("test_linuxEncryptedGCM", test_linuxEncryptedGCM),
+            ("test_MacEncryptedGCM", test_MacEncryptedGCM),
+            ("test_4096bitRSAKeyMacEncryptedGCM", test_4096bitRSAKeyMacEncryptedGCM),
             ("test_longStringEncryption", test_longStringEncryption),
             ("test_randomByteEncryption", test_randomByteEncryption),
 			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
