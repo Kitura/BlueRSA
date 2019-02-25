@@ -20,7 +20,7 @@
 //
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-	import CommonCrypto
+    import CommonCrypto
 #elseif os(Linux)
 	import OpenSSL
 #endif
@@ -34,15 +34,15 @@ extension CryptorRSA {
 	
 	// MARK: Type Aliases
 	
-	#if os(Linux)
+    #if os(Linux)
 	
 		public typealias NativeKey = OpaquePointer?
 	
-	#else
-	
-		public typealias NativeKey = SecKey
-	
-	#endif
+    #else
+    
+        public typealias NativeKey = SecKey
+    
+    #endif
 	
 	// MARK: Class Functions
 	
@@ -58,11 +58,11 @@ extension CryptorRSA {
 	///
 	public class func createPublicKey(with data: Data) throws -> PublicKey {
 		
-		#if os(Linux)
+        #if os(Linux)
 		
 			let data = CryptorRSA.convertDerToPem(from: data, type: .publicType)
 		
-		#endif
+        #endif
 		
 		return try PublicKey(with: data)
 	}
@@ -112,12 +112,12 @@ extension CryptorRSA {
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base64 string")
 		}
 		
-		#if os(Linux)
+        #if os(Linux)
 		
 			// OpenSSL uses the PEM version when importing key...
 			data = CryptorRSA.convertDerToPem(from: data, type: .publicType)
 		
-		#endif
+        #endif
 		
 		return try PublicKey(with: data)
 	}
@@ -132,21 +132,21 @@ extension CryptorRSA {
 	///
 	public class func createPublicKey(withPEM pemString: String) throws -> PublicKey {
 		
-		#if os(Linux)
+        #if os(Linux)
 		
 			// OpenSSL takes the full PEM format...
 			let keyData = pemString.data(using: String.Encoding.utf8)!
 		
 			return try PublicKey(with: keyData)
 		
-		#else
-		
-			// Get the Base64 representation of the PEM encoded string after stripping off the PEM markers
-			let base64String = try CryptorRSA.base64String(for: pemString)
-		
-			return try createPublicKey(withBase64: base64String)
-		
-		#endif
+        #else
+        
+            // Get the Base64 representation of the PEM encoded string after stripping off the PEM markers
+            let base64String = try CryptorRSA.base64String(for: pemString)
+        
+            return try createPublicKey(withBase64: base64String)
+        
+        #endif
 	}
 	
 	///
@@ -194,15 +194,15 @@ extension CryptorRSA {
 		
 		let dataIn = try Data(contentsOf: fullPath)
 		
-		#if os(Linux)
+        #if os(Linux)
 		
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
 		
-		#else
-		
-			let data = dataIn
-		
-		#endif
+        #else
+        
+            let data = dataIn
+        
+        #endif
 		
 		return try PublicKey(with: data)
 	}
@@ -227,19 +227,19 @@ extension CryptorRSA {
 		let fullPath = URL(fileURLWithPath: #file).appendingPathComponent( path.appending(certNameFull) ).standardized
 		
 		// Import the data from the file...
-		#if os(Linux)
+        #if os(Linux)
 		
 			// In OpenSSL, we can just get the data and don't have to worry about stripping off headers etc.
 			let data = try Data(contentsOf: fullPath)
 		
-		#else
-		
-			// Get the Base64 representation of the PEM encoded string after stripping off the PEM markers...
-			let tmp = try String(contentsOf: fullPath, encoding: .utf8)
-			let base64 = try CryptorRSA.base64String(for: tmp)
-			let data = Data(base64Encoded: base64)!
-		
-		#endif
+        #else
+        
+            // Get the Base64 representation of the PEM encoded string after stripping off the PEM markers...
+            let tmp = try String(contentsOf: fullPath, encoding: .utf8)
+            let base64 = try CryptorRSA.base64String(for: tmp)
+            let data = Data(base64Encoded: base64)!
+        
+        #endif
 		
 		return try CryptorRSA.createPublicKey(data: data)
 	}
@@ -283,15 +283,15 @@ extension CryptorRSA {
 		
 		let dataIn = try Data(contentsOf: URL(fileURLWithPath: path))
 		
-		#if os(Linux)
+        #if os(Linux)
 		
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .publicType)
 		
-		#else
-		
-			let data = dataIn
-		
-		#endif
+        #else
+        
+            let data = dataIn
+        
+        #endif
 		
 		return try PublicKey(with: data)
 	}
@@ -331,7 +331,7 @@ extension CryptorRSA {
 	///
 	internal class func createPublicKey(data: Data) throws -> PublicKey {
 		
-		#if os(Linux)
+        #if os(Linux)
 		
 			let certbio = BIO_new(BIO_s_mem())
 			defer {
@@ -367,53 +367,40 @@ extension CryptorRSA {
 				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error getting public key from certificate")
 			}
 		
-			let key = EVP_PKEY_get1_RSA( evp_key)
-			if key == nil {
-				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error getting public key from certificate")
-			}
-			defer {
-				//	RSA_free(key)
-				EVP_PKEY_free(evp_key)
-			}
-		
-			#if swift(>=4.1)
-				return PublicKey(with: .make(optional: key!)!)
-			#else
-				return PublicKey(with: key!)
-			#endif
+				return PublicKey(with: .make(optional: evp_key)!)
 	
-		#else
-		
-			// Create a DER-encoded X.509 certificate object from the DER data...
-			let certificateData = SecCertificateCreateWithData(nil, data as CFData)
-			guard let certData = certificateData else {
-				
-				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data.")
-			}
-		
-			#if os(macOS)
-		
-				// Now extract the public key from it...
-				var key: SecKey? = nil
-				let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
-					
-					// Retrieves the public key from a certificate...
-					SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
-				}
-				if status != errSecSuccess || key == nil {
-					
-					throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
-				}
-		
-			#else
-		
-				let key = SecCertificateCopyPublicKey(certData)
-		
-			#endif
-		
-			return PublicKey(with: key!)
-		
-		#endif		
+        #else
+        
+            // Create a DER-encoded X.509 certificate object from the DER data...
+            let certificateData = SecCertificateCreateWithData(nil, data as CFData)
+            guard let certData = certificateData else {
+                
+                throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data.")
+            }
+        
+            #if os(macOS)
+        
+                // Now extract the public key from it...
+                var key: SecKey? = nil
+                let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
+                    
+                    // Retrieves the public key from a certificate...
+                    SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
+                }
+                if status != errSecSuccess || key == nil {
+                    
+                    throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
+                }
+        
+            #else
+        
+                let key = SecCertificateCopyPublicKey(certData)
+        
+            #endif
+        
+            return PublicKey(with: key!)
+        
+        #endif        
 	}
 	
 	// MARK: -- Private Key Creation
@@ -459,21 +446,21 @@ extension CryptorRSA {
 	///
 	public class func createPrivateKey(withPEM pemString: String) throws -> PrivateKey {
 		
-		#if os(Linux)
+        #if os(Linux)
 		
 			// OpenSSL takes the full PEM format...
 			let keyData = pemString.data(using: String.Encoding.utf8)!
 		
 			return try PrivateKey(with: keyData)
 		
-		#else
-		
-			// SecKey needs the PEM format stripped of the header info and converted to base64...
-			let base64String = try CryptorRSA.base64String(for: pemString)
-		
-			return try CryptorRSA.createPrivateKey(withBase64: base64String)
-		
-		#endif
+        #else
+        
+            // SecKey needs the PEM format stripped of the header info and converted to base64...
+            let base64String = try CryptorRSA.base64String(for: pemString)
+        
+            return try CryptorRSA.createPrivateKey(withBase64: base64String)
+        
+        #endif
 	}
 	
 	///
@@ -519,16 +506,16 @@ extension CryptorRSA {
 		
 		let dataIn = try Data(contentsOf: fullPath)
 		
-		#if os(Linux)
+        #if os(Linux)
 		
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .privateType)
 		
-		#else
-		
-			let data = dataIn
-		
-		#endif
-		
+        #else
+        
+            let data = dataIn
+        
+        #endif
+        
 		return try PrivateKey(with: data)
 	}
 	
@@ -571,15 +558,15 @@ extension CryptorRSA {
 		
 		let dataIn = try Data(contentsOf: URL(fileURLWithPath: path))
 		
-		#if os(Linux)
+        #if os(Linux)
 		
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .privateType)
 		
-		#else
-		
-			let data = dataIn
-		
-		#endif
+        #else
+        
+            let data = dataIn
+        
+        #endif
 		
 		return try PrivateKey(with: data)
 	}
@@ -611,7 +598,7 @@ extension CryptorRSA {
         #if os(Linux)
         var publicKeyBytes: Data?
         deinit {
-            RSA_free(.make(optional: reference))
+            EVP_PKEY_free(.make(optional: reference))
         }
         #endif
         
@@ -675,24 +662,24 @@ extension CryptorRSA {
 			self.reference = nativeKey
 		}
 		
-		#if os(Linux) && !swift(>=4.1)
-		
-			///
-			/// Create a key using a native key.
-			///
-			/// - Parameters:
-			///		- nativeKey:		Pointer to RSA key structure.
-			///		- type:				Type of key.
-			///
-			/// - Returns:				New `RSAKey` instance.
-			///
-			internal init(with nativeKey: UnsafeMutablePointer<rsa_st>, type: KeyType) {
-				
-				self.type = type
-				self.reference = .make(optional: nativeKey)
-			}
-		
-		#endif
+        #if os(Linux) && !swift(>=4.1)
+        
+            ///
+            /// Create a key using a native key.
+            ///
+            /// - Parameters:
+            ///        - nativeKey:        Pointer to RSA key structure.
+            ///        - type:                Type of key.
+            ///
+            /// - Returns:                New `RSAKey` instance.
+            ///
+            internal init(with nativeKey: UnsafeMutablePointer<EVP_PKEY>, type: KeyType) {
+                
+                self.type = type
+                self.reference = .make(optional: nativeKey)
+            }
+        
+        #endif
 	}
 	
 	// MARK: -
@@ -804,22 +791,22 @@ extension CryptorRSA {
 			super.init(with: nativeKey, type: .publicType)
 		}
 
-		#if os(Linux) && !swift(>=4.1)
-		
-			///
-			/// Create a key using a native key.
-			///
-			/// - Parameters:
-			///		- nativeKey:		Pointer to RSA key structure.
-			///
-			/// - Returns:				New `RSAKey` instance.
-			///
-			public init(with nativeKey: UnsafeMutablePointer<rsa_st>) {
-				
-				super.init(with: nativeKey, type: .publicType)
-			}
-		
-		#endif
+        #if os(Linux) && !swift(>=4.1)
+        
+            ///
+            /// Create a key using a native key.
+            ///
+            /// - Parameters:
+            ///        - nativeKey:        Pointer to RSA key structure.
+            ///
+            /// - Returns:                New `RSAKey` instance.
+            ///
+            public init(with nativeKey: UnsafeMutablePointer<EVP_PKEY>) {
+                
+                super.init(with: nativeKey, type: .publicType)
+            }
+        
+        #endif
 	}
 	
 	// MARK: -

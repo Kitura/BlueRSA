@@ -221,7 +221,7 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not public")
 			}
 			
-			#if os(Linux)
+            #if os(Linux)
                 switch algorithm {
                 case .gcm:
                     return try encryptedGCM(with: key)
@@ -229,23 +229,23 @@ public class CryptorRSA {
                     // Same algorithm is used regardless of sha
                     return try encryptedCBC(with: key)
                 }
-			#else
-				
-				var response: Unmanaged<CFError>? = nil
-				let eData = SecKeyCreateEncryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
-				if response != nil {
-				
-					guard let error = response?.takeRetainedValue() else {
-					
-						throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed. Unable to determine error.")
-					}
-				
-					throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed with error: \(error)")
-				}
-			
-				return EncryptedData(with: eData! as Data)
+            #else
+                
+                var response: Unmanaged<CFError>? = nil
+                let eData = SecKeyCreateEncryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
+                if response != nil {
+                
+                    guard let error = response?.takeRetainedValue() else {
+                    
+                        throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed. Unable to determine error.")
+                    }
+                
+                    throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed with error: \(error)")
+                }
+            
+                return EncryptedData(with: eData! as Data)
 
-			#endif
+            #endif
 		}
 		
 		///
@@ -271,7 +271,7 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not private")
 			}
 			
-			#if os(Linux)
+            #if os(Linux)
 				
                 switch algorithm {
                 case .gcm:
@@ -281,23 +281,23 @@ public class CryptorRSA {
                     return try decryptedCBC(with: key)
                 }
                 
-			#else
-				
-				var response: Unmanaged<CFError>? = nil
-				let pData = SecKeyCreateDecryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
-				if response != nil {
-				
-					guard let error = response?.takeRetainedValue() else {
-					
-						throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed. Unable to determine error.")
-					}
-				
-					throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed with error: \(error)")
-				}
-				
-				return PlaintextData(with: pData! as Data)
-				
-			#endif
+            #else
+                
+                var response: Unmanaged<CFError>? = nil
+                let pData = SecKeyCreateDecryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
+                if response != nil {
+                
+                    guard let error = response?.takeRetainedValue() else {
+                    
+                        throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed. Unable to determine error.")
+                    }
+                
+                    throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed with error: \(error)")
+                }
+                
+                return PlaintextData(with: pData! as Data)
+                
+            #endif
 		}
 		
         ///
@@ -308,6 +308,18 @@ public class CryptorRSA {
             // Initialize encryption context
             let rsaEncryptCtx = EVP_CIPHER_CTX_new_wrapper()
             EVP_CIPHER_CTX_init_wrapper(rsaEncryptCtx)
+            
+            // get rsaKey
+            guard let rsaKey = EVP_PKEY_get1_RSA(.make(optional: key.reference)) else {
+                let source = "Couldn't create key reference from key data"
+                if let reason = CryptorRSA.getLastError(source: source) {
+                    throw Error(code: ERR_ADD_KEY, reason: reason)
+                }
+                throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+            }
+            defer {
+                RSA_free(rsaKey)
+            }
             
             // Set the additional authenticated data (aad) as the RSA key modulus and publicExponent in an ASN1 sequence.
             guard let aad = key.publicKeyBytes else {
@@ -368,7 +380,7 @@ public class CryptorRSA {
                 // Set the aeskey and iv for the symmetric encryption.
                 EVP_EncryptInit_ex(rsaEncryptCtx, nil, nil, aeskey, iv) == 1,
                 // Encrypt the aes key using the rsa public key with SHA1, OAEP padding.
-                RSA_public_encrypt(Int32(keySize), aeskey, encryptedKey, .make(optional: key.reference), RSA_PKCS1_OAEP_PADDING) == encryptedCapacity,
+                RSA_public_encrypt(Int32(keySize), aeskey, encryptedKey, .make(optional: rsaKey), RSA_PKCS1_OAEP_PADDING) == encryptedCapacity,
                 // Add the aad to the encryption context.
                 // This is used in generating the GCM tag. We don't use this processedLength.
                 EVP_EncryptUpdate(rsaEncryptCtx, nil, &processedLength, [UInt8](aad), Int32(aad.count)) == 1
@@ -418,16 +430,7 @@ public class CryptorRSA {
         
         func encryptedCBC(with key: PublicKey) throws -> EncryptedData? {
             // Convert RSA key to EVP
-            var evp_key = EVP_PKEY_new()
-            var rc = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
-            guard rc == 1 else {
-                let source = "Couldn't create key reference from key data"
-                if let reason = CryptorRSA.getLastError(source: source) {
-                    
-                    throw Error(code: ERR_ADD_KEY, reason: reason)
-                }
-                throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
-            }
+            var evp_key: UnsafeMutablePointer<EVP_PKEY>? = .make(optional: key.reference)
             
             // TODO: hash type option is not being used right now.
             let enc = EVP_aes_256_cbc()
@@ -438,7 +441,6 @@ public class CryptorRSA {
             defer {
                 EVP_CIPHER_CTX_reset_wrapper(rsaEncryptCtx)
                 EVP_CIPHER_CTX_free_wrapper(rsaEncryptCtx)
-                EVP_PKEY_free(evp_key)
             }
             
             EVP_CIPHER_CTX_set_padding(rsaEncryptCtx, padding)
@@ -446,7 +448,7 @@ public class CryptorRSA {
             // Initialize the AES encryption key array (of size 1)
             typealias UInt8Ptr = UnsafeMutablePointer<UInt8>?
             var ek: UInt8Ptr
-            ek = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(EVP_PKEY_size(evp_key)))
+            ek = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(EVP_PKEY_size(.make(optional: key.reference))))
             let ekPtr = UnsafeMutablePointer<UInt8Ptr>.allocate(capacity: MemoryLayout<UInt8Ptr>.size)
             ekPtr.pointee = ek
             
@@ -518,6 +520,18 @@ public class CryptorRSA {
             let rsaDecryptCtx = EVP_CIPHER_CTX_new()
             EVP_CIPHER_CTX_init_wrapper(rsaDecryptCtx)
             
+            // get rsaKey
+            guard let rsaKey = EVP_PKEY_get1_RSA(.make(optional: key.reference)) else {
+                let source = "Couldn't create key reference from key data"
+                if let reason = CryptorRSA.getLastError(source: source) {
+                    throw Error(code: ERR_ADD_KEY, reason: reason)
+                }
+                throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+            }
+            defer {
+                RSA_free(rsaKey)
+            }
+            
             // Set the additional authenticated data (aad) as the RSA key modulus and publicExponent in an ASN1 sequence.
             guard let aad = key.publicKeyBytes else {
                 let source = "Encryption failed"
@@ -571,7 +585,7 @@ public class CryptorRSA {
             let iv = [UInt8](repeating: 0, count: 16)
             
             // Decrypt the encryptedKey into the aeskey using the RSA private key
-            guard RSA_private_decrypt(Int32(encryptedKey.count), [UInt8](encryptedKey), aeskey, .make(optional: key.reference), RSA_PKCS1_OAEP_PADDING) != 0,
+            guard RSA_private_decrypt(Int32(encryptedKey.count), [UInt8](encryptedKey), aeskey, rsaKey, RSA_PKCS1_OAEP_PADDING) != 0,
                 // Set the IV length to be 16 bytes.
                 EVP_CIPHER_CTX_ctrl(rsaDecryptCtx, EVP_CTRL_GCM_SET_IVLEN, 16, nil) == 1,
                 // Set the AES key to be 16 bytes.
@@ -619,23 +633,23 @@ public class CryptorRSA {
         /// Decrypt the data using aes GCM for cross platform support.
         func decryptedCBC(with key: PrivateKey) throws -> PlaintextData? {
             // Convert RSA key to EVP
-            var evp_key = EVP_PKEY_new()
-            var status = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
-            guard status == 1 else {
-                let source = "Couldn't create key reference from key data"
-                if let reason = CryptorRSA.getLastError(source: source) {
-                    
-                    throw Error(code: ERR_ADD_KEY, reason: reason)
-                }
-                throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
-            }
+//            var evp_key = EVP_PKEY_new()
+//            var status = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
+//            guard status == 1 else {
+//                let source = "Couldn't create key reference from key data"
+//                if let reason = CryptorRSA.getLastError(source: source) {
+//                    
+//                    throw Error(code: ERR_ADD_KEY, reason: reason)
+//                }
+//                throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+//            }
             
             // TODO: hash type option is not being used right now.
             let encType = EVP_aes_256_cbc()
             let padding = RSA_PKCS1_OAEP_PADDING
             
             // Size of symmetric encryption
-            let encKeyLength = Int(EVP_PKEY_size(evp_key))
+            let encKeyLength = Int(EVP_PKEY_size(.make(optional: key.reference)))
             // Size of the corresponding cipher's IV
             let encIVLength = Int(EVP_CIPHER_iv_length(.make(optional: encType)))
             // Size of encryptedKey
@@ -652,7 +666,6 @@ public class CryptorRSA {
             defer {
                 EVP_CIPHER_CTX_reset_wrapper(rsaDecryptCtx)
                 EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
-                EVP_PKEY_free(evp_key)
             }
             
             EVP_CIPHER_CTX_set_padding(rsaDecryptCtx, padding)
@@ -671,9 +684,9 @@ public class CryptorRSA {
                 #endif
             }
             // EVP_OpenInit returns 0 on error or the recovered secret key size if successful
-            status = encryptedKey.withUnsafeBytes({ (ek: UnsafePointer<UInt8>) -> Int32 in
+            var status = encryptedKey.withUnsafeBytes({ (ek: UnsafePointer<UInt8>) -> Int32 in
                 return encryptedIV.withUnsafeBytes({ (iv: UnsafePointer<UInt8>) -> Int32 in
-                    return EVP_OpenInit(rsaDecryptCtx, .make(optional: encType), ek, Int32(encryptedKey.count), iv, evp_key)
+                    return EVP_OpenInit(rsaDecryptCtx, .make(optional: encType), ek, Int32(encryptedKey.count), iv, .make(optional: key.reference))
                 })
             })
             guard status != 0 else {
@@ -733,7 +746,7 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "Supplied key is not private")
 			}
 			
-			#if os(Linux)
+            #if os(Linux)
 			
 				let md_ctx = EVP_MD_CTX_new_wrapper()
 
@@ -742,26 +755,26 @@ public class CryptorRSA {
                 }
                 
                 // convert RSA key to EVP
-                let evp_key = EVP_PKEY_new()
-                defer {
-                    EVP_PKEY_free(evp_key)
-                }
-				var rc = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
-                guard rc == 1 else {
-                    let source = "Couldn't create key reference from key data"
-                    if let reason = CryptorRSA.getLastError(source: source) {
-                        
-                        throw Error(code: ERR_ADD_KEY, reason: reason)
-                    }
-                    throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
-                }
+//                let evp_key = EVP_PKEY_new()
+//                defer {
+//                    EVP_PKEY_free(evp_key)
+//                }
+//                var rc = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
+//                guard rc == 1 else {
+//                    let source = "Couldn't create key reference from key data"
+//                    if let reason = CryptorRSA.getLastError(source: source) {
+//                        
+//                        throw Error(code: ERR_ADD_KEY, reason: reason)
+//                    }
+//                    throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+//                }
                 
                 let (md, padding) = algorithm.algorithmForSignature
                 
                 // Provide a pkey_ctx to EVP_DigestSignInit so that the EVP_PKEY_CTX of the signing operation
                 // is written to it, to allow alternative signing options to be set
-                var pkey_ctx = EVP_PKEY_CTX_new(evp_key, nil)
-                EVP_DigestSignInit(md_ctx, &pkey_ctx, .make(optional: md), nil, evp_key)
+                var pkey_ctx = EVP_PKEY_CTX_new(.make(optional: key.reference), nil)
+                EVP_DigestSignInit(md_ctx, &pkey_ctx, .make(optional: md), nil, .make(optional: key.reference))
                 
                 // Now that Init has initialized pkey_ctx, set the padding option
                 EVP_PKEY_CTX_ctrl(pkey_ctx, EVP_PKEY_RSA, -1, EVP_PKEY_CTRL_RSA_PADDING, padding, nil)
@@ -784,7 +797,7 @@ public class CryptorRSA {
                     #endif
                 }
             
-                rc = EVP_DigestSignFinal(md_ctx, sig, &sig_len)
+                let rc = EVP_DigestSignFinal(md_ctx, sig, &sig_len)
                 guard rc == 1, sig_len > 0 else {
                     let source = "Signing failed."
                     if let reason = CryptorRSA.getLastError(source: source) {
@@ -796,23 +809,23 @@ public class CryptorRSA {
                 
                 return SignedData(with: Data(bytes: sig, count: sig_len))
 
-			#else
-				
-				var response: Unmanaged<CFError>? = nil
-				let sData = SecKeyCreateSignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, &response)
-				if response != nil {
-				
-					guard let error = response?.takeRetainedValue() else {
-					
-						throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed. Unable to determine error.")
-					}
-				
-					throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed with error: \(error)")
-				}
-				
-				return SignedData(with: sData! as Data)
-				
-			#endif
+            #else
+                
+                var response: Unmanaged<CFError>? = nil
+                let sData = SecKeyCreateSignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, &response)
+                if response != nil {
+                
+                    guard let error = response?.takeRetainedValue() else {
+                    
+                        throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed. Unable to determine error.")
+                    }
+                
+                    throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed with error: \(error)")
+                }
+                
+                return SignedData(with: sData! as Data)
+                
+            #endif
 		}
 		
 		///
@@ -844,7 +857,7 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_NOT_SIGNED_DATA, reason: "Supplied signature is not of signed data type")
 			}
 			
-			#if os(Linux)
+            #if os(Linux)
 				
 				let md_ctx = EVP_MD_CTX_new_wrapper()
 
@@ -853,31 +866,31 @@ public class CryptorRSA {
                 }
 
                 // convert RSA key to EVP
-                let evp_key = EVP_PKEY_new()
-                defer {
-                    EVP_PKEY_free(evp_key)
-                }
-                var rc = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
-                guard rc == 1 else {
-                    let source = "Couldn't create key reference from key data"
-                    if let reason = CryptorRSA.getLastError(source: source) {
-                        
-                        throw Error(code: ERR_ADD_KEY, reason: reason)
-                    }
-                    throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
-                }
+//                let evp_key = EVP_PKEY_new()
+//                defer {
+//                    EVP_PKEY_free(evp_key)
+//                }
+//                var rc = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
+//                guard rc == 1 else {
+//                    let source = "Couldn't create key reference from key data"
+//                    if let reason = CryptorRSA.getLastError(source: source) {
+//                        
+//                        throw Error(code: ERR_ADD_KEY, reason: reason)
+//                    }
+//                    throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+//                }
 
                 let (md, padding) = algorithm.algorithmForSignature
                 
                 // Provide a pkey_ctx to EVP_DigestSignInit so that the EVP_PKEY_CTX of the signing operation
                 // is written to it, to allow alternative signing options to be set
-                var pkey_ctx = EVP_PKEY_CTX_new(evp_key, nil)
-                EVP_DigestVerifyInit(md_ctx, &pkey_ctx, .make(optional: md), nil, evp_key)
+                var pkey_ctx = EVP_PKEY_CTX_new(.make(optional: key.reference), nil)
+                EVP_DigestVerifyInit(md_ctx, &pkey_ctx, .make(optional: md), nil, .make(optional: key.reference))
 
                 // Now that EVP_DigestVerifyInit has initialized pkey_ctx, set the padding option
                 EVP_PKEY_CTX_ctrl(pkey_ctx, EVP_PKEY_RSA, -1, EVP_PKEY_CTRL_RSA_PADDING, padding, nil)
 
-                rc = self.data.withUnsafeBytes({ (message: UnsafePointer<UInt8>) -> Int32 in
+                var rc = self.data.withUnsafeBytes({ (message: UnsafePointer<UInt8>) -> Int32 in
                     return EVP_DigestUpdate(md_ctx, message, self.data.count)
                 })
                 guard rc == 1 else {
@@ -899,23 +912,23 @@ public class CryptorRSA {
                 
                 return (rc == 1) ? true : false
 				
-			#else
-				
-				var response: Unmanaged<CFError>? = nil
-				let result = SecKeyVerifySignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, signature.data as CFData, &response)
-				if response != nil {
-				
-					guard let error = response?.takeRetainedValue() else {
-					
-						throw Error(code: CryptorRSA.ERR_VERIFICATION_FAILED, reason: "Signature verification failed. Unable to determine error.")
-					}
-				
-					throw Error(code: CryptorRSA.ERR_VERIFICATION_FAILED, reason: "Signature verification failed with error: \(error)")
-				}
-			
-				return result
-			
-			#endif
+            #else
+                
+                var response: Unmanaged<CFError>? = nil
+                let result = SecKeyVerifySignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, signature.data as CFData, &response)
+                if response != nil {
+                
+                    guard let error = response?.takeRetainedValue() else {
+                    
+                        throw Error(code: CryptorRSA.ERR_VERIFICATION_FAILED, reason: "Signature verification failed. Unable to determine error.")
+                    }
+                
+                    throw Error(code: CryptorRSA.ERR_VERIFICATION_FAILED, reason: "Signature verification failed with error: \(error)")
+                }
+            
+                return result
+            
+            #endif
 		}
 		
 		// MARK: --- Utility
