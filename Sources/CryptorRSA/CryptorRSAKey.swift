@@ -39,9 +39,9 @@ extension CryptorRSA {
 		public typealias NativeKey = OpaquePointer?
 	
 	#else
-
+	
 		public typealias NativeKey = SecKey
-
+	
 	#endif
 	
 	// MARK: Class Functions
@@ -400,7 +400,7 @@ extension CryptorRSA {
 		
 			return PublicKey(with: key!)
 		
-		#endif        
+		#endif		
 	}
 	
 	// MARK: -- Private Key Creation
@@ -515,7 +515,7 @@ extension CryptorRSA {
 			let data = dataIn
 		
 		#endif
-        
+		
 		return try PrivateKey(with: data)
 	}
 	
@@ -558,15 +558,15 @@ extension CryptorRSA {
 		
 		let dataIn = try Data(contentsOf: URL(fileURLWithPath: path))
 		
-        #if os(Linux)
+		#if os(Linux)
 		
 			let data = CryptorRSA.convertDerToPem(from: dataIn, type: .privateType)
 		
-        #else
-        
-            let data = dataIn
-        
-        #endif
+		#else
+		
+			let data = dataIn
+		
+		#endif
 		
 		return try PrivateKey(with: data)
 	}
@@ -668,10 +668,10 @@ extension CryptorRSA {
 			/// Create a key using a native key.
 			///
 			/// - Parameters:
-			///        - nativeKey:        Pointer to RSA key structure.
-			///        - type:                Type of key.
+			///		- nativeKey:		Pointer to RSA key structure.
+			///		- type:				Type of key.
 			///
-			/// - Returns:                New `RSAKey` instance.
+			/// - Returns:				New `RSAKey` instance.
 			///
 			internal init(with nativeKey: UnsafeMutablePointer<EVP_PKEY>, type: KeyType) {
 				
@@ -791,22 +791,22 @@ extension CryptorRSA {
 			super.init(with: nativeKey, type: .publicType)
 		}
 
-        #if os(Linux) && !swift(>=4.1)
-        
-            ///
-            /// Create a key using a native key.
-            ///
-            /// - Parameters:
-            ///        - nativeKey:        Pointer to RSA key structure.
-            ///
-            /// - Returns:                New `RSAKey` instance.
-            ///
-            public init(with nativeKey: UnsafeMutablePointer<EVP_PKEY>) {
-                
-                super.init(with: nativeKey, type: .publicType)
-            }
-        
-        #endif
+		#if os(Linux) && !swift(>=4.1)
+		
+			///
+			/// Create a key using a native key.
+			///
+			/// - Parameters:
+			///		- nativeKey:		Pointer to RSA key structure.
+			///
+			/// - Returns:				New `RSAKey` instance.
+			///
+			public init(with nativeKey: UnsafeMutablePointer<EVP_PKEY>) {
+				
+				super.init(with: nativeKey, type: .publicType)
+			}
+		
+		#endif
 	}
 	
 	// MARK: -

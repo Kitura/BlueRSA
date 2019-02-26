@@ -105,8 +105,8 @@ extension Data {
 				case .sha512:
 					return CC_LONG(CC_SHA512_DIGEST_LENGTH)
 					
-				case .gcm:
-					return CC_LONG(CC_SHA1_DIGEST_LENGTH)
+                case .gcm:
+                    return CC_LONG(CC_SHA1_DIGEST_LENGTH)
 				}
 
 			#endif

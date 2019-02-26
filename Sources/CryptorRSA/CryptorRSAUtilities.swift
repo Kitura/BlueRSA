@@ -20,7 +20,7 @@
 //
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-    import CommonCrypto
+	import CommonCrypto
 #elseif os(Linux)
 	import OpenSSL
 #endif
@@ -49,6 +49,7 @@ public extension CryptorRSA {
 	static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  NativeKey {
 		
 		let keyData = keyData
+	
 		// Create a memory BIO...
 		let bio = BIO_new(BIO_s_mem())
 	
@@ -151,15 +152,15 @@ public extension CryptorRSA {
 	/// Create a key from key data.
 	///
 	/// - Parameters:
-	///        - keyData:            `Data` representation of the key.
-	///        - type:                Type of key data.
+	///		- keyData:			`Data` representation of the key.
+	///		- type:				Type of key data.
 	///
-	///    - Returns:                `SecKey` representation of the key.
+	///	- Returns:				`SecKey` representation of the key.
 	///
 	static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  NativeKey {
 		
 		var keyData = keyData
-		
+        
 		let keyClass = type == .publicType ? kSecAttrKeyClassPublic : kSecAttrKeyClassPrivate
 		
 		let sizeInBits = keyData.count * MemoryLayout<UInt8>.size
@@ -173,7 +174,7 @@ public extension CryptorRSA {
 			
 			throw Error(code: ERR_ADD_KEY, reason: "Couldn't create key reference from key data")
 		}
-		
+        
 		return key
 		
 	}

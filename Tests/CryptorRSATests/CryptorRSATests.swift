@@ -99,7 +99,7 @@ class CryptorRSATests: XCTestCase {
             let data = try Data(contentsOf: filePath)
             let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: data)
             XCTAssertNotNil(publicKey)
-            XCTAssertTrue(publicKey?.type == .publicType)
+            XCTAssertTrue(publicKey!.type == .publicType)
         }
 	}
 	
@@ -113,7 +113,7 @@ class CryptorRSATests: XCTestCase {
             let data = try Data(contentsOf: filePath)
             let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: data)
             XCTAssertNotNil(publicKey)
-            XCTAssertTrue(publicKey?.type == .publicType)
+            XCTAssertTrue(publicKey!.type == .publicType)
         }
 	}
 	
@@ -207,7 +207,7 @@ class CryptorRSATests: XCTestCase {
             XCTFail()
             return
         }
-
+        
 		let keys = CryptorRSA.PublicKey.publicKeys(withPEM: input)
 		XCTAssertEqual(keys.count, 9)
 		
