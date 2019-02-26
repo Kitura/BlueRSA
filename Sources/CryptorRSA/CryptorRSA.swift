@@ -429,8 +429,14 @@ public class CryptorRSA {
         }
         
         func encryptedCBC(with key: PublicKey) throws -> EncryptedData? {
-            // Convert RSA key to EVP
-            var evp_key = key.reference
+            // Copy the EVP Key
+            var evp_key = EVP_PKEY_new()
+            let rsa = EVP_PKEY_get1_RSA(.make(optional: key.reference))
+            EVP_PKEY_set1_RSA(evp_key, rsa)
+            RSA_free(rsa)
+            defer {
+                EVP_PKEY_free(evp_key)
+            }
             
             // TODO: hash type option is not being used right now.
             let enc = EVP_aes_256_cbc()
@@ -476,7 +482,7 @@ public class CryptorRSA {
             // Initializes a cipher context ctx for encryption with cipher type using a random secret key and IV.
             // The secret key is encrypted using the public key (evp_key can be an array of public keys)
             // Here we are using just 1 public key
-            var status = EVP_SealInit(rsaEncryptCtx, .make(optional: enc), ekPtr, &encKeyLength, iv, .make(optional: &evp_key), 1)
+            var status = EVP_SealInit(rsaEncryptCtx, .make(optional: enc), ekPtr, &encKeyLength, iv, &evp_key, 1)
             
             // SealInit should return the number of public keys that were input, here it is only 1
             guard status == 1 else {
@@ -519,7 +525,11 @@ public class CryptorRSA {
             // Initialize the decryption context.
             let rsaDecryptCtx = EVP_CIPHER_CTX_new()
             EVP_CIPHER_CTX_init_wrapper(rsaDecryptCtx)
-            
+            defer {
+                // On completion deallocate the memory
+                EVP_CIPHER_CTX_reset_wrapper(rsaDecryptCtx)
+                EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
+            }
             // get rsaKey
             guard let rsaKey = EVP_PKEY_get1_RSA(.make(optional: key.reference)) else {
                 let source = "Couldn't create key reference from key data"
@@ -568,7 +578,6 @@ public class CryptorRSA {
             let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(encryptedData.count + 16))
             defer {
                 // On completion deallocate the memory
-                EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
                 #if swift(>=4.1)
                     aeskey.deallocate()
                     decrypted.deallocate()
