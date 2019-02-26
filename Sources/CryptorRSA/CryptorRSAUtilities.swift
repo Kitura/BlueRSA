@@ -72,18 +72,18 @@ public extension CryptorRSA {
             BIO_ctrl(bio, BIO_CTRL_FLUSH, 0, nil)
 		}
 		
-		var evp_key: OpaquePointer?
+		var evp_key = EVP_PKEY_new()
 
         // Read in the key data and process depending on key type...
         if type == .publicType {
 			
-			evp_key = .init(PEM_read_bio_PUBKEY(bio, nil, nil, nil))
+			PEM_read_bio_PUBKEY(bio, &evp_key, nil, nil)
 
         } else {
 			
-			evp_key = .init(PEM_read_bio_PrivateKey(bio, nil, nil, nil))
+			PEM_read_bio_PrivateKey(bio, &evp_key, nil, nil)
         }
-		return evp_key
+        return .make(optional: evp_key)
 	}
 	
 	///

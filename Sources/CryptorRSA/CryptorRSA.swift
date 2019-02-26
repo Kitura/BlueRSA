@@ -430,7 +430,7 @@ public class CryptorRSA {
         
         func encryptedCBC(with key: PublicKey) throws -> EncryptedData? {
             // Convert RSA key to EVP
-            var evp_key: UnsafeMutablePointer<EVP_PKEY>? = .make(optional: key.reference)
+            var evp_key = key.reference
             
             // TODO: hash type option is not being used right now.
             let enc = EVP_aes_256_cbc()
@@ -463,7 +463,7 @@ public class CryptorRSA {
                 iv.deallocate()
                 encrypted.deallocate()
                 #else
-                ek?.deallocate(capacity: Int(EVP_PKEY_size(evp_key)))
+                ek?.deallocate(capacity: Int(EVP_PKEY_size(.make(optional: key.reference))))
                 ekPtr.deallocate(capacity: MemoryLayout<UInt8Ptr>.size)
                 iv.deallocate(capacity: Int(IVLength))
                 encrypted.deallocate(capacity: self.data.count + Int(IVLength))
@@ -476,7 +476,7 @@ public class CryptorRSA {
             // Initializes a cipher context ctx for encryption with cipher type using a random secret key and IV.
             // The secret key is encrypted using the public key (evp_key can be an array of public keys)
             // Here we are using just 1 public key
-            var status = EVP_SealInit(rsaEncryptCtx, .make(optional: enc), ekPtr, &encKeyLength, iv, &evp_key, 1)
+            var status = EVP_SealInit(rsaEncryptCtx, .make(optional: enc), ekPtr, &encKeyLength, iv, .make(optional: &evp_key), 1)
             
             // SealInit should return the number of public keys that were input, here it is only 1
             guard status == 1 else {
@@ -633,18 +633,6 @@ public class CryptorRSA {
         /// Decrypt the data using aes GCM for cross platform support.
         func decryptedCBC(with key: PrivateKey) throws -> PlaintextData? {
             // Convert RSA key to EVP
-//            var evp_key = EVP_PKEY_new()
-//            var status = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
-//            guard status == 1 else {
-//                let source = "Couldn't create key reference from key data"
-//                if let reason = CryptorRSA.getLastError(source: source) {
-//                    
-//                    throw Error(code: ERR_ADD_KEY, reason: reason)
-//                }
-//                throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
-//            }
-            
-            // TODO: hash type option is not being used right now.
             let encType = EVP_aes_256_cbc()
             let padding = RSA_PKCS1_OAEP_PADDING
             
@@ -754,20 +742,6 @@ public class CryptorRSA {
 					EVP_MD_CTX_free_wrapper(md_ctx)
                 }
                 
-                // convert RSA key to EVP
-//                let evp_key = EVP_PKEY_new()
-//                defer {
-//                    EVP_PKEY_free(evp_key)
-//                }
-//                var rc = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
-//                guard rc == 1 else {
-//                    let source = "Couldn't create key reference from key data"
-//                    if let reason = CryptorRSA.getLastError(source: source) {
-//                        
-//                        throw Error(code: ERR_ADD_KEY, reason: reason)
-//                    }
-//                    throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
-//                }
                 
                 let (md, padding) = algorithm.algorithmForSignature
                 
@@ -865,20 +839,6 @@ public class CryptorRSA {
 					EVP_MD_CTX_free_wrapper(md_ctx)
                 }
 
-                // convert RSA key to EVP
-//                let evp_key = EVP_PKEY_new()
-//                defer {
-//                    EVP_PKEY_free(evp_key)
-//                }
-//                var rc = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
-//                guard rc == 1 else {
-//                    let source = "Couldn't create key reference from key data"
-//                    if let reason = CryptorRSA.getLastError(source: source) {
-//                        
-//                        throw Error(code: ERR_ADD_KEY, reason: reason)
-//                    }
-//                    throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
-//                }
 
                 let (md, padding) = algorithm.algorithmForSignature
                 

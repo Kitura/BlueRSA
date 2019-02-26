@@ -362,12 +362,12 @@ extension CryptorRSA {
 			}
 		
 			// Extract the certificate's public key data.
-			let evp_key = X509_get_pubkey(cert)
+            let evp_key: OpaquePointer? = .init(X509_get_pubkey(cert))
 			if evp_key == nil {
 				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error getting public key from certificate")
 			}
 		
-				return PublicKey(with: .make(optional: evp_key)!)
+            return PublicKey(with: evp_key)
 	
         #else
         
