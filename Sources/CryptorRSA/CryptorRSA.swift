@@ -221,7 +221,7 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not public")
 			}
 			
-            #if os(Linux)
+			#if os(Linux)
                 switch algorithm {
                 case .gcm:
                     return try encryptedGCM(with: key)
@@ -229,23 +229,23 @@ public class CryptorRSA {
                     // Same algorithm is used regardless of sha
                     return try encryptedCBC(with: key)
                 }
-            #else
-                
-                var response: Unmanaged<CFError>? = nil
-                let eData = SecKeyCreateEncryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
-                if response != nil {
-                
-                    guard let error = response?.takeRetainedValue() else {
-                    
-                        throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed. Unable to determine error.")
-                    }
-                
-                    throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed with error: \(error)")
-                }
-            
-                return EncryptedData(with: eData! as Data)
+			#else
+				
+				var response: Unmanaged<CFError>? = nil
+				let eData = SecKeyCreateEncryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
+				if response != nil {
+				
+					guard let error = response?.takeRetainedValue() else {
+					
+						throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed. Unable to determine error.")
+					}
+				
+					throw Error(code: CryptorRSA.ERR_ENCRYPTION_FAILED, reason: "Encryption failed with error: \(error)")
+				}
+			
+				return EncryptedData(with: eData! as Data)
 
-            #endif
+			#endif
 		}
 		
 		///
@@ -271,7 +271,7 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_KEY_NOT_PUBLIC, reason: "Supplied key is not private")
 			}
 			
-            #if os(Linux)
+			#if os(Linux)
 				
                 switch algorithm {
                 case .gcm:
@@ -281,23 +281,23 @@ public class CryptorRSA {
                     return try decryptedCBC(with: key)
                 }
                 
-            #else
-                
-                var response: Unmanaged<CFError>? = nil
-                let pData = SecKeyCreateDecryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
-                if response != nil {
-                
-                    guard let error = response?.takeRetainedValue() else {
-                    
-                        throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed. Unable to determine error.")
-                    }
-                
-                    throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed with error: \(error)")
-                }
-                
-                return PlaintextData(with: pData! as Data)
-                
-            #endif
+			#else
+				
+				var response: Unmanaged<CFError>? = nil
+				let pData = SecKeyCreateDecryptedData(key.reference, algorithm.alogrithmForEncryption, self.data as CFData, &response)
+				if response != nil {
+				
+					guard let error = response?.takeRetainedValue() else {
+					
+						throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed. Unable to determine error.")
+					}
+				
+					throw Error(code: CryptorRSA.ERR_DECRYPTION_FAILED, reason: "Decryption failed with error: \(error)")
+				}
+				
+				return PlaintextData(with: pData! as Data)
+				
+			#endif
 		}
 		
         ///
@@ -309,18 +309,18 @@ public class CryptorRSA {
             let rsaEncryptCtx = EVP_CIPHER_CTX_new_wrapper()
             EVP_CIPHER_CTX_init_wrapper(rsaEncryptCtx)
             
-            // get rsaKey
-            guard let rsaKey = EVP_PKEY_get1_RSA(.make(optional: key.reference)) else {
-                let source = "Couldn't create key reference from key data"
-                if let reason = CryptorRSA.getLastError(source: source) {
-                    throw Error(code: ERR_ADD_KEY, reason: reason)
-                }
-                throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
-            }
-            defer {
-                RSA_free(rsaKey)
-            }
-            
+			// get rsaKey
+			guard let rsaKey = EVP_PKEY_get1_RSA(.make(optional: key.reference)) else {
+				let source = "Couldn't create key reference from key data"
+				if let reason = CryptorRSA.getLastError(source: source) {
+					throw Error(code: ERR_ADD_KEY, reason: reason)
+				}
+				throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+			}
+			defer {
+				RSA_free(rsaKey)
+			}
+			
             // Set the additional authenticated data (aad) as the RSA key modulus and publicExponent in an ASN1 sequence.
             guard let aad = key.publicKeyBytes else {
                 let source = "Encryption failed"
@@ -743,7 +743,7 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_KEY_NOT_PRIVATE, reason: "Supplied key is not private")
 			}
 			
-            #if os(Linux)
+			#if os(Linux)
 			
 				let md_ctx = EVP_MD_CTX_new_wrapper()
 
@@ -788,23 +788,23 @@ public class CryptorRSA {
                 
                 return SignedData(with: Data(bytes: sig, count: sig_len))
 
-            #else
-                
-                var response: Unmanaged<CFError>? = nil
-                let sData = SecKeyCreateSignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, &response)
-                if response != nil {
-                
-                    guard let error = response?.takeRetainedValue() else {
-                    
-                        throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed. Unable to determine error.")
-                    }
-                
-                    throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed with error: \(error)")
-                }
-                
-                return SignedData(with: sData! as Data)
-                
-            #endif
+			#else
+				
+				var response: Unmanaged<CFError>? = nil
+				let sData = SecKeyCreateSignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, &response)
+				if response != nil {
+				
+					guard let error = response?.takeRetainedValue() else {
+					
+						throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed. Unable to determine error.")
+					}
+				
+					throw Error(code: CryptorRSA.ERR_SIGNING_FAILED, reason: "Signing failed with error: \(error)")
+				}
+				
+				return SignedData(with: sData! as Data)
+				
+			#endif
 		}
 		
 		///
@@ -836,7 +836,7 @@ public class CryptorRSA {
 				throw Error(code: CryptorRSA.ERR_NOT_SIGNED_DATA, reason: "Supplied signature is not of signed data type")
 			}
 			
-            #if os(Linux)
+			#if os(Linux)
 				
 				let md_ctx = EVP_MD_CTX_new_wrapper()
 
@@ -874,23 +874,23 @@ public class CryptorRSA {
                 
                 return (rc == 1) ? true : false
 				
-            #else
-                
-                var response: Unmanaged<CFError>? = nil
-                let result = SecKeyVerifySignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, signature.data as CFData, &response)
-                if response != nil {
-                
-                    guard let error = response?.takeRetainedValue() else {
-                    
-                        throw Error(code: CryptorRSA.ERR_VERIFICATION_FAILED, reason: "Signature verification failed. Unable to determine error.")
-                    }
-                
-                    throw Error(code: CryptorRSA.ERR_VERIFICATION_FAILED, reason: "Signature verification failed with error: \(error)")
-                }
-            
-                return result
-            
-            #endif
+			#else
+				
+				var response: Unmanaged<CFError>? = nil
+				let result = SecKeyVerifySignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, signature.data as CFData, &response)
+				if response != nil {
+				
+					guard let error = response?.takeRetainedValue() else {
+					
+						throw Error(code: CryptorRSA.ERR_VERIFICATION_FAILED, reason: "Signature verification failed. Unable to determine error.")
+					}
+				
+					throw Error(code: CryptorRSA.ERR_VERIFICATION_FAILED, reason: "Signature verification failed with error: \(error)")
+				}
+			
+				return result
+			
+			#endif
 		}
 		
 		// MARK: --- Utility

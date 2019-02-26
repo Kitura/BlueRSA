@@ -72,18 +72,18 @@ public extension CryptorRSA {
             BIO_ctrl(bio, BIO_CTRL_FLUSH, 0, nil)
 		}
 		
-		var evp_key = EVP_PKEY_new()
+		var evp_key: OpaquePointer?
 
         // Read in the key data and process depending on key type...
         if type == .publicType {
 			
-			PEM_read_bio_PUBKEY(bio, &evp_key, nil, nil)
+			evp_key = .init(PEM_read_bio_PUBKEY(bio, nil, nil, nil))
 
         } else {
 			
-			PEM_read_bio_PrivateKey(bio, &evp_key, nil, nil)
+			evp_key = .init(PEM_read_bio_PrivateKey(bio, nil, nil, nil))
         }
-        return .make(optional: evp_key)
+        return evp_key
 	}
 	
 	///
@@ -146,38 +146,38 @@ public extension CryptorRSA {
 	}
 	
 #else
-    
-    ///
-    /// Create a key from key data.
-    ///
-    /// - Parameters:
-    ///        - keyData:            `Data` representation of the key.
-    ///        - type:                Type of key data.
-    ///
-    ///    - Returns:                `SecKey` representation of the key.
-    ///
-    static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  NativeKey {
-        
-        var keyData = keyData
-        
-        let keyClass = type == .publicType ? kSecAttrKeyClassPublic : kSecAttrKeyClassPrivate
-        
-        let sizeInBits = keyData.count * MemoryLayout<UInt8>.size
-        let keyDict: [CFString: Any] = [
-            kSecAttrKeyType: kSecAttrKeyTypeRSA,
-            kSecAttrKeyClass: keyClass,
-            kSecAttrKeySizeInBits: NSNumber(value: sizeInBits)
-        ]
-        
-        guard let key = SecKeyCreateWithData(keyData as CFData, keyDict as CFDictionary, nil) else {
-            
-            throw Error(code: ERR_ADD_KEY, reason: "Couldn't create key reference from key data")
-        }
-        
-        return key
-        
-    }
-    
+	
+	///
+	/// Create a key from key data.
+	///
+	/// - Parameters:
+	///        - keyData:            `Data` representation of the key.
+	///        - type:                Type of key data.
+	///
+	///    - Returns:                `SecKey` representation of the key.
+	///
+	static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  NativeKey {
+		
+		var keyData = keyData
+		
+		let keyClass = type == .publicType ? kSecAttrKeyClassPublic : kSecAttrKeyClassPrivate
+		
+		let sizeInBits = keyData.count * MemoryLayout<UInt8>.size
+		let keyDict: [CFString: Any] = [
+			kSecAttrKeyType: kSecAttrKeyTypeRSA,
+			kSecAttrKeyClass: keyClass,
+			kSecAttrKeySizeInBits: NSNumber(value: sizeInBits)
+		]
+		
+		guard let key = SecKeyCreateWithData(keyData as CFData, keyDict as CFDictionary, nil) else {
+			
+			throw Error(code: ERR_ADD_KEY, reason: "Couldn't create key reference from key data")
+		}
+		
+		return key
+		
+	}
+	
 #endif
 
 	///

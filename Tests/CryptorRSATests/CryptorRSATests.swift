@@ -203,17 +203,17 @@ class CryptorRSATests: XCTestCase {
 	
 	func test_publicKeysFromComplexPEMFileWorksCorrectly() {
 		
-//        guard let input = CryptorRSATests.pemKeyString(name: "multiple-keys-testcase") else {
-//            XCTFail()
-//            return
-//        }
-//        
-//        let keys = CryptorRSA.PublicKey.publicKeys(withPEM: input)
-//        XCTAssertEqual(keys.count, 9)
-//        
-//        for publicKey in keys {
-//            XCTAssertTrue(publicKey.type == .publicType)
-//        }
+        guard let input = CryptorRSATests.pemKeyString(name: "multiple-keys-testcase") else {
+            XCTFail()
+            return
+        }
+
+		let keys = CryptorRSA.PublicKey.publicKeys(withPEM: input)
+		XCTAssertEqual(keys.count, 9)
+		
+		for publicKey in keys {
+			XCTAssertTrue(publicKey.type == .publicType)
+		}
 	}
 	
 	func test_publicKeysFromEmptyPEMFileReturnsEmptyArray() {

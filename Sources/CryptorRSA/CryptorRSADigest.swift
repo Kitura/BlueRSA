@@ -19,7 +19,7 @@
 //
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
-    import CommonCrypto
+	import CommonCrypto
 #elseif os(Linux)
 	import OpenSSL
 	public typealias CC_LONG = size_t
@@ -63,7 +63,7 @@ extension Data {
 		/// Digest Length
 		public var length: CC_LONG {
 			
-            #if os(Linux)
+			#if os(Linux)
 				
 				switch self {
 					
@@ -86,33 +86,33 @@ extension Data {
                     return CC_LONG(SHA_DIGEST_LENGTH)
 				}
 				
-            #else
+			#else
 
-                switch self {
-                
-                case .sha1:
-                    return CC_LONG(CC_SHA1_DIGEST_LENGTH)
-                    
-                case .sha224:
-                    return CC_LONG(CC_SHA224_DIGEST_LENGTH)
-                    
-                case .sha256:
-                    return CC_LONG(CC_SHA256_DIGEST_LENGTH)
-                    
-                case .sha384:
-                    return CC_LONG(CC_SHA384_DIGEST_LENGTH)
-                    
-                case .sha512:
-                    return CC_LONG(CC_SHA512_DIGEST_LENGTH)
-                    
-                case .gcm:
-                    return CC_LONG(CC_SHA1_DIGEST_LENGTH)
-                }
+				switch self {
+				
+				case .sha1:
+					return CC_LONG(CC_SHA1_DIGEST_LENGTH)
+					
+				case .sha224:
+					return CC_LONG(CC_SHA224_DIGEST_LENGTH)
+					
+				case .sha256:
+					return CC_LONG(CC_SHA256_DIGEST_LENGTH)
+					
+				case .sha384:
+					return CC_LONG(CC_SHA384_DIGEST_LENGTH)
+					
+				case .sha512:
+					return CC_LONG(CC_SHA512_DIGEST_LENGTH)
+					
+				case .gcm:
+					return CC_LONG(CC_SHA1_DIGEST_LENGTH)
+				}
 
-            #endif
+			#endif
 		}
 		
-        #if os(Linux)
+		#if os(Linux)
 		
 			// Hash, padding type
 			public var algorithmForSignature: (OpaquePointer?, Int32) {
@@ -167,63 +167,63 @@ extension Data {
 			}
 
         #else
-            
-            @available(macOS 10.12, iOS 10.0, *)
-            public var algorithmForSignature: SecKeyAlgorithm {
-                    
-                switch self {
-                        
-                case .sha1:
-                    return .rsaSignatureMessagePKCS1v15SHA1
-                        
-                case .sha224:
-                    return .rsaSignatureMessagePKCS1v15SHA224
-                    
-                case .sha256:
-                    return .rsaSignatureMessagePKCS1v15SHA256
-                        
-                case .sha384:
-                    return .rsaSignatureMessagePKCS1v15SHA384
-                        
-                case .sha512:
-                    return .rsaSignatureMessagePKCS1v15SHA512
-                    
-                case .gcm:
-                    return .rsaSignatureMessagePKCS1v15SHA1
-                }
-            }
-                
-            @available(macOS 10.12, iOS 10.0, *)
-            public var alogrithmForEncryption: SecKeyAlgorithm {
-            
-                switch self {
-                
-                case .sha1:
-                    return .rsaEncryptionOAEPSHA1AESGCM
-                
-                case .sha224:
-                    return .rsaEncryptionOAEPSHA224AESGCM
-                
-                case .sha256:
-                    return .rsaEncryptionOAEPSHA256AESGCM
-                
-                case .sha384:
-                    return .rsaEncryptionOAEPSHA384AESGCM
-                
-                case .sha512:
-                    return .rsaEncryptionOAEPSHA512AESGCM
+			
+			@available(macOS 10.12, iOS 10.0, *)
+			public var algorithmForSignature: SecKeyAlgorithm {
+					
+				switch self {
+						
+				case .sha1:
+					return .rsaSignatureMessagePKCS1v15SHA1
+						
+				case .sha224:
+					return .rsaSignatureMessagePKCS1v15SHA224
+					
+				case .sha256:
+					return .rsaSignatureMessagePKCS1v15SHA256
+						
+				case .sha384:
+					return .rsaSignatureMessagePKCS1v15SHA384
+						
+				case .sha512:
+					return .rsaSignatureMessagePKCS1v15SHA512
                     
                 case .gcm:
+                    return .rsaSignatureMessagePKCS1v15SHA1
+				}
+			}
+				
+			@available(macOS 10.12, iOS 10.0, *)
+			public var alogrithmForEncryption: SecKeyAlgorithm {
+			
+				switch self {
+				
+				case .sha1:
+					return .rsaEncryptionOAEPSHA1AESGCM
+				
+				case .sha224:
+					return .rsaEncryptionOAEPSHA224AESGCM
+				
+				case .sha256:
+					return .rsaEncryptionOAEPSHA256AESGCM
+				
+				case .sha384:
+					return .rsaEncryptionOAEPSHA384AESGCM
+				
+				case .sha512:
+					return .rsaEncryptionOAEPSHA512AESGCM
+                    
+                case .gcm:
                     return .rsaEncryptionOAEPSHA1AESGCM
-                
-            }
-        }
-        
-        #endif
+				
+			}
+		}
+		
+		#endif
 		
 		/// The platform/alogorithm dependent function to be used.
 		/// (UnsafePointer<UInt8>!, Int, UnsafeMutablePointer<UInt8>!) -> UnsafeMutablePointer<UInt8>!
-        #if os(Linux)
+		#if os(Linux)
 		
 			public var engine: (_ data: UnsafePointer<UInt8>, _ len: CC_LONG, _ md: UnsafeMutablePointer<UInt8>) -> UnsafeMutablePointer<UInt8>? {
 			
@@ -250,33 +250,33 @@ extension Data {
 				}
 			}
 		
-        #else
-        
-            public var engine: (_ data: UnsafeRawPointer, _ len: CC_LONG, _ md: UnsafeMutablePointer<UInt8>) -> UnsafeMutablePointer<UInt8>? {
-            
-                switch self {
-                    
-                case .sha1:
-                    return CC_SHA1
-                    
-                case .sha224:
-                    return CC_SHA224
-                    
-                case .sha256:
-                    return CC_SHA256
-                    
-                case .sha384:
-                    return CC_SHA384
-                    
-                case .sha512:
-                    return CC_SHA512
-                    
+		#else
+		
+			public var engine: (_ data: UnsafeRawPointer, _ len: CC_LONG, _ md: UnsafeMutablePointer<UInt8>) -> UnsafeMutablePointer<UInt8>? {
+			
+				switch self {
+					
+				case .sha1:
+					return CC_SHA1
+					
+				case .sha224:
+					return CC_SHA224
+					
+				case .sha256:
+					return CC_SHA256
+					
+				case .sha384:
+					return CC_SHA384
+					
+				case .sha512:
+					return CC_SHA512
+					
                 case .gcm:
                     return CC_SHA1
-                }
-        }
-        
-        #endif
+				}
+		}
+		
+		#endif
 	}
 	
 	
