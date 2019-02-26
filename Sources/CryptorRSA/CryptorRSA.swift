@@ -748,20 +748,15 @@ public class CryptorRSA {
 				let md_ctx = EVP_MD_CTX_new_wrapper()
 
                 defer {
-                    EVP_MD_CTX_cleanup(md_ctx)
 					EVP_MD_CTX_free_wrapper(md_ctx)
                 }
                 
                 
-                let (md, padding) = algorithm.algorithmForSignature
+                let (md, _) = algorithm.algorithmForSignature
                 
                 // Provide a pkey_ctx to EVP_DigestSignInit so that the EVP_PKEY_CTX of the signing operation
                 // is written to it, to allow alternative signing options to be set
-                var pkey_ctx = EVP_PKEY_CTX_new(.make(optional: key.reference), nil)
-                EVP_DigestSignInit(md_ctx, &pkey_ctx, .make(optional: md), nil, .make(optional: key.reference))
-                
-                // Now that Init has initialized pkey_ctx, set the padding option
-                EVP_PKEY_CTX_ctrl(pkey_ctx, EVP_PKEY_RSA, -1, EVP_PKEY_CTRL_RSA_PADDING, padding, nil)
+                EVP_DigestSignInit(md_ctx, nil, .make(optional: md), nil, .make(optional: key.reference))
                 
                 // Convert Data to UnsafeRawPointer!
                 _ = self.data.withUnsafeBytes({ (message: UnsafePointer<UInt8>) -> Int32 in
@@ -846,20 +841,16 @@ public class CryptorRSA {
 				let md_ctx = EVP_MD_CTX_new_wrapper()
 
                 defer {
-                    EVP_MD_CTX_cleanup(md_ctx)
 					EVP_MD_CTX_free_wrapper(md_ctx)
                 }
 
 
-                let (md, padding) = algorithm.algorithmForSignature
+                let (md, _) = algorithm.algorithmForSignature
                 
                 // Provide a pkey_ctx to EVP_DigestSignInit so that the EVP_PKEY_CTX of the signing operation
                 // is written to it, to allow alternative signing options to be set
-                var pkey_ctx = EVP_PKEY_CTX_new(.make(optional: key.reference), nil)
-                EVP_DigestVerifyInit(md_ctx, &pkey_ctx, .make(optional: md), nil, .make(optional: key.reference))
+                EVP_DigestVerifyInit(md_ctx, nil, .make(optional: md), nil, .make(optional: key.reference))
 
-                // Now that EVP_DigestVerifyInit has initialized pkey_ctx, set the padding option
-                EVP_PKEY_CTX_ctrl(pkey_ctx, EVP_PKEY_RSA, -1, EVP_PKEY_CTRL_RSA_PADDING, padding, nil)
 
                 var rc = self.data.withUnsafeBytes({ (message: UnsafePointer<UInt8>) -> Int32 in
                     return EVP_DigestUpdate(md_ctx, message, self.data.count)
