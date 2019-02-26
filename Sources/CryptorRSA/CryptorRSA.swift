@@ -748,6 +748,7 @@ public class CryptorRSA {
 				let md_ctx = EVP_MD_CTX_new_wrapper()
 
                 defer {
+                    EVP_MD_CTX_cleanup(md_ctx)
 					EVP_MD_CTX_free_wrapper(md_ctx)
                 }
                 
@@ -845,6 +846,7 @@ public class CryptorRSA {
 				let md_ctx = EVP_MD_CTX_new_wrapper()
 
                 defer {
+                    EVP_MD_CTX_cleanup(md_ctx)
 					EVP_MD_CTX_free_wrapper(md_ctx)
                 }
 
