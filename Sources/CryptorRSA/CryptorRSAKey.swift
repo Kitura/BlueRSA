@@ -596,10 +596,10 @@ extension CryptorRSA {
 		internal let reference: NativeKey
         
         #if os(Linux)
-        var publicKeyBytes: Data?
-		deinit {
-			EVP_PKEY_free(.make(optional: reference))
-		}
+        	var publicKeyBytes: Data?
+			deinit {
+				EVP_PKEY_free(.make(optional: reference))
+			}
         #endif
         
 		/// Represents the type of key data contained.

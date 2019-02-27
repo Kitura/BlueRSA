@@ -464,15 +464,15 @@ public class CryptorRSA {
             let encrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: self.data.count + Int(IVLength))
             defer {
                 #if swift(>=4.1)
-                ek?.deallocate()
-                ekPtr.deallocate()
-                iv.deallocate()
-                encrypted.deallocate()
+                	ek?.deallocate()
+                	ekPtr.deallocate()
+                	iv.deallocate()
+                	encrypted.deallocate()
                 #else
-                ek?.deallocate(capacity: Int(EVP_PKEY_size(.make(optional: key.reference))))
-                ekPtr.deallocate(capacity: MemoryLayout<UInt8Ptr>.size)
-                iv.deallocate(capacity: Int(IVLength))
-                encrypted.deallocate(capacity: self.data.count + Int(IVLength))
+                	ek?.deallocate(capacity: Int(EVP_PKEY_size(.make(optional: key.reference))))
+                	ekPtr.deallocate(capacity: MemoryLayout<UInt8Ptr>.size)
+                	iv.deallocate(capacity: Int(IVLength))
+                	encrypted.deallocate(capacity: self.data.count + Int(IVLength))
                 #endif
             }
             var encKeyLength: Int32 = 0
@@ -675,9 +675,9 @@ public class CryptorRSA {
             let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(encryptedData.count + encryptedIV.count))
             defer {
                 #if swift(>=4.1)
-                decrypted.deallocate()
+                	decrypted.deallocate()
                 #else
-                decrypted.deallocate(capacity: Int(encryptedData.count + encryptedIV.count))
+                	decrypted.deallocate(capacity: Int(encryptedData.count + encryptedIV.count))
                 #endif
             }
             // EVP_OpenInit returns 0 on error or the recovered secret key size if successful
@@ -770,9 +770,9 @@ public class CryptorRSA {
                 
                 defer {
                     #if swift(>=4.1)
-                    sig.deallocate()
+                    	sig.deallocate()
                     #else
-                    sig.deallocate(capacity: sig_len)
+                    	sig.deallocate(capacity: sig_len)
                     #endif
                 }
             
