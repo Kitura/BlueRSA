@@ -309,6 +309,18 @@ public class CryptorRSA {
             let rsaEncryptCtx = EVP_CIPHER_CTX_new_wrapper()
             EVP_CIPHER_CTX_init_wrapper(rsaEncryptCtx)
             
+			// get rsaKey
+			guard let rsaKey = EVP_PKEY_get1_RSA(.make(optional: key.reference)) else {
+				let source = "Couldn't create key reference from key data"
+				if let reason = CryptorRSA.getLastError(source: source) {
+					throw Error(code: ERR_ADD_KEY, reason: reason)
+				}
+				throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+			}
+			defer {
+				RSA_free(rsaKey)
+			}
+			
             // Set the additional authenticated data (aad) as the RSA key modulus and publicExponent in an ASN1 sequence.
             guard let aad = key.publicKeyBytes else {
                 let source = "Encryption failed"
@@ -368,7 +380,7 @@ public class CryptorRSA {
                 // Set the aeskey and iv for the symmetric encryption.
                 EVP_EncryptInit_ex(rsaEncryptCtx, nil, nil, aeskey, iv) == 1,
                 // Encrypt the aes key using the rsa public key with SHA1, OAEP padding.
-                RSA_public_encrypt(Int32(keySize), aeskey, encryptedKey, .make(optional: key.reference), RSA_PKCS1_OAEP_PADDING) == encryptedCapacity,
+                RSA_public_encrypt(Int32(keySize), aeskey, encryptedKey, .make(optional: rsaKey), RSA_PKCS1_OAEP_PADDING) == encryptedCapacity,
                 // Add the aad to the encryption context.
                 // This is used in generating the GCM tag. We don't use this processedLength.
                 EVP_EncryptUpdate(rsaEncryptCtx, nil, &processedLength, [UInt8](aad), Int32(aad.count)) == 1
@@ -417,16 +429,13 @@ public class CryptorRSA {
         }
         
         func encryptedCBC(with key: PublicKey) throws -> EncryptedData? {
-            // Convert RSA key to EVP
+            // Copy the EVP Key
             var evp_key = EVP_PKEY_new()
-            var rc = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
-            guard rc == 1 else {
-                let source = "Couldn't create key reference from key data"
-                if let reason = CryptorRSA.getLastError(source: source) {
-                    
-                    throw Error(code: ERR_ADD_KEY, reason: reason)
-                }
-                throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+            let rsa = EVP_PKEY_get1_RSA(.make(optional: key.reference))
+            EVP_PKEY_set1_RSA(evp_key, rsa)
+            RSA_free(rsa)
+            defer {
+                EVP_PKEY_free(evp_key)
             }
             
             // TODO: hash type option is not being used right now.
@@ -438,7 +447,6 @@ public class CryptorRSA {
             defer {
                 EVP_CIPHER_CTX_reset_wrapper(rsaEncryptCtx)
                 EVP_CIPHER_CTX_free_wrapper(rsaEncryptCtx)
-                EVP_PKEY_free(evp_key)
             }
             
             EVP_CIPHER_CTX_set_padding(rsaEncryptCtx, padding)
@@ -446,15 +454,27 @@ public class CryptorRSA {
             // Initialize the AES encryption key array (of size 1)
             typealias UInt8Ptr = UnsafeMutablePointer<UInt8>?
             var ek: UInt8Ptr
-            ek = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(EVP_PKEY_size(evp_key)))
+            ek = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(EVP_PKEY_size(.make(optional: key.reference))))
             let ekPtr = UnsafeMutablePointer<UInt8Ptr>.allocate(capacity: MemoryLayout<UInt8Ptr>.size)
             ekPtr.pointee = ek
             
             // Assign size of the corresponding cipher's IV
             let IVLength = EVP_CIPHER_iv_length(.make(optional: enc))
             let iv = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(IVLength))
-            
             let encrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: self.data.count + Int(IVLength))
+            defer {
+                #if swift(>=4.1)
+                ek?.deallocate()
+                ekPtr.deallocate()
+                iv.deallocate()
+                encrypted.deallocate()
+                #else
+                ek?.deallocate(capacity: Int(EVP_PKEY_size(.make(optional: key.reference))))
+                ekPtr.deallocate(capacity: MemoryLayout<UInt8Ptr>.size)
+                iv.deallocate(capacity: Int(IVLength))
+                encrypted.deallocate(capacity: self.data.count + Int(IVLength))
+                #endif
+            }
             var encKeyLength: Int32 = 0
             var processedLength: Int32 = 0
             var encLength: Int32 = 0
@@ -505,6 +525,22 @@ public class CryptorRSA {
             // Initialize the decryption context.
             let rsaDecryptCtx = EVP_CIPHER_CTX_new()
             EVP_CIPHER_CTX_init_wrapper(rsaDecryptCtx)
+            defer {
+                // On completion deallocate the memory
+                EVP_CIPHER_CTX_reset_wrapper(rsaDecryptCtx)
+                EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
+            }
+            // get rsaKey
+            guard let rsaKey = EVP_PKEY_get1_RSA(.make(optional: key.reference)) else {
+                let source = "Couldn't create key reference from key data"
+                if let reason = CryptorRSA.getLastError(source: source) {
+                    throw Error(code: ERR_ADD_KEY, reason: reason)
+                }
+                throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
+            }
+            defer {
+                RSA_free(rsaKey)
+            }
             
             // Set the additional authenticated data (aad) as the RSA key modulus and publicExponent in an ASN1 sequence.
             guard let aad = key.publicKeyBytes else {
@@ -542,7 +578,6 @@ public class CryptorRSA {
             let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(encryptedData.count + 16))
             defer {
                 // On completion deallocate the memory
-                EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
                 #if swift(>=4.1)
                     aeskey.deallocate()
                     decrypted.deallocate()
@@ -559,7 +594,7 @@ public class CryptorRSA {
             let iv = [UInt8](repeating: 0, count: 16)
             
             // Decrypt the encryptedKey into the aeskey using the RSA private key
-            guard RSA_private_decrypt(Int32(encryptedKey.count), [UInt8](encryptedKey), aeskey, .make(optional: key.reference), RSA_PKCS1_OAEP_PADDING) != 0,
+            guard RSA_private_decrypt(Int32(encryptedKey.count), [UInt8](encryptedKey), aeskey, rsaKey, RSA_PKCS1_OAEP_PADDING) != 0,
                 // Set the IV length to be 16 bytes.
                 EVP_CIPHER_CTX_ctrl(rsaDecryptCtx, EVP_CTRL_GCM_SET_IVLEN, 16, nil) == 1,
                 // Set the AES key to be 16 bytes.
@@ -607,23 +642,11 @@ public class CryptorRSA {
         /// Decrypt the data using aes GCM for cross platform support.
         func decryptedCBC(with key: PrivateKey) throws -> PlaintextData? {
             // Convert RSA key to EVP
-            var evp_key = EVP_PKEY_new()
-            var status = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
-            guard status == 1 else {
-                let source = "Couldn't create key reference from key data"
-                if let reason = CryptorRSA.getLastError(source: source) {
-                    
-                    throw Error(code: ERR_ADD_KEY, reason: reason)
-                }
-                throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
-            }
-            
-            // TODO: hash type option is not being used right now.
             let encType = EVP_aes_256_cbc()
             let padding = RSA_PKCS1_OAEP_PADDING
             
             // Size of symmetric encryption
-            let encKeyLength = Int(EVP_PKEY_size(evp_key))
+            let encKeyLength = Int(EVP_PKEY_size(.make(optional: key.reference)))
             // Size of the corresponding cipher's IV
             let encIVLength = Int(EVP_CIPHER_iv_length(.make(optional: encType)))
             // Size of encryptedKey
@@ -640,7 +663,6 @@ public class CryptorRSA {
             defer {
                 EVP_CIPHER_CTX_reset_wrapper(rsaDecryptCtx)
                 EVP_CIPHER_CTX_free_wrapper(rsaDecryptCtx)
-                EVP_PKEY_free(evp_key)
             }
             
             EVP_CIPHER_CTX_set_padding(rsaDecryptCtx, padding)
@@ -651,11 +673,17 @@ public class CryptorRSA {
             var decMsgLen: Int32 = 0
             
             let decrypted = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(encryptedData.count + encryptedIV.count))
-            
+            defer {
+                #if swift(>=4.1)
+                decrypted.deallocate()
+                #else
+                decrypted.deallocate(capacity: Int(encryptedData.count + encryptedIV.count))
+                #endif
+            }
             // EVP_OpenInit returns 0 on error or the recovered secret key size if successful
-            status = encryptedKey.withUnsafeBytes({ (ek: UnsafePointer<UInt8>) -> Int32 in
+            var status = encryptedKey.withUnsafeBytes({ (ek: UnsafePointer<UInt8>) -> Int32 in
                 return encryptedIV.withUnsafeBytes({ (iv: UnsafePointer<UInt8>) -> Int32 in
-                    return EVP_OpenInit(rsaDecryptCtx, .make(optional: encType), ek, Int32(encryptedKey.count), iv, evp_key)
+                    return EVP_OpenInit(rsaDecryptCtx, .make(optional: encType), ek, Int32(encryptedKey.count), iv, .make(optional: key.reference))
                 })
             })
             guard status != 0 else {
@@ -723,28 +751,12 @@ public class CryptorRSA {
 					EVP_MD_CTX_free_wrapper(md_ctx)
                 }
                 
-                // convert RSA key to EVP
-                let evp_key = EVP_PKEY_new()
-				var rc = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
-                guard rc == 1 else {
-                    let source = "Couldn't create key reference from key data"
-                    if let reason = CryptorRSA.getLastError(source: source) {
-                        
-                        throw Error(code: ERR_ADD_KEY, reason: reason)
-                    }
-                    throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
-                }
                 
-                let (md, padding) = algorithm.algorithmForSignature
+                let (md, _) = algorithm.algorithmForSignature
                 
                 // Provide a pkey_ctx to EVP_DigestSignInit so that the EVP_PKEY_CTX of the signing operation
                 // is written to it, to allow alternative signing options to be set
-                var pkey_ctx = EVP_PKEY_CTX_new(evp_key, nil)
-                
-                EVP_DigestSignInit(md_ctx, &pkey_ctx, .make(optional: md), nil, evp_key)
-                
-                // Now that Init has initialized pkey_ctx, set the padding option
-                EVP_PKEY_CTX_ctrl(pkey_ctx, EVP_PKEY_RSA, -1, EVP_PKEY_CTRL_RSA_PADDING, padding, nil)
+                EVP_DigestSignInit(md_ctx, nil, .make(optional: md), nil, .make(optional: key.reference))
                 
                 // Convert Data to UnsafeRawPointer!
                 _ = self.data.withUnsafeBytes({ (message: UnsafePointer<UInt8>) -> Int32 in
@@ -756,7 +768,15 @@ public class CryptorRSA {
                 EVP_DigestSignFinal(md_ctx, nil, &sig_len)
                 let sig = UnsafeMutablePointer<UInt8>.allocate(capacity: sig_len)
                 
-                rc = EVP_DigestSignFinal(md_ctx, sig, &sig_len)
+                defer {
+                    #if swift(>=4.1)
+                    sig.deallocate()
+                    #else
+                    sig.deallocate(capacity: sig_len)
+                    #endif
+                }
+            
+                let rc = EVP_DigestSignFinal(md_ctx, sig, &sig_len)
                 guard rc == 1, sig_len > 0 else {
                     let source = "Signing failed."
                     if let reason = CryptorRSA.getLastError(source: source) {
@@ -824,30 +844,15 @@ public class CryptorRSA {
 					EVP_MD_CTX_free_wrapper(md_ctx)
                 }
 
-                // convert RSA key to EVP
-                let evp_key = EVP_PKEY_new()
-                var rc = EVP_PKEY_set1_RSA(evp_key, .make(optional: key.reference))
-                guard rc == 1 else {
-                    let source = "Couldn't create key reference from key data"
-                    if let reason = CryptorRSA.getLastError(source: source) {
-                        
-                        throw Error(code: ERR_ADD_KEY, reason: reason)
-                    }
-                    throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
-                }
 
-                let (md, padding) = algorithm.algorithmForSignature
+                let (md, _) = algorithm.algorithmForSignature
                 
                 // Provide a pkey_ctx to EVP_DigestSignInit so that the EVP_PKEY_CTX of the signing operation
                 // is written to it, to allow alternative signing options to be set
-                var pkey_ctx = EVP_PKEY_CTX_new(evp_key, nil)
+                EVP_DigestVerifyInit(md_ctx, nil, .make(optional: md), nil, .make(optional: key.reference))
 
-                EVP_DigestVerifyInit(md_ctx, &pkey_ctx, .make(optional: md), nil, evp_key)
 
-                // Now that EVP_DigestVerifyInit has initialized pkey_ctx, set the padding option
-                EVP_PKEY_CTX_ctrl(pkey_ctx, EVP_PKEY_RSA, -1, EVP_PKEY_CTRL_RSA_PADDING, padding, nil)
-
-                rc = self.data.withUnsafeBytes({ (message: UnsafePointer<UInt8>) -> Int32 in
+                var rc = self.data.withUnsafeBytes({ (message: UnsafePointer<UInt8>) -> Int32 in
                     return EVP_DigestUpdate(md_ctx, message, self.data.count)
                 })
                 guard rc == 1 else {

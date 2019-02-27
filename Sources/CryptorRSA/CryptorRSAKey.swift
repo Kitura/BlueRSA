@@ -362,25 +362,12 @@ extension CryptorRSA {
 			}
 		
 			// Extract the certificate's public key data.
-			let evp_key = X509_get_pubkey(cert)
+			let evp_key: OpaquePointer? = .init(X509_get_pubkey(cert))
 			if evp_key == nil {
 				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error getting public key from certificate")
 			}
 		
-			let key = EVP_PKEY_get1_RSA( evp_key)
-			if key == nil {
-				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Error getting public key from certificate")
-			}
-			defer {
-				//	RSA_free(key)
-				EVP_PKEY_free(evp_key)
-			}
-		
-			#if swift(>=4.1)
-				return PublicKey(with: .make(optional: key!)!)
-			#else
-				return PublicKey(with: key!)
-			#endif
+			return PublicKey(with: evp_key)
 	
 		#else
 		
@@ -610,6 +597,9 @@ extension CryptorRSA {
         
         #if os(Linux)
         var publicKeyBytes: Data?
+		deinit {
+			EVP_PKEY_free(.make(optional: reference))
+		}
         #endif
         
 		/// Represents the type of key data contained.
@@ -683,7 +673,7 @@ extension CryptorRSA {
 			///
 			/// - Returns:				New `RSAKey` instance.
 			///
-			internal init(with nativeKey: UnsafeMutablePointer<rsa_st>, type: KeyType) {
+			internal init(with nativeKey: UnsafeMutablePointer<EVP_PKEY>, type: KeyType) {
 				
 				self.type = type
 				self.reference = .make(optional: nativeKey)
@@ -811,7 +801,7 @@ extension CryptorRSA {
 			///
 			/// - Returns:				New `RSAKey` instance.
 			///
-			public init(with nativeKey: UnsafeMutablePointer<rsa_st>) {
+			public init(with nativeKey: UnsafeMutablePointer<EVP_PKEY>) {
 				
 				super.init(with: nativeKey, type: .publicType)
 			}

@@ -74,10 +74,6 @@ public extension CryptorRSA {
 		}
 		
 		var evp_key: OpaquePointer?
-	
-        defer {
-			EVP_PKEY_free(.make(optional: evp_key))
-        }
 
         // Read in the key data and process depending on key type...
         if type == .publicType {
@@ -88,18 +84,7 @@ public extension CryptorRSA {
 			
 			evp_key = .init(PEM_read_bio_PrivateKey(bio, nil, nil, nil))
         }
-
-		let key = EVP_PKEY_get1_RSA(.make(optional: evp_key))
-        if key == nil {
-            let source = "Couldn't create key reference from key data"
-            if let reason = CryptorRSA.getLastError(source: source) {
-    
-                throw Error(code: ERR_ADD_KEY, reason: reason)
-            }
-            throw Error(code: ERR_ADD_KEY, reason: source + ": No OpenSSL error reported.")
-        }
-
-		return .init(key!)
+        return evp_key
 	}
 	
 	///
