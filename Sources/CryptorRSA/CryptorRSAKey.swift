@@ -428,11 +428,21 @@ extension CryptorRSA {
 	///
 	public class func createPrivateKey(withBase64 base64String: String) throws -> PrivateKey {
 		
-		guard let data = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
+		guard let dataIn = Data(base64Encoded: base64String, options: [.ignoreUnknownCharacters]) else {
 			
 			throw Error(code: ERR_INIT_PK, reason: "Couldn't decode base 64 string")
 		}
-		
+        
+        #if os(Linux)
+        
+        let data = CryptorRSA.convertDerToPem(from: dataIn, type: .privateType)
+        
+        #else
+        
+        let data = dataIn
+        
+        #endif
+
 		return try PrivateKey(with: data)
 	}
 	
