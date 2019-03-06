@@ -267,6 +267,21 @@ class CryptorRSATests: XCTestCase {
             XCTAssertTrue(privateKey!.type == .privateType)
         }
 	}
+    
+    func test_private_initWithBase64() throws {
+        
+        let path = CryptorRSATests.getFilePath(for: "private", ofType: "pem")
+        XCTAssertNotNil(path)
+        
+        if let filePath = path {
+            let str = try String(contentsOf: filePath, encoding: .utf8)
+            let strippedstr = String(str.filter { !" \n\t\r".contains($0) })
+            let headerlessStr = String(strippedstr.dropFirst(28).dropLast(26))
+            let privateKey = try? CryptorRSA.createPrivateKey(withBase64: headerlessStr)
+            XCTAssertNotNil(privateKey)
+            XCTAssertTrue(privateKey?.type == .privateType)
+        }
+    }
 	
 	func test_private_initWithPEMStringHeaderless() throws {
 		
@@ -721,7 +736,7 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
             ("test_public_initWithCertificateName", test_public_initWithCertificateName),
             ("test_public_initWithCertificateName2", test_public_initWithCertificateName2),
             ("test_private_initWithPEMString", test_private_initWithPEMString),
-
+            ("test_private_initWithBase64", test_private_initWithBase64),
 //			("test_private_initWithPEMStringHeaderless", test_private_initWithPEMStringHeaderless),
             ("test_private_initWithPEMName", test_private_initWithPEMName),
             ("test_private_initWithDERName", test_private_initWithDERName),
