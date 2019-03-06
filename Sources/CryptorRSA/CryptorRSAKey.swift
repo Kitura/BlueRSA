@@ -435,11 +435,11 @@ extension CryptorRSA {
         
         #if os(Linux)
         
-        let data = CryptorRSA.convertDerToPem(from: dataIn, type: .privateType)
+        	let data = CryptorRSA.convertDerToPem(from: dataIn, type: .privateType)
         
         #else
         
-        let data = dataIn
+        	let data = dataIn
         
         #endif
 
