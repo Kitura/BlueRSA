@@ -646,7 +646,7 @@ extension CryptorRSA {
 				
 				self.type = type
 				self.reference = .make(optional: nativeKey)
-				self.pemString = (try? RSAKey.getPEMString(reference: nativeKey, type: type)) ?? ""
+				self.pemString = (try? RSAKey.getPEMString(reference: .init(nativeKey), type: type)) ?? ""
 				if let base64String = try? CryptorRSA.base64String(for: pemString),
 					let derData = Data(base64Encoded: base64String)
 				{
