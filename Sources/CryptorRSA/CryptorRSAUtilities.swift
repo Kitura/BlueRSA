@@ -48,19 +48,28 @@ public extension CryptorRSA {
 	///
 	static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  NativeKey {
 		
-		let keyData = keyData
-	
+		var keyData = keyData
+
+		// If data is a PEM String, strip the headers and convert to der.
+		if let pemString = String(data: keyData, encoding: .utf8),
+			let base64String = try? CryptorRSA.base64String(for: pemString),
+			let base64Data = Data(base64Encoded: base64String)
+		{
+			keyData = base64Data
+		}
+
+		let headerKey = CryptorRSA.addX509CertificateHeader(for: keyData)
+
 		// Create a memory BIO...
 		let bio = BIO_new(BIO_s_mem())
 	
         defer {
             BIO_free(bio)
         }
-	
 		// Create a BIO object with the key data...
-		try keyData.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
+		try headerKey.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
 			
-			let len = BIO_write(bio, buffer, Int32(keyData.count))
+			let len = BIO_write(bio, buffer, Int32(headerKey.count))
             guard len != 0 else {
                 let source = "Couldn't create BIO reference from key data"
                 if let reason = CryptorRSA.getLastError(source: source) {
@@ -78,46 +87,15 @@ public extension CryptorRSA {
         // Read in the key data and process depending on key type...
         if type == .publicType {
 			
-			evp_key = .init(PEM_read_bio_PUBKEY(bio, nil, nil, nil))
+			evp_key = .init(d2i_PUBKEY_bio(bio, nil))
 
         } else {
 			
-			evp_key = .init(PEM_read_bio_PrivateKey(bio, nil, nil, nil))
+			evp_key = .init(d2i_PrivateKey_bio(bio, nil))
         }
         return evp_key
 	}
-	
-	///
-	/// Convert DER data to PEM data.
-	///
-	///	- Parameters:
-	///		- derData:			`Data` in DER format.
-	///		- type:				Type of key data.
-	///
-	///	- Returns:				PEM `Data` representation.
-	///
-	static func convertDerToPem(from derData: Data, type: CryptorRSA.RSAKey.KeyType) -> Data {
-		
-		// First convert the DER data to a base64 string...
-		let base64String = derData.base64EncodedString()
-	
-		// Split the string into strings of length 65...
-		let lines = base64String.split(to: 65)
-		
-		// Join those lines with a new line...
-		let joinedLines = lines.joined(separator: "\n")
-		
-		// Add the appropriate header and footer depending on whether the key is public or private...
-		if type == .publicType {
-			
-			return (CryptorRSA.PK_BEGIN_MARKER + "\n" + joinedLines + "\n" + CryptorRSA.PK_END_MARKER).data(using: .utf8)!
-		
-		} else {
-			
-			return (CryptorRSA.SK_BEGIN_MARKER + "\n" + joinedLines + "\n" + CryptorRSA.SK_END_MARKER).data(using: .utf8)!
-		}
-	}
-	
+
 	///
 	/// Retrieve the OpenSSL error and text.
 	///
@@ -158,8 +136,6 @@ public extension CryptorRSA {
 	///	- Returns:				`SecKey` representation of the key.
 	///
 	static func createKey(from keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws ->  NativeKey {
-		
-		var keyData = keyData
         
 		let keyClass = type == .publicType ? kSecAttrKeyClassPublic : kSecAttrKeyClassPrivate
 		
@@ -180,6 +156,37 @@ public extension CryptorRSA {
 	}
 	
 #endif
+
+	///
+	/// Convert DER data to PEM data.
+	///
+	///    - Parameters:
+	///        - derData:            `Data` in DER format.
+	///        - type:                Type of key data.
+	///
+	///    - Returns:                PEM `Data` representation.
+	///
+	static func convertDerToPem(from derData: Data, type: CryptorRSA.RSAKey.KeyType) -> String {
+		
+		// First convert the DER data to a base64 string...
+		let base64String = derData.base64EncodedString()
+		
+		// Split the string into strings of length 65...
+		let lines = base64String.split(to: 65)
+		
+		// Join those lines with a new line...
+		let joinedLines = lines.joined(separator: "\n")
+		
+		// Add the appropriate header and footer depending on whether the key is public or private...
+		if type == .publicType {
+			
+			return ("-----BEGIN RSA PUBLIC KEY-----\n" + joinedLines + "\n-----END RSA PUBLIC KEY-----")
+			
+		} else {
+			
+			return (CryptorRSA.SK_BEGIN_MARKER + "\n" + joinedLines + "\n" + CryptorRSA.SK_END_MARKER)
+		}
+	}
 
 	///
 	/// Get the Base64 representation of a PEM encoded string after stripping off the PEM markers.
@@ -276,71 +283,36 @@ public extension CryptorRSA {
 		
 		let strippedKeyBytes = [UInt8](byteArray[index...keyData.count - 1])
 		let data = Data(bytes: UnsafePointer<UInt8>(strippedKeyBytes), count: keyData.count - index)
-		
 		return data
 	}
     
-    // SecKeyCreateEncrypted uses the public key and modulus as Additional authenticated data.
-    // This function extracts and creates an ASN1 sequence with these two bits of data
-    // To be used for cross platform support.
-    static func getPublicKeyDataFrom(privateKey keyData: Data) throws -> Data {
-        
-        let count = keyData.count / MemoryLayout<CUnsignedChar>.size
-        
-        guard count > 0 else {
-            
-            throw Error(code: ERR_STRIP_PK_HEADER, reason: "Provided public key is empty")
-        }
-        
-        // Get the length of the total length bytes and move to object after them.
-        var byteArray = [UInt8](keyData)
-        var index = 1
-        if byteArray[index] > 0x80 {
-            index += Int(byteArray[index]) - 0x80 + 1
-        } else {
-            index += 1
-        }
-        // Skip the RSA version
-        index += 3
-        guard Int(byteArray[index]) == 0x02 else {
-            throw Error(code: ERR_STRIP_PK_HEADER, reason: "Invalid private key ANS1")
-        }
-        var publicKeyLength = 0
-        var lengthOfLength = 0
-        index += 1
-        // Add the modulus length and bytes to the stripped bytes
-        if byteArray[index]  <= 0x80 { // short form
-            publicKeyLength = Int(byteArray[index])
-            lengthOfLength = 1
-        } else {
-            lengthOfLength = Int(byteArray[index]) - 0x80 + 1
-            var result: Int = 0
-            for i in 1..<(lengthOfLength) {
-                result = 256 * result + Int(byteArray[index + i])
-            }
-            publicKeyLength = result
-        }
-        var strippedKeyBytes = [UInt8](byteArray[(index-1)..<(index+lengthOfLength+publicKeyLength)])
-        index += lengthOfLength + publicKeyLength
-        
-        // Add the publicExponent length and bytes to the stripped bytes
-        let exponentLength = Int(byteArray[index + 1])
-        strippedKeyBytes += [UInt8](byteArray[index..<(index+2+exponentLength)])
-        let sequenceCount = strippedKeyBytes.count
-        
-        // Calculating the length representation and create an ASN1 sequence for the modulus and exponent.
-        let sequenceBytes: [UInt8]
-        if sequenceCount < 128 {
-            sequenceBytes = [0x30, UInt8(sequenceCount)]
-        } else if sequenceCount <= 255 {
-            sequenceBytes = [0x30, 0x81, UInt8(sequenceCount)]
-        } else {
-            let mostSigByte = strippedKeyBytes.count/256
-            let leastSigByte = strippedKeyBytes.count % 256
-            sequenceBytes = [0x30, 0x82, UInt8(mostSigByte), UInt8(leastSigByte)]
-        }
-        strippedKeyBytes = sequenceBytes + strippedKeyBytes
-        return Data(bytes: strippedKeyBytes, count: strippedKeyBytes.count)
+	static func addX509CertificateHeader(for keyData: Data) -> Data {
+		if keyData.count == 140 {
+			return Data(bytes: [0x30, 0x81, 0x9F,
+								0x30, 0x0D,
+								0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01,
+								0x05, 0x00,
+								0x03, 0x81, 0x8D, 0x00]) + keyData
+		} else if keyData.count == 270 {
+			return Data(bytes: [0x30, 0x82, 0x01, 0x22,
+								0x30, 0x0D,
+								0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01,
+								0x05, 0x00,
+								0x03, 0x82, 0x01, 0x0F, 0x00]) + keyData
+		} else if keyData.count == 398 {  
+			return Data(bytes: [0x30, 0x82, 0x01, 0xA2,
+								0x30, 0x0D,
+								0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01,
+								0x05, 0x00,
+								0x03, 0x82, 0x01, 0x8F, 0x00]) + keyData
+		} else if keyData.count == 526 {
+			return Data(bytes: [0x30, 0x82, 0x02, 0x22,
+								0x30, 0x0D, 0x06, 0x09, 0x2A, 0x86, 0x48, 0x86, 0xF7, 0x0D, 0x01, 0x01, 0x01,
+								0x05, 0x00,
+								0x03, 0x82, 0x02, 0x0F, 0x00]) + keyData            
+		} else {
+			return keyData
+		}
     }
 	
 }

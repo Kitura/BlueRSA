@@ -85,7 +85,7 @@ class CryptorRSATests: XCTestCase {
             let data = try Data(contentsOf: filePath)
             let publicKey = try? CryptorRSA.createPublicKey(with: data)
             XCTAssertNotNil(publicKey)
-            XCTAssertTrue(publicKey!.type == .publicType)
+            XCTAssertTrue(publicKey?.type == .publicType)
         }
 	}
 	
@@ -99,7 +99,7 @@ class CryptorRSATests: XCTestCase {
             let data = try Data(contentsOf: filePath)
             let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: data)
             XCTAssertNotNil(publicKey)
-            XCTAssertTrue(publicKey!.type == .publicType)
+            XCTAssertTrue(publicKey?.type == .publicType)
         }
 	}
 	
@@ -113,7 +113,7 @@ class CryptorRSATests: XCTestCase {
             let data = try Data(contentsOf: filePath)
             let publicKey = try? CryptorRSA.createPublicKey(extractingFrom: data)
             XCTAssertNotNil(publicKey)
-            XCTAssertTrue(publicKey!.type == .publicType)
+            XCTAssertTrue(publicKey?.type == .publicType)
         }
 	}
 	
@@ -127,7 +127,7 @@ class CryptorRSATests: XCTestCase {
             let str = try String(contentsOf: filePath, encoding: .utf8)
             let publicKey = try? CryptorRSA.createPublicKey(withBase64: str)
             XCTAssertNotNil(publicKey)
-            XCTAssertTrue(publicKey!.type == .publicType)
+            XCTAssertTrue(publicKey?.type == .publicType)
         }
 	}
 	
@@ -141,7 +141,7 @@ class CryptorRSATests: XCTestCase {
             let str = try String(contentsOf: filePath, encoding: .utf8)
             let publicKey = try? CryptorRSA.createPublicKey(withBase64: str)
             XCTAssertNotNil(publicKey)
-            XCTAssertTrue(publicKey!.type == .publicType)
+            XCTAssertTrue(publicKey?.type == .publicType)
         }
 	}
 	
@@ -154,7 +154,7 @@ class CryptorRSATests: XCTestCase {
             let str = try String(contentsOf: filePath, encoding: .utf8)
             let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
             XCTAssertNotNil(publicKey)
-            XCTAssertTrue(publicKey!.type == .publicType)
+            XCTAssertTrue(publicKey?.type == .publicType)
         }
 	}
 	
@@ -197,7 +197,7 @@ class CryptorRSATests: XCTestCase {
             let str = try String(contentsOf: filePath, encoding: .utf8)
             let publicKey = try? CryptorRSA.createPublicKey(withPEM: str)
             XCTAssertNotNil(publicKey)
-            XCTAssertTrue(publicKey!.type == .publicType)
+            XCTAssertTrue(publicKey?.type == .publicType)
         }
 	}
 	
@@ -639,6 +639,30 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
         let verificationResult = try message.verify(with: tokenPublicKey, signature: signature, algorithm: .sha256)
         XCTAssertTrue(verificationResult)
     }
+    
+	func test_makeKeyPair() {
+		let bitSizes: [CryptorRSA.RSAKey.KeySize] = [.bits1024, .bits2048, .bits3072, .bits4096]
+		for bitSize in bitSizes {
+			do {
+				let (tempPrivKey, tempPubKey) = try CryptorRSA.makeKeyPair(bitSize)
+				let privString = tempPrivKey.pemString
+				let pubString = tempPubKey.pemString
+				let privKey = try CryptorRSA.createPrivateKey(withPEM: privString)
+				let pubKey = try CryptorRSA.createPublicKey(withPEM: pubString)
+				let str = "Plain Text"
+				let plainText = try CryptorRSA.createPlaintext(with: str, using: .utf8)
+				let encrypted = try plainText.encrypted(with: pubKey, algorithm: .gcm)
+				let decrypted = try encrypted?.decrypted(with: privKey, algorithm: .gcm)
+				XCTAssertNotNil(decrypted)
+				let decryptedString = try decrypted?.string(using: .utf8)
+				XCTAssertEqual(decryptedString, str)
+			} catch {
+				XCTFail("test_makeKeyPair failed for bitSize: \(bitSize.bits), with error: \(error)")
+			}
+		}
+		
+		
+	}
 
 	// MARK: Test Utilities
 	
@@ -749,6 +773,7 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
 			("test_signVerifyAllDigestTypes", test_signVerifyAllDigestTypes),
 			("test_signVerifyBase64", test_signVerifyBase64),
             ("test_verifyAppIDToken", test_verifyAppIDToken),
+            ("test_makeKeyPair", test_makeKeyPair),
         ]
     }
 }
