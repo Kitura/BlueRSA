@@ -114,6 +114,7 @@ extension CryptorRSA {
 	/// - Returns:				New `PublicKey` instance.
 	///
 	public class func createPublicKey(withPEM pemString: String) throws -> PublicKey {
+		
         // Get the Base64 representation of the PEM encoded string after stripping off the PEM markers
         let base64String = try CryptorRSA.base64String(for: pemString)
     
@@ -483,41 +484,48 @@ extension CryptorRSA {
     /// Create a new RSA public/private key pair.
     ///
     /// - Parameters:
-    ///     - keySize: The size of the generated RSA keys in bits.
-    /// - Returns: A tuple containing the (`PrivateKey`, `PublicKey`) instances.
+    ///     - keySize: 	The size of the generated RSA keys in bits.
+	///
+    /// - Returns: 		A tuple containing the (`PrivateKey`, `PublicKey`) instances.
+	///
 	public class func makeKeyPair(_ keySize: RSAKey.KeySize) throws -> (PrivateKey, PublicKey) {
+		
         #if os(Linux)
-        var pkey = EVP_PKEY_new()
-        let ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nil)
-        defer { 
-            EVP_PKEY_CTX_free(ctx) 
-        }
-        guard EVP_PKEY_keygen_init(ctx) == 1,
-            EVP_PKEY_CTX_ctrl(ctx, -1, EVP_PKEY_OP_KEYGEN, EVP_PKEY_CTRL_RSA_KEYGEN_BITS, Int32(keySize.bits), nil) == 1,
-            EVP_PKEY_keygen(ctx, &pkey) == 1
-            else {
-                EVP_PKEY_free(pkey)
-                throw Error(code: ERR_INIT_PK, reason: "Could not generate rsa pair for \(keySize.bits) bits")
-        }
-        let privKey = PrivateKey(with: .make(optional: pkey))
-		let publicPem = try RSAKey.getPEMString(reference: privKey.reference, keyType: .publicType, stripped: false)
-        let pubKey = try CryptorRSA.createPublicKey(withPEM: publicPem)
-        return(privKey, pubKey)
+			var pkey = EVP_PKEY_new()
+			let ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nil)
+			defer {
+				EVP_PKEY_CTX_free(ctx)
+			}
+			guard EVP_PKEY_keygen_init(ctx) == 1,
+				EVP_PKEY_CTX_ctrl(ctx, -1, EVP_PKEY_OP_KEYGEN, EVP_PKEY_CTRL_RSA_KEYGEN_BITS, Int32(keySize.bits), nil) == 1,
+				EVP_PKEY_keygen(ctx, &pkey) == 1
+				else {
+					EVP_PKEY_free(pkey)
+					throw Error(code: ERR_INIT_PK, reason: "Could not generate rsa pair for \(keySize.bits) bits")
+			}
+			let privKey = PrivateKey(with: .make(optional: pkey))
+			let publicPem = try RSAKey.getPEMString(reference: privKey.reference, keyType: .publicType, stripped: false)
+			let pubKey = try CryptorRSA.createPublicKey(withPEM: publicPem)
+
+			return(privKey, pubKey)
+
         #else
-        let parameters: [String: AnyObject] = [
-			kSecAttrKeyType as String:          kSecAttrKeyTypeRSA,
-			kSecAttrKeySizeInBits as String:    keySize.bits as AnyObject,
-            kSecPublicKeyAttrs as String: [ kSecAttrIsPermanent as String: true as AnyObject ] as AnyObject,
-            kSecPrivateKeyAttrs as String: [ kSecAttrIsPermanent as String: true as AnyObject ] as AnyObject,
-			]
-		var pubKey, privKey: SecKey?
-		let status = SecKeyGeneratePair(parameters as CFDictionary, &pubKey, &privKey)
-		guard status == 0, let newPubKey = pubKey, let newPrivKey = privKey else {
-			throw Error(code: ERR_INIT_PK, reason: "Could not generate rsa pair for \(keySize.bits) bits")
-		}
-		let privateKey = PrivateKey(with: newPrivKey)
-		let publicKey = PublicKey(with: newPubKey)
-		return (privateKey, publicKey)
+
+			let parameters: [String: AnyObject] = [
+				kSecAttrKeyType as String:          kSecAttrKeyTypeRSA,
+				kSecAttrKeySizeInBits as String:    keySize.bits as AnyObject,
+				kSecPublicKeyAttrs as String: [ kSecAttrIsPermanent as String: true as AnyObject ] as AnyObject,
+				kSecPrivateKeyAttrs as String: [ kSecAttrIsPermanent as String: true as AnyObject ] as AnyObject,
+				]
+			var pubKey, privKey: SecKey?
+			let status = SecKeyGeneratePair(parameters as CFDictionary, &pubKey, &privKey)
+			guard status == 0, let newPubKey = pubKey, let newPrivKey = privKey else {
+				throw Error(code: ERR_INIT_PK, reason: "Could not generate rsa pair for \(keySize.bits) bits")
+			}
+			let privateKey = PrivateKey(with: newPrivKey)
+			let publicKey = PublicKey(with: newPubKey)
+
+			return (privateKey, publicKey)
         #endif
 	}
     
@@ -590,8 +598,7 @@ extension CryptorRSA {
 			// If data is a PEM String, strip the headers and convert to der.
 			if let pemString = String(data: data, encoding: .utf8),
 				let base64String = try? CryptorRSA.base64String(for: pemString),
-				let base64Data = Data(base64Encoded: base64String)
-			{
+				let base64Data = Data(base64Encoded: base64String) {
 				data = base64Data
 			}
 			data = try CryptorRSA.stripX509CertificateHeader(for: data)
@@ -601,8 +608,7 @@ extension CryptorRSA {
 			#if os(Linux)
 			if let pubString = try? RSAKey.getPEMString(reference: reference, keyType: .publicType, stripped: true),
 				let base64String = try? CryptorRSA.base64String(for: pubString),
-				let derData = Data(base64Encoded: base64String)
-			{
+				let derData = Data(base64Encoded: base64String)	{
 				self.publicKeyBytes = derData
 			}
 			#endif
@@ -624,8 +630,7 @@ extension CryptorRSA {
 			self.pemString = (try? RSAKey.getPEMString(reference: nativeKey, type: type)) ?? ""
 			#if os(Linux)
 			if let base64String = try? CryptorRSA.base64String(for: pemString),
-				let derData = Data(base64Encoded: base64String)
-			{
+				let derData = Data(base64Encoded: base64String)	{
 				self.publicKeyBytes = derData
 			}
 			#endif
@@ -648,71 +653,84 @@ extension CryptorRSA {
 				self.reference = .make(optional: nativeKey)
 				self.pemString = (try? RSAKey.getPEMString(reference: .init(nativeKey), type: type)) ?? ""
 				if let base64String = try? CryptorRSA.base64String(for: pemString),
-					let derData = Data(base64Encoded: base64String)
-				{
+					let derData = Data(base64Encoded: base64String)	{
 					self.publicKeyBytes = derData
 				}
 			}
 		
 		#endif
-		
+
+		///
 		/// Get the RSA key as a PEM String.
+		///
 		/// - Returns: The RSA Key in PEM format.
+		///
 		static func getPEMString(reference: NativeKey, type: KeyType) throws -> String {
+
 			#if os(Linux)
-			return try getPEMString(reference: reference, keyType: type, stripped: true)
+				return try getPEMString(reference: reference, keyType: type, stripped: true)
 			#else
-			var error: Unmanaged<CFError>? = nil
-			guard let keyBytes = SecKeyCopyExternalRepresentation(reference, &error) else {
-				guard let error = error?.takeRetainedValue() else {
-					throw Error(code: ERR_INIT_PK, reason: "Couldn't read PEM String")
+				var error: Unmanaged<CFError>? = nil
+				guard let keyBytes = SecKeyCopyExternalRepresentation(reference, &error) else {
+					guard let error = error?.takeRetainedValue() else {
+						throw Error(code: ERR_INIT_PK, reason: "Couldn't read PEM String")
+					}
+					throw error
 				}
-				throw error
-			}
-			return CryptorRSA.convertDerToPem(from: keyBytes as Data, type: type)
+				return CryptorRSA.convertDerToPem(from: keyBytes as Data, type: type)
 			#endif            
 		}
 		
 		#if os(Linux)
-		static func getPEMString(reference: NativeKey, keyType: KeyType, stripped: Bool) throws -> String {
-			let asn1Bio = BIO_new(BIO_s_mem())
-			defer { BIO_free_all(asn1Bio) }
-			if keyType == .publicType {
-				PEM_write_bio_PUBKEY(asn1Bio, .make(optional: reference))
-			} else {
-				PEM_write_bio_PrivateKey(asn1Bio, .make(optional: reference), nil, nil, 0, nil, nil)
-			}
-			// 4096 bit rsa PEM key is 3272 bytes of data
-			let asn1 = UnsafeMutablePointer<UInt8>.allocate(capacity: 3500)
-			let readLength = BIO_read(asn1Bio, asn1, 3500)
-			let pemData = Data(bytes: asn1, count: Int(readLength))
-			guard let pemString = String(data: pemData, encoding: .utf8) else {
-				throw Error(code: ERR_INIT_PK, reason: "Couldn't utf8 decode pemString")
-			}
-			if !stripped {
-				return pemString
-			} else {
-				let derString = try CryptorRSA.base64String(for: pemString)
-				guard let derData = Data(base64Encoded: derString) else {
-					throw Error(code: ERR_INIT_PK, reason: "Couldn't read PEM String")
-				}
-				let pkcs1PEM: String
+			///
+			///	Get a PEM string of a native key.
+			///
+			///	- Parameters:
+			///		- reference:		Native key.
+			///		- keyType:			Type of key.
+			///		- stripped:			`true` to return string stripped, `false` otherwise.
+			///
+			///	- Returns:				The PEM string.
+			///
+			static func getPEMString(reference: NativeKey, keyType: KeyType, stripped: Bool) throws -> String {
+				let asn1Bio = BIO_new(BIO_s_mem())
+				defer { BIO_free_all(asn1Bio) }
 				if keyType == .publicType {
-					let strippedDer = try CryptorRSA.stripX509CertificateHeader(for: derData)
-					pkcs1PEM = CryptorRSA.convertDerToPem(from: strippedDer, type: .publicType)
+					PEM_write_bio_PUBKEY(asn1Bio, .make(optional: reference))
 				} else {
-					// If data is PKCS8 format strip the header
-					let strippedDer: Data
-					if derData[26] == 0x30 {
-						strippedDer = derData.advanced(by: 26)
-					} else {
-						strippedDer = derData
-					}
-					pkcs1PEM = CryptorRSA.convertDerToPem(from: strippedDer, type: .privateType)
+					PEM_write_bio_PrivateKey(asn1Bio, .make(optional: reference), nil, nil, 0, nil, nil)
 				}
-				return pkcs1PEM
+				// 4096 bit rsa PEM key is 3272 bytes of data
+				let asn1 = UnsafeMutablePointer<UInt8>.allocate(capacity: 3500)
+				let readLength = BIO_read(asn1Bio, asn1, 3500)
+				let pemData = Data(bytes: asn1, count: Int(readLength))
+				guard let pemString = String(data: pemData, encoding: .utf8) else {
+					throw Error(code: ERR_INIT_PK, reason: "Couldn't utf8 decode pemString")
+				}
+				if !stripped {
+					return pemString
+				} else {
+					let derString = try CryptorRSA.base64String(for: pemString)
+					guard let derData = Data(base64Encoded: derString) else {
+						throw Error(code: ERR_INIT_PK, reason: "Couldn't read PEM String")
+					}
+					let pkcs1PEM: String
+					if keyType == .publicType {
+						let strippedDer = try CryptorRSA.stripX509CertificateHeader(for: derData)
+						pkcs1PEM = CryptorRSA.convertDerToPem(from: strippedDer, type: .publicType)
+					} else {
+						// If data is PKCS8 format strip the header
+						let strippedDer: Data
+						if derData[26] == 0x30 {
+							strippedDer = derData.advanced(by: 26)
+						} else {
+							strippedDer = derData
+						}
+						pkcs1PEM = CryptorRSA.convertDerToPem(from: strippedDer, type: .privateType)
+					}
+					return pkcs1PEM
+				}
 			}
-		}
 		#endif
 	}
 	// MARK: -

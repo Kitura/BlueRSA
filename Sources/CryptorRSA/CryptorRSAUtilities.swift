@@ -53,8 +53,7 @@ public extension CryptorRSA {
 		// If data is a PEM String, strip the headers and convert to der.
 		if let pemString = String(data: keyData, encoding: .utf8),
 			let base64String = try? CryptorRSA.base64String(for: pemString),
-			let base64Data = Data(base64Encoded: base64String)
-		{
+			let base64Data = Data(base64Encoded: base64String) {
 			keyData = base64Data
 		}
 
@@ -285,8 +284,17 @@ public extension CryptorRSA {
 		let data = Data(bytes: UnsafePointer<UInt8>(strippedKeyBytes), count: keyData.count - index)
 		return data
 	}
-    
+	
+	///
+	///	Add an X509 certificate header to key data.
+	///
+	/// - Parameters:
+	///		- keyData:		Data to add the header to.
+	///
+	///	- Returns:			The modified key data.
+	///
 	static func addX509CertificateHeader(for keyData: Data) -> Data {
+		
 		if keyData.count == 140 {
 			return Data(bytes: [0x30, 0x81, 0x9F,
 								0x30, 0x0D,
