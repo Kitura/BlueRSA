@@ -66,9 +66,9 @@ public extension CryptorRSA {
             BIO_free(bio)
         }
 		// Create a BIO object with the key data...
-		try headerKey.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
+		try headerKey.withUnsafeBytes() { (buffer: UnsafeRawBufferPointer) in
 
-			let len = BIO_write(bio, buffer, Int32(headerKey.count))
+			let len = BIO_write(bio, buffer.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(headerKey.count))
             guard len != 0 else {
                 let source = "Couldn't create BIO reference from key data"
                 if let reason = CryptorRSA.getLastError(source: source) {
