@@ -732,11 +732,11 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
 
 		var data = Data(count: count)
 		data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) -> Void in
-
+            guard let baseAddress = bytes.baseAddress else { return }
             #if os(Linux)
-                _ = RAND_bytes(bytes.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(count))
+                _ = RAND_bytes(baseAddress.assumingMemoryBound(to: UInt8.self), Int32(count))
             #else
-                _ = SecRandomCopyBytes(kSecRandomDefault, count, bytes.baseAddress?.assumingMemoryBound(to: UInt8.self))
+                _ = SecRandomCopyBytes(kSecRandomDefault, count, baseAddress.assumingMemoryBound(to: UInt8.self))
             #endif
 		}
 		return data
