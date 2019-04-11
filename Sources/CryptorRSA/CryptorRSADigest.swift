@@ -226,7 +226,7 @@ extension Data {
 		#if os(Linux)
 		
 			public var engine: (_ data: UnsafePointer<UInt8>, _ len: CC_LONG, _ md: UnsafeMutablePointer<UInt8>) -> UnsafeMutablePointer<UInt8>? {
-			
+
 				switch self {
 					
 				case .sha1:
@@ -293,12 +293,12 @@ extension Data {
 	public func digest(using alogorithm: Algorithm) throws -> Data {
 
 		var hash = [UInt8](repeating: 0, count: Int(alogorithm.length))
-		
-		self.withUnsafeBytes {
-			
-			_ = alogorithm.engine($0, CC_LONG(self.count), &hash)
+
+		self.withUnsafeBytes { ptr in
+			guard let baseAddress = ptr.baseAddress else { return }
+			_ = alogorithm.engine(baseAddress.assumingMemoryBound(to: UInt8.self), CC_LONG(self.count), &hash)
 		}
 		
-		return Data(bytes: hash)
+		return Data(hash)
 	}
 }

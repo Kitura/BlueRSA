@@ -49,7 +49,7 @@ public class CryptorRSA {
 		
 		return PlaintextData(with: data)
 	}
-	
+
 	///
 	/// Creates a message from a plaintext string, with the specified encoding.
 	///
@@ -329,7 +329,7 @@ public class CryptorRSA {
 				defer {
 					RSA_free(rsaKey)
 				}
-				
+
 				// Set the additional authenticated data (aad) as the RSA key modulus and publicExponent in an ASN1 sequence.
 				guard let aad = key.publicKeyBytes else {
 					let source = "Encryption failed"
@@ -404,8 +404,8 @@ public class CryptorRSA {
 				}
 				
 				// Encrypt the plaintext into encrypted using gcmAlgorithm with the random aes key and all 0 iv.
-				guard(self.data.withUnsafeBytes({ (plaintext: UnsafePointer<UInt8>) -> Int32 in
-					return EVP_EncryptUpdate(rsaEncryptCtx, encrypted, &processedLength, plaintext, Int32(data.count))
+				guard(self.data.withUnsafeBytes({ (plaintext: UnsafeRawBufferPointer) -> Int32 in
+					return EVP_EncryptUpdate(rsaEncryptCtx, encrypted, &processedLength, plaintext.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(data.count))
 				})) == 1 else {
 					let source = "Encryption failed"
 					if let reason = CryptorRSA.getLastError(source: source) {
@@ -515,8 +515,8 @@ public class CryptorRSA {
 				
 				// EVP_SealUpdate is a complex macros and therefore the compiler doesnt
 				// convert it directly to swift. From /usr/local/opt/openssl/include/openssl/evp.h:
-				_ = self.data.withUnsafeBytes({ (plaintext: UnsafePointer<UInt8>) -> Int32 in
-					return EVP_EncryptUpdate(rsaEncryptCtx, encrypted, &processedLength, plaintext, Int32(self.data.count))
+				_ = self.data.withUnsafeBytes({ (plaintext: UnsafeRawBufferPointer) -> Int32 in
+					return EVP_EncryptUpdate(rsaEncryptCtx, encrypted, &processedLength, plaintext.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(self.data.count))
 				})
 				encLength = processedLength
 				
@@ -547,7 +547,7 @@ public class CryptorRSA {
 			///	- Returns:	Decrypted data object.
 			///
 			func decryptedGCM(with key: PrivateKey) throws -> PlaintextData? {
-				
+
 				// Initialize the decryption context.
 				let rsaDecryptCtx = EVP_CIPHER_CTX_new()
 				EVP_CIPHER_CTX_init_wrapper(rsaDecryptCtx)
@@ -624,7 +624,7 @@ public class CryptorRSA {
 				var decMsgLen: Int32 = 0
 				// Use a 16-byte all zero initialization vector (IV) to match Apple Security.
 				let iv = [UInt8](repeating: 0, count: 16)
-				
+
 				// Decrypt the encryptedKey into the aeskey using the RSA private key
 				guard RSA_private_decrypt(Int32(encryptedKey.count), [UInt8](encryptedKey), aeskey, rsaKey, RSA_PKCS1_OAEP_PADDING) != 0,
 					// Set the IV length to be 16 bytes.
@@ -643,8 +643,8 @@ public class CryptorRSA {
 						throw Error(code: ERR_DECRYPTION_FAILED, reason: source + ": No OpenSSL error reported.")
 				}
 				// Decrypt the encrypted data using the symmetric key.
-				guard encryptedData.withUnsafeBytes({ (enc: UnsafePointer<UInt8>) -> Int32 in
-					return EVP_DecryptUpdate(rsaDecryptCtx, decrypted, &processedLen, enc, Int32(encryptedData.count))
+				guard encryptedData.withUnsafeBytes({ (enc: UnsafeRawBufferPointer) -> Int32 in
+					return EVP_DecryptUpdate(rsaDecryptCtx, decrypted, &processedLen, enc.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(encryptedData.count))
 				}) != 0 else {
 					let source = "Decryption failed"
 					if let reason = CryptorRSA.getLastError(source: source) {
@@ -655,8 +655,8 @@ public class CryptorRSA {
 				decMsgLen += processedLen
 				
 				// Verify the provided GCM tag.
-				guard tagData.withUnsafeMutableBytes({ (tag: UnsafeMutablePointer<UInt8>) -> Int32 in
-					return EVP_CIPHER_CTX_ctrl(rsaDecryptCtx, EVP_CTRL_GCM_SET_TAG, 16, tag)
+				guard tagData.withUnsafeMutableBytes({ (tag: UnsafeMutableRawBufferPointer) -> Int32 in
+					return EVP_CIPHER_CTX_ctrl(rsaDecryptCtx, EVP_CTRL_GCM_SET_TAG, 16, tag.baseAddress)
 				}) == 1,
 					EVP_DecryptFinal_ex(rsaDecryptCtx, decrypted.advanced(by: Int(decMsgLen)), &processedLen) == 1
 					else {
@@ -690,7 +690,7 @@ public class CryptorRSA {
 				let encIVLength = Int(EVP_CIPHER_iv_length(.make(optional: encType)))
 				// Size of encryptedKey
 				let encryptedDataLength = Int(self.data.count) - encKeyLength - encIVLength
-				
+
 				// Extract encryptedKey, encryptedData, encryptedIV from data
 				// self.data = encryptedKey + encryptedData + encryptedIV
 				let encryptedKey = self.data.subdata(in: 0..<encKeyLength)
@@ -720,9 +720,9 @@ public class CryptorRSA {
 					#endif
 				}
 				// EVP_OpenInit returns 0 on error or the recovered secret key size if successful
-				var status = encryptedKey.withUnsafeBytes({ (ek: UnsafePointer<UInt8>) -> Int32 in
-					return encryptedIV.withUnsafeBytes({ (iv: UnsafePointer<UInt8>) -> Int32 in
-						return EVP_OpenInit(rsaDecryptCtx, .make(optional: encType), ek, Int32(encryptedKey.count), iv, .make(optional: key.reference))
+				var status = encryptedKey.withUnsafeBytes({ (ek: UnsafeRawBufferPointer) -> Int32 in
+					return encryptedIV.withUnsafeBytes({ (iv: UnsafeRawBufferPointer) -> Int32 in
+						return EVP_OpenInit(rsaDecryptCtx, .make(optional: encType), ek.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(encryptedKey.count), iv.baseAddress?.assumingMemoryBound(to: UInt8.self), .make(optional: key.reference))
 					})
 				})
 				guard status != 0 else {
@@ -736,8 +736,8 @@ public class CryptorRSA {
 				
 				// EVP_OpenUpdate is a complex macros and therefore the compiler doesnt
 				// convert it directly to Swift. From /usr/local/opt/openssl/include/openssl/evp.h:
-				_ = encryptedData.withUnsafeBytes({ (enc: UnsafePointer<UInt8>) -> Int32 in
-					return EVP_DecryptUpdate(rsaDecryptCtx, decrypted, &processedLen, enc, Int32(encryptedData.count))
+				_ = encryptedData.withUnsafeBytes({ (enc: UnsafeRawBufferPointer) -> Int32 in
+					return EVP_DecryptUpdate(rsaDecryptCtx, decrypted, &processedLen, enc.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(encryptedData.count))
 				})
 				decMsgLen = processedLen
 				
@@ -798,8 +798,8 @@ public class CryptorRSA {
                 EVP_DigestSignInit(md_ctx, nil, .make(optional: md), nil, .make(optional: key.reference))
                 
                 // Convert Data to UnsafeRawPointer!
-                _ = self.data.withUnsafeBytes({ (message: UnsafePointer<UInt8>) -> Int32 in
-                    return EVP_DigestUpdate(md_ctx, message, self.data.count)
+                _ = self.data.withUnsafeBytes({ (message: UnsafeRawBufferPointer) -> Int32 in
+                    return EVP_DigestUpdate(md_ctx, message.baseAddress?.assumingMemoryBound(to: UInt8.self), self.data.count)
                 })
                 
                 // Determine the size of the actual signature
@@ -891,8 +891,8 @@ public class CryptorRSA {
                 EVP_DigestVerifyInit(md_ctx, nil, .make(optional: md), nil, .make(optional: key.reference))
 
 
-                var rc = self.data.withUnsafeBytes({ (message: UnsafePointer<UInt8>) -> Int32 in
-                    return EVP_DigestUpdate(md_ctx, message, self.data.count)
+                var rc = self.data.withUnsafeBytes({ (message: UnsafeRawBufferPointer) -> Int32 in
+                    return EVP_DigestUpdate(md_ctx, message.baseAddress?.assumingMemoryBound(to: UInt8.self), self.data.count)
                 })
                 guard rc == 1 else {
                     let source = "Signature verification failed."
@@ -904,11 +904,11 @@ public class CryptorRSA {
                 }
 
                 // Unlike other return values above, this return indicates if signature verifies or not
-                rc = signature.data.withUnsafeBytes({ (sig: UnsafePointer<UInt8>) -> Int32 in
+                rc = signature.data.withUnsafeBytes({ (sig: UnsafeRawBufferPointer) -> Int32 in
                     // Wrapper for OpenSSL EVP_DigestVerifyFinal function defined in
                     // IBM-Swift/OpenSSL/shim.h, to provide compatibility with OpenSSL
                     // 1.0.1 and 1.0.2 on Ubuntu 14.04 and 16.04, respectively.
-                    return SSL_EVP_digestVerifyFinal_wrapper(md_ctx, sig, signature.data.count)
+                    return SSL_EVP_digestVerifyFinal_wrapper(md_ctx, sig.baseAddress?.assumingMemoryBound(to: UInt8.self), signature.data.count)
                 })
                 
                 return (rc == 1) ? true : false

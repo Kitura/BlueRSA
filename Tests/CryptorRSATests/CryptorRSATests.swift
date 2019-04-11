@@ -540,10 +540,10 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
                 XCTFail("Could not find key")
                 return
         }
-        
+
 		// Test all the algorithms available...
 		for (algorithm, name) in algorithms {
-			
+
 			print("Testing algorithm: \(name)")
 			let data = CryptorRSATests.randomData(count: 8192)
 			let message = CryptorRSA.createPlaintext(with: data)
@@ -705,13 +705,13 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
 	}
     
     enum MyError : Error {
-        case invalidPath()
+        case invalidPath
     }
 	
 	static public func publicKey(name: String) throws -> CryptorRSA.PublicKey {
 		
         guard let path = CryptorRSATests.getFilePath(for: name, ofType: "pem") else {
-            throw MyError.invalidPath()
+            throw MyError.invalidPath
         }
         
         let pemString = try String(contentsOf: path, encoding: String.Encoding.ascii)
@@ -721,7 +721,7 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
 	static public func privateKey(name: String) throws -> CryptorRSA.PrivateKey {
 		
         guard let path = CryptorRSATests.getFilePath(for: name, ofType: "pem") else {
-            throw MyError.invalidPath()
+            throw MyError.invalidPath
         }
         
         let pemString = try String(contentsOf: path, encoding: String.Encoding.ascii)
@@ -731,12 +731,12 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
 	static public func randomData(count: Int) -> Data {
 		
 		var data = Data(count: count)
-		data.withUnsafeMutableBytes { (bytes: UnsafeMutablePointer<UInt8>) -> Void in
-			
-            #if os(Linux)
-                _ = RAND_bytes(bytes, Int32(count))
-            #else
-                _ = SecRandomCopyBytes(kSecRandomDefault, count, bytes)
+		data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) -> Void in
+			guard let baseAddress = bytes.baseAddress else { return }
+			#if os(Linux)
+				_ = RAND_bytes(baseAddress.assumingMemoryBound(to: UInt8.self), Int32(count))
+			#else
+				_ = SecRandomCopyBytes(kSecRandomDefault, count, baseAddress.assumingMemoryBound(to: UInt8.self))
             #endif
 		}
 		return data

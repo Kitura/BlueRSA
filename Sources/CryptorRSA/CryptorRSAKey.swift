@@ -281,9 +281,9 @@ extension CryptorRSA {
 			}
 		
 			// Move the key data to BIO
-			try data.withUnsafeBytes() { (buffer: UnsafePointer<UInt8>) in
+			try data.withUnsafeBytes() { (buffer: UnsafeRawBufferPointer) in
 				
-				let len = BIO_write(certbio, buffer, Int32(data.count))
+				let len = BIO_write(certbio, buffer.baseAddress?.assumingMemoryBound(to: UInt8.self), Int32(data.count))
 				guard len != 0 else {
 					let source = "Couldn't create BIO reference from key data"
 					if let reason = CryptorRSA.getLastError(source: source) {
