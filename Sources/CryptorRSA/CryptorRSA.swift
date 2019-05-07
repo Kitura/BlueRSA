@@ -765,6 +765,7 @@ public class CryptorRSA {
 		/// - Parameters:
 		///		- key:				The `PrivateKey`.
 		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
+		///		- usePSS: 			Bool stating whether or not to use RSA-PSS (Probabilistic signature scheme).
 		///
 		///	- Returns:				A new optional `SignedData` containing the digital signature.
 		///
@@ -875,6 +876,7 @@ public class CryptorRSA {
 		///		- key:				The `PublicKey`.
 		///		- signature:		The `SignedData` containing the signature to verify against.
 		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
+		///		- usePSS: 			Bool stating whether or not to use RSA-PSS (Probabilistic signature scheme).
 		///
 		///	- Returns:				True if verification is successful, false otherwise
 		///
