@@ -192,6 +192,31 @@ extension Data {
                     return .rsaSignatureMessagePKCS1v15SHA1
 				}
 			}
+		
+			@available(macOS 10.13, iOS 10.0, *)
+			var algorithmForPssSignature: SecKeyAlgorithm {
+				switch self {
+					
+				case .sha1:
+					return .rsaSignatureMessagePSSSHA1
+					
+				case .sha224:
+					return .rsaSignatureMessagePSSSHA224
+					
+				case .sha256:
+					return .rsaSignatureMessagePSSSHA256
+					
+				case .sha384:
+					return .rsaSignatureMessagePSSSHA384
+					
+				case .sha512:
+					return .rsaSignatureMessagePSSSHA512
+					
+				case .gcm:
+					return .rsaSignatureMessagePSSSHA1
+					
+				}
+			}
 				
 			@available(macOS 10.12, iOS 10.0, *)
 			public var alogrithmForEncryption: SecKeyAlgorithm {
