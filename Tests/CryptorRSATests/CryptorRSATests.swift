@@ -587,6 +587,11 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
 	
 	func test_signVerifyAllDigestTypesPSS() throws {
 		
+		// PSS is only supported from swift 4.1 onwards
+		#if !swift(>=4.1) 
+		return
+		#endif
+		
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
 													  (.sha224, ".sha224"),
 													  (.sha256, ".sha256"),
@@ -616,6 +621,11 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
 	}
 	
 	func test_signVerifyBase64PSS() throws {
+		
+		// PSS is only supported from swift 4.1 onwards
+		#if !swift(>=4.1) 
+			return
+		#endif
 		
 		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
 													  (.sha224, ".sha224"),
@@ -648,6 +658,12 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
 	}
 	
 	func test_verifyExtenalPSSSignature() {
+		
+		// PSS is only supported from swift 4.1 onwards
+		#if !swift(>=4.1) 
+		return
+		#endif
+		
 		guard let publicKey = self.publicKey else {
 			XCTFail("Could not find key")
 			return
