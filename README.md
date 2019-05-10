@@ -164,7 +164,7 @@ There are two class level functions for creating a `PlaintextData` object. These
 
 Once the `PlaintextData` object is created, there are two instance functions that can be used to manipulate the contained data.  These are:
 
-- `encrypted(with key: PublicKey, algorithm: Data.Algorithm) throws -> EncryptedData?` - This function allows you to encrypt containing data using the private `key` and `algorithm` specified.  This function returns an optional `EncryptedData` object containing the encryped data.
+- `encrypted(with key: PublicKey, algorithm: Data.Algorithm) throws -> EncryptedData?` - This function allows you to encrypt containing data using the public `key` and `algorithm` specified.  This function returns an optional `EncryptedData` object containing the encryped data.
 - `signed(with key: PrivateKey, algorithm: Data.Algorithm) throws -> SignedData?` - This function allows you to sign the contained data using the private `key` and `algorithm` specified.  This function returns an optional `SignedData` object containing the signature of the signed data.
 
 **Example**
@@ -266,9 +266,9 @@ There is a single class level function that can be used to create a `SignedData`
 
 - `CryptorRSA.createSigned(with data: Data) -> SignedData` - This function creates a `SignedData` containing the specified signed `data`.
 
-Once created or obtained, there is an instance function which can be used to verify the signature contained therein:
+Once created or obtained `PlaintextData` and `SignedData`, there is an instance function which can be used to verify the signature contained therein:
 
-- `CryptorRSA.verify(with key: PublicKey, signature: SignedData, algorithm: Data.Algorithm) throws -> Bool` - This function is used to verify, using the public `key` and `algorithm`, the `signature`.  Returns true if the signature is valid, false otherwise.
+- `verify(with key: PublicKey, signature: SignedData, algorithm: Data.Algorithm) throws -> Bool` - This function is used to verify, using the public `key` and `algorithm`, the `signature`.  Returns true if the signature is valid, false otherwise.
 
 - *Verifying*: **Note:** Exception handling omitted for brevity.
 
@@ -291,7 +291,7 @@ let myData: Data = <... Data to be signed ...>
 let myPlaintext = CryptorRSA.createPlaintext(with: myData)
 let signedData = try myPlaintext.signed(with: privateKey, algorithm: .sha1)
 
-if signedData.verify(with: publicKey, signature: signedData, algorithm: .sha1) {
+if try myPlaintext.verify(with: publicKey, signature: signedData, algorithm: .sha1) {
 
 	print("Signature verified")
 
