@@ -765,10 +765,11 @@ public class CryptorRSA {
 		/// - Parameters:
 		///		- key:				The `PrivateKey`.
 		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
+		///		- usePSS: 			Bool stating whether or not to use RSA-PSS (Probabilistic signature scheme).
 		///
 		///	- Returns:				A new optional `SignedData` containing the digital signature.
 		///
-		public func signed(with key: PrivateKey, algorithm: Data.Algorithm) throws -> SignedData? {
+		public func signed(with key: PrivateKey, algorithm: Data.Algorithm, usePSS: Bool = false) throws -> SignedData? {
 			
 			// Must be plaintext...
 			guard self.type == .plaintextType else {
@@ -793,9 +794,20 @@ public class CryptorRSA {
                 
                 let (md, _) = algorithm.algorithmForSignature
                 
-                // Provide a pkey_ctx to EVP_DigestSignInit so that the EVP_PKEY_CTX of the signing operation
-                // is written to it, to allow alternative signing options to be set
-                EVP_DigestSignInit(md_ctx, nil, .make(optional: md), nil, .make(optional: key.reference))
+				if usePSS {
+					// If using PSS padding, create a PKEY and set it's padding, mask generation function and salt length.
+					// NID_rsassaPss is `EVP_PKEY_RSA_PSS` as defined in evp.h
+					var pkey_ctx = EVP_PKEY_CTX_new_id(NID_rsassaPss, nil)
+					EVP_DigestSignInit(md_ctx, &pkey_ctx, .make(optional: md), nil, .make(optional: key.reference))
+					EVP_PKEY_CTX_ctrl(pkey_ctx, EVP_PKEY_RSA, -1, EVP_PKEY_CTRL_RSA_PADDING, RSA_PKCS1_PSS_PADDING, nil)
+					EVP_PKEY_CTX_ctrl(pkey_ctx, -1, EVP_PKEY_OP_SIGN, EVP_PKEY_CTRL_RSA_MGF1_MD, 0, .make(optional: md))
+					// Sets salt length to be equal to message digest length
+					EVP_PKEY_CTX_ctrl(pkey_ctx, -1, EVP_PKEY_OP_SIGN, EVP_PKEY_CTRL_RSA_PSS_SALTLEN, -1, .make(optional: md))
+				} else {
+					// Provide a pkey_ctx to EVP_DigestSignInit so that the EVP_PKEY_CTX of the signing operation
+					// is written to it, to allow alternative signing options to be set
+					EVP_DigestSignInit(md_ctx, nil, .make(optional: md), nil, .make(optional: key.reference))
+				}
                 
                 // Convert Data to UnsafeRawPointer!
                 _ = self.data.withUnsafeBytes({ (message: UnsafeRawBufferPointer) -> Int32 in
@@ -829,8 +841,19 @@ public class CryptorRSA {
 
 			#else
 				
+				let signingAlgorithm: SecKeyAlgorithm
+				if usePSS {
+					if #available(macOS 10.13, iOS 10.0, *) {
+						signingAlgorithm = usePSS ? algorithm.algorithmForPssSignature : algorithm.algorithmForSignature
+					} else {
+						throw Error(code: ERR_NOT_IMPLEMENTED, reason: "RSA-PSS only supported on macOS 10.13/iOS 10.0 and above.")
+					}
+				} else {
+					signingAlgorithm = algorithm.algorithmForSignature
+				}
+			
 				var response: Unmanaged<CFError>? = nil
-				let sData = SecKeyCreateSignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, &response)
+				let sData = SecKeyCreateSignature(key.reference, signingAlgorithm, self.data as CFData, &response)
 				if response != nil {
 				
 					guard let error = response?.takeRetainedValue() else {
@@ -853,10 +876,11 @@ public class CryptorRSA {
 		///		- key:				The `PublicKey`.
 		///		- signature:		The `SignedData` containing the signature to verify against.
 		///		- algorithm:		The algorithm to use (`Data.Algorithm`).
+		///		- usePSS: 			Bool stating whether or not to use RSA-PSS (Probabilistic signature scheme).
 		///
 		///	- Returns:				True if verification is successful, false otherwise
 		///
-		public func verify(with key: PublicKey, signature: SignedData, algorithm: Data.Algorithm) throws -> Bool {
+		public func verify(with key: PublicKey, signature: SignedData, algorithm: Data.Algorithm, usePSS: Bool = false) throws -> Bool {
 			
 			// Must be plaintext...
 			guard self.type == .plaintextType else {
@@ -886,9 +910,17 @@ public class CryptorRSA {
 
                 let (md, _) = algorithm.algorithmForSignature
                 
-                // Provide a pkey_ctx to EVP_DigestSignInit so that the EVP_PKEY_CTX of the signing operation
-                // is written to it, to allow alternative signing options to be set
-                EVP_DigestVerifyInit(md_ctx, nil, .make(optional: md), nil, .make(optional: key.reference))
+				if usePSS {
+					// If using PSS padding, create a PKEY and set it's padding and mask generation function.
+					var pkey_ctx = EVP_PKEY_CTX_new_id(NID_rsassaPss, nil)
+					EVP_DigestVerifyInit(md_ctx, &pkey_ctx, .make(optional: md), nil, .make(optional: key.reference))
+					EVP_PKEY_CTX_ctrl(pkey_ctx, EVP_PKEY_RSA, -1, EVP_PKEY_CTRL_RSA_PADDING, RSA_PKCS1_PSS_PADDING, nil)
+					EVP_PKEY_CTX_ctrl(pkey_ctx, -1, EVP_PKEY_OP_VERIFY, EVP_PKEY_CTRL_RSA_MGF1_MD, 0, .make(optional: md))
+				} else {
+					// Provide a pkey_ctx to EVP_DigestSignInit so that the EVP_PKEY_CTX of the signing operation
+					// is written to it, to allow alternative signing options to be set
+					EVP_DigestVerifyInit(md_ctx, nil, .make(optional: md), nil, .make(optional: key.reference))
+				}
 
 
                 var rc = self.data.withUnsafeBytes({ (message: UnsafeRawBufferPointer) -> Int32 in
@@ -915,8 +947,19 @@ public class CryptorRSA {
 				
 			#else
 				
+				let signingAlgorithm: SecKeyAlgorithm
+				if usePSS {
+					if #available(macOS 10.13, iOS 10.0, *) {
+						signingAlgorithm = usePSS ? algorithm.algorithmForPssSignature : algorithm.algorithmForSignature
+					} else {
+						throw Error(code: ERR_NOT_IMPLEMENTED, reason: "RSA-PSS only supported on macOS 10.13/iOS 10.0 and above.")
+					}
+				} else {
+					signingAlgorithm = algorithm.algorithmForSignature
+				}
+
 				var response: Unmanaged<CFError>? = nil
-				let result = SecKeyVerifySignature(key.reference, algorithm.algorithmForSignature, self.data as CFData, signature.data as CFData, &response)
+				let result = SecKeyVerifySignature(key.reference, signingAlgorithm, self.data as CFData, signature.data as CFData, &response)
 				if response != nil {
 				
 					guard let error = response?.takeRetainedValue() else {

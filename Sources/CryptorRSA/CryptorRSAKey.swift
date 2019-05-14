@@ -704,6 +704,11 @@ extension CryptorRSA {
 				let asn1 = UnsafeMutablePointer<UInt8>.allocate(capacity: 3500)
 				let readLength = BIO_read(asn1Bio, asn1, 3500)
 				let pemData = Data(bytes: asn1, count: Int(readLength))
+                #if swift(>=4.1)
+                asn1.deallocate()
+                #else
+                asn1.deallocate(capacity: 3500)
+                #endif
 				guard let pemString = String(data: pemData, encoding: .utf8) else {
 					throw Error(code: ERR_INIT_PK, reason: "Couldn't utf8 decode pemString")
 				}
