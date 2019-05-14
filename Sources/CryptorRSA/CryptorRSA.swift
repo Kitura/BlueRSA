@@ -843,7 +843,7 @@ public class CryptorRSA {
 				
 				let signingAlgorithm: SecKeyAlgorithm
 				if usePSS {
-					if #available(macOS 10.13, iOS 10.0, *) {
+					if #available(macOS 10.13, iOS 11.0, *) {
 						signingAlgorithm = usePSS ? algorithm.algorithmForPssSignature : algorithm.algorithmForSignature
 					} else {
 						throw Error(code: ERR_NOT_IMPLEMENTED, reason: "RSA-PSS only supported on macOS 10.13/iOS 10.0 and above.")
@@ -949,7 +949,7 @@ public class CryptorRSA {
 				
 				let signingAlgorithm: SecKeyAlgorithm
 				if usePSS {
-					if #available(macOS 10.13, iOS 10.0, *) {
+					if #available(macOS 10.13, iOS 11.0, *) {
 						signingAlgorithm = usePSS ? algorithm.algorithmForPssSignature : algorithm.algorithmForSignature
 					} else {
 						throw Error(code: ERR_NOT_IMPLEMENTED, reason: "RSA-PSS only supported on macOS 10.13/iOS 10.0 and above.")

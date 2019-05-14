@@ -193,7 +193,7 @@ extension Data {
 				}
 			}
 		
-			@available(macOS 10.13, iOS 10.0, *)
+			@available(macOS 10.13, iOS 11.0, *)
 			var algorithmForPssSignature: SecKeyAlgorithm {
 				switch self {
 					
