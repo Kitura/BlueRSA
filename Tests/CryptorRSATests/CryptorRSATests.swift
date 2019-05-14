@@ -589,35 +589,36 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
 		
 		// PSS is only supported from swift 4.1 onwards
 		#if !swift(>=4.1) 
-		return
+			return
+		#else
+		
+			let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
+														  (.sha224, ".sha224"),
+														  (.sha256, ".sha256"),
+														  (.sha384, ".sha384"),
+														  (.gcm, ".gcm"),
+														/*(.sha512, ".sha512")*/]
+			// Test all the algorithms available...
+			//	Note: .sha512 pss appears to be broken internally on Apple platforms, so we skip it...
+			guard let publicKey = self.publicKey,
+				let privateKey = self.privateKey else {
+					XCTFail("Could not find key")
+					return
+			}
+		
+			// Test all the algorithms available...
+			for (algorithm, name) in algorithms {
+				
+				print("Testing algorithm: \(name)")
+				let data = CryptorRSATests.randomData(count: 8192)
+				let message = CryptorRSA.createPlaintext(with: data)
+				let signature = try message.signed(with: privateKey, algorithm: algorithm, usePSS: true)
+				XCTAssertNotNil(signature)
+				let verificationResult = try message.verify(with: publicKey, signature: signature!, algorithm: algorithm, usePSS: true)
+				XCTAssertTrue(verificationResult)
+				print("Test of algorithm: \(name) succeeded")
+			}
 		#endif
-		
-		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-													  (.sha224, ".sha224"),
-													  (.sha256, ".sha256"),
-													  (.sha384, ".sha384"),
-													  (.gcm, ".gcm"),
-													/*(.sha512, ".sha512")*/]
-		// Test all the algorithms available...
-		//	Note: .sha512 pss appears to be broken internally on Apple platforms, so we skip it...
-		guard let publicKey = self.publicKey,
-			let privateKey = self.privateKey else {
-				XCTFail("Could not find key")
-				return
-		}
-		
-		// Test all the algorithms available...
-		for (algorithm, name) in algorithms {
-			
-			print("Testing algorithm: \(name)")
-			let data = CryptorRSATests.randomData(count: 8192)
-			let message = CryptorRSA.createPlaintext(with: data)
-			let signature = try message.signed(with: privateKey, algorithm: algorithm, usePSS: true)
-			XCTAssertNotNil(signature)
-			let verificationResult = try message.verify(with: publicKey, signature: signature!, algorithm: algorithm, usePSS: true)
-			XCTAssertTrue(verificationResult)
-			print("Test of algorithm: \(name) succeeded")
-		}
 	}
 	
 	func test_signVerifyBase64PSS() throws {
@@ -625,60 +626,62 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
 		// PSS is only supported from swift 4.1 onwards
 		#if !swift(>=4.1) 
 			return
+		#else
+		
+			let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
+														  (.sha224, ".sha224"),
+														  (.sha256, ".sha256"),
+														  (.sha384, ".sha384"),
+														  (.gcm, ".gcm"),
+														/*(.sha512, ".sha512")*/]
+			// Test all the algorithms available...
+			//	Note: .sha512 pss appears to be broken internally on Apple platforms, so we skip it...
+		
+			guard let publicKey = self.publicKey,
+				let privateKey = self.privateKey else {
+					XCTFail("Could not find key")
+					return
+			}
+		
+			// Test all the algorithms available...
+			for (algorithm, name) in algorithms {
+				
+				print("Testing algorithm: \(name)")
+				let data = CryptorRSATests.randomData(count: 8192)
+				let message = CryptorRSA.createPlaintext(with: data)
+				let signature = try message.signed(with: privateKey, algorithm: algorithm, usePSS: true)
+				XCTAssertNotNil(signature)
+				XCTAssertEqual(signature!.base64String, signature!.data.base64EncodedString())
+				let verificationResult = try message.verify(with: publicKey, signature: signature!, algorithm: algorithm, usePSS: true)
+				XCTAssertTrue(verificationResult)
+				print("Test of algorithm: \(name) succeeded")
+			}
 		#endif
-		
-		let algorithms: [(Data.Algorithm, String)] = [(.sha1, ".sha1"),
-													  (.sha224, ".sha224"),
-													  (.sha256, ".sha256"),
-													  (.sha384, ".sha384"),
-													  (.gcm, ".gcm"),
-													/*(.sha512, ".sha512")*/]
-		// Test all the algorithms available...
-		//	Note: .sha512 pss appears to be broken internally on Apple platforms, so we skip it...
-		
-		guard let publicKey = self.publicKey,
-			let privateKey = self.privateKey else {
-				XCTFail("Could not find key")
-				return
-		}
-		
-		// Test all the algorithms available...
-		for (algorithm, name) in algorithms {
-			
-			print("Testing algorithm: \(name)")
-			let data = CryptorRSATests.randomData(count: 8192)
-			let message = CryptorRSA.createPlaintext(with: data)
-			let signature = try message.signed(with: privateKey, algorithm: algorithm, usePSS: true)
-			XCTAssertNotNil(signature)
-			XCTAssertEqual(signature!.base64String, signature!.data.base64EncodedString())
-			let verificationResult = try message.verify(with: publicKey, signature: signature!, algorithm: algorithm, usePSS: true)
-			XCTAssertTrue(verificationResult)
-			print("Test of algorithm: \(name) succeeded")
-		}
 	}
 	
 	func test_verifyExtenalPSSSignature() {
 		
 		// PSS is only supported from swift 4.1 onwards
 		#if !swift(>=4.1) 
-		return
-		#endif
-		
-		guard let publicKey = self.publicKey else {
-			XCTFail("Could not find key")
 			return
-		}
-		// Generated by jwt.io
-		let externalMessage = "eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0"
-		let externalSignature = "Itey9AhjNgb1owBaVsTE-7NrZY1c7AJtp990w4AJRZWMOeX-2UiVdil9vflW7BkduRXMA83hCdhQjqzvnJGhxEVllZshPYvueW0otxzI-wl4fPY6ai6qiBh9JzDwFlb9IHyIDGhr3HHKaMjYEwpt8VJYxzEcHwdGg34aczspM0U"
-		let message = CryptorRSA.createPlaintext(with: Data(externalMessage.utf8))
-		let signature = CryptorRSA.createSigned(with: Data(base64urlEncoded: externalSignature)!)
-		do {
-			let verificationResult = try message.verify(with: publicKey, signature: signature, algorithm: .sha256, usePSS: true)
-			XCTAssertTrue(verificationResult)
-		} catch {
-			XCTFail("Error thrown during verification: \(error)")
-		}
+		#else
+		
+			guard let publicKey = self.publicKey else {
+				XCTFail("Could not find key")
+				return
+			}
+			// Generated by jwt.io
+			let externalMessage = "eyJhbGciOiJQUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0"
+			let externalSignature = "Itey9AhjNgb1owBaVsTE-7NrZY1c7AJtp990w4AJRZWMOeX-2UiVdil9vflW7BkduRXMA83hCdhQjqzvnJGhxEVllZshPYvueW0otxzI-wl4fPY6ai6qiBh9JzDwFlb9IHyIDGhr3HHKaMjYEwpt8VJYxzEcHwdGg34aczspM0U"
+			let message = CryptorRSA.createPlaintext(with: Data(externalMessage.utf8))
+			let signature = CryptorRSA.createSigned(with: Data(base64urlEncoded: externalSignature)!)
+			do {
+				let verificationResult = try message.verify(with: publicKey, signature: signature, algorithm: .sha256, usePSS: true)
+				XCTAssertTrue(verificationResult)
+			} catch {
+				XCTFail("Error thrown during verification: \(error)")
+			}
+		#endif
 	}
 
     func test_verifyAppIDToken() throws {
