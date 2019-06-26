@@ -26,7 +26,7 @@ import XCTest
 
 @testable import CryptorRSA
 
-@available(macOS 10.12, iOS 10.0, *)
+@available(macOS 10.12, iOS 10.3, *)
 class CryptorRSATests: XCTestCase {
 	
 	/// Test for bundle usage.

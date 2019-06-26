@@ -32,7 +32,7 @@ import Foundation
 ///
 /// RSA Encryption/Decryption, Signing/Verification
 ///
-@available(macOS 10.12, iOS 10.0, *)
+@available(macOS 10.12, iOS 10.3, *)
 public class CryptorRSA {
 	
 	// MARK: Class Functions
