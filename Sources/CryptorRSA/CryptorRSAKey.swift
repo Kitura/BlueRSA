@@ -320,12 +320,14 @@ extension CryptorRSA {
 			}
 			
 			var key: SecKey? = nil
-		
+			#if swift(>=4.2)
 			if #available(macOS 10.14, iOS 12.0, watchOS 5.0, *) {
 				
 				key = SecCertificateCopyKey(certData)
-					
-			} else {
+				
+			} 
+			#endif
+			if key == nil {
 		
 			#if os(macOS)
 		
