@@ -29,7 +29,7 @@ import Foundation
 
 // MARK: -
 
-@available(macOS 10.12, iOS 10.3, *)
+@available(macOS 10.12, iOS 10.3, watchOS 3.3, tvOS 12.0, *)
 extension CryptorRSA {
 	
 	// MARK: Type Aliases
@@ -321,7 +321,7 @@ extension CryptorRSA {
 			
 			var key: SecKey? = nil
 		
-			if #available(macOS 10.14, iOS 12.0, *) {
+			if #available(macOS 10.14, iOS 12.0, watchOS 5.0, *) {
 				
 				key = SecCertificateCopyKey(certData)
 					
