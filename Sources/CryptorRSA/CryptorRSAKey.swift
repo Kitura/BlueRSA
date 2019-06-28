@@ -29,7 +29,7 @@ import Foundation
 
 // MARK: -
 
-@available(macOS 10.12, iOS 10.0, *)
+@available(macOS 10.12, iOS 10.3, watchOS 3.3, tvOS 12.0, *)
 extension CryptorRSA {
 	
 	// MARK: Type Aliases
@@ -318,28 +318,41 @@ extension CryptorRSA {
 				
 				throw Error(code: ERR_CREATE_CERT_FAILED, reason: "Unable to create certificate from certificate data.")
 			}
+			
+			var key: SecKey? = nil
+			#if swift(>=4.2)
+			if #available(macOS 10.14, iOS 12.0, watchOS 5.0, *) {
+				
+				key = SecCertificateCopyKey(certData)
+				
+			} 
+			#endif
+			if key == nil {
 		
 			#if os(macOS)
 		
 				// Now extract the public key from it...
-				var key: SecKey? = nil
 				let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
 					
 					// Retrieves the public key from a certificate...
 					SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
 				}
-				if status != errSecSuccess || key == nil {
+				if status != errSecSuccess {
 					
 					throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
 				}
 		
 			#else
 		
-				let key = SecCertificateCopyPublicKey(certData)
+				key = SecCertificateCopyPublicKey(certData)
 		
 			#endif
+			}
 		
-			return PublicKey(with: key!)
+		guard let createdKey = key else {
+			throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
+		}
+		return PublicKey(with: createdKey)
 		
 		#endif		
 	}
