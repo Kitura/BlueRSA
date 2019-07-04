@@ -296,6 +296,17 @@ class CryptorRSATests: XCTestCase {
         }
 	}
 	
+	func test_private_initWithPKCS8() throws {
+		
+		let path = URL(fileURLWithPath: #file).appendingPathComponent("../keys/pkcs8.pem").standardized
+		XCTAssertNotNil(path)
+		
+		let str = try String(contentsOf: path, encoding: .utf8)
+		let privateKey = try? CryptorRSA.createPrivateKey(withPEM: str)
+		XCTAssertNotNil(privateKey)
+		XCTAssertTrue(privateKey?.type == .privateType)
+	}
+	
 	func test_private_initWithPEMName() throws {
 		
 		if CryptorRSATests.useBundles, let bundle = CryptorRSATests.bundle {

@@ -739,20 +739,8 @@ extension CryptorRSA {
 					guard let derData = Data(base64Encoded: derString) else {
 						throw Error(code: ERR_INIT_PK, reason: "Couldn't read PEM String")
 					}
-					let pkcs1PEM: String
-					if keyType == .publicType {
-						let strippedDer = try CryptorRSA.stripX509CertificateHeader(for: derData)
-						pkcs1PEM = CryptorRSA.convertDerToPem(from: strippedDer, type: .publicType)
-					} else {
-						// If data is PKCS8 format strip the header
-						let strippedDer: Data
-						if derData[26] == 0x30 {
-							strippedDer = derData.advanced(by: 26)
-						} else {
-							strippedDer = derData
-						}
-						pkcs1PEM = CryptorRSA.convertDerToPem(from: strippedDer, type: .privateType)
-					}
+					let strippedDer = try CryptorRSA.stripX509CertificateHeader(for: derData)
+					let pkcs1PEM = CryptorRSA.convertDerToPem(from: strippedDer, type: keyType)
 					return pkcs1PEM
 				}
 			}
