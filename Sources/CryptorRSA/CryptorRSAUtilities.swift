@@ -231,7 +231,7 @@ public extension CryptorRSA {
 			throw Error(code: ERR_STRIP_PK_HEADER, reason: "Provided public key is empty")
 		}
 		
-		var byteArray = [UInt8](keyData)
+		let byteArray = [UInt8](keyData)
 		
 		var index = 0
 		guard byteArray[index] == 0x30 else {
