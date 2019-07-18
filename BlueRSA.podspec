@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
 s.name        = "BlueRSA"
-s.version     = "1.0.33"
+s.version     = "1.0.34"
 s.summary     = "Swift cross-platform RSA crypto library using CommonCrypto/libcrypto via Package Manager."
 s.homepage    = "https://github.com/IBM-Swift/BlueRSA"
 s.license     = { :type => "Apache License, Version 2.0" }
