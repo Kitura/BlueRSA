@@ -349,7 +349,7 @@ extension CryptorRSA {
 			
 				#else
 			
-					key = SecCertificateCopyPublicKey(certData)
+					key = SecCertificateCopyKey(certData)
 			
 				#endif
 			}
