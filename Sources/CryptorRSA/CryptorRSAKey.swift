@@ -349,7 +349,11 @@ extension CryptorRSA {
 			
 				#else
 			
-					key = SecCertificateCopyKey(certData)
+					if #available(iOS 12, *) {
+						key = SecCertificateCopyKey(certData)
+					} else {
+						key = SecCertificateCopyPublicKey(certData)
+					}
 			
 				#endif
 			}
