@@ -321,38 +321,60 @@ extension CryptorRSA {
 			}
 			
 			var key: SecKey? = nil
-		
-			#if swift(>=4.2)
-		
-				if #available(macOS 10.14, iOS 12.0, watchOS 5.0, *) {
-					
-					key = SecCertificateCopyKey(certData)
-					
-				}
-		
-			#endif
-		
-			if key == nil {
-		
-				#if os(macOS)
-			
-					// Now extract the public key from it...
-					let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
-						
-						// Retrieves the public key from a certificate...
-						SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
-					}
-					if status != errSecSuccess {
-						
-						throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
-					}
-			
-				#else
-			
-					key = SecCertificateCopyPublicKey(certData)
-			
-				#endif
-			}
+        
+            #if swift(<4.2)
+                #if os(macOS)
+
+                    // Now extract the public key from it...
+                    let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
+                        
+                        // Retrieves the public key from a certificate...
+                        SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
+                    }
+
+                    if status != errSecSuccess {
+            
+                        throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
+                    }
+
+                #else
+                   
+                    key = SecCertificateCopyPublicKey(certData)
+
+                #endif
+            #else
+                #if os(macOS)
+                    if #available(macOS 10.14, *) {
+                        key = SecCertificateCopyKey(certData)
+                    } else {
+                        // Now extract the public key from it...
+                        let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
+                            
+                            // Retrieves the public key from a certificate...
+                            SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
+                        }
+
+                        if status != errSecSuccess {
+                
+                            throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
+                        }
+                    }
+                #else
+                    let copyKey: (SecCertificate) -> SecKey?
+
+                    #if targetEnvironment(macCatalyst)
+                        copyKey = SecCertificateCopyKey
+                    #else
+                        if #available(iOS 12.0, watchOS 5.0, *) {
+                            copyKey = SecCertificateCopyKey
+                        } else {
+                            copyKey = SecCertificateCopyPublicKey
+                        }
+                    #endif
+                    
+                    key = copyKey(certData)
+                #endif
+            #endif
 		
 			guard let createdKey = key else {
 				
