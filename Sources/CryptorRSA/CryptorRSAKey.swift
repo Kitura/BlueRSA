@@ -322,27 +322,7 @@ extension CryptorRSA {
 			
 			var key: SecKey? = nil
         
-            #if swift(<4.2)
-                #if os(macOS)
-
-                    // Now extract the public key from it...
-                    let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
-                        
-                        // Retrieves the public key from a certificate...
-                        SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
-                    }
-
-                    if status != errSecSuccess {
-            
-                        throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
-                    }
-
-                #else
-                   
-                    key = SecCertificateCopyPublicKey(certData)
-
-                #endif
-            #else
+            #if swift(>=4.2)
                 #if os(macOS)
                     if #available(macOS 10.14, *) {
                         key = SecCertificateCopyKey(certData)
@@ -373,6 +353,26 @@ extension CryptorRSA {
                     #endif
                     
                     key = copyKey(certData)
+                #endif
+            #else
+                #if os(macOS)
+
+                    // Now extract the public key from it...
+                    let status: OSStatus = withUnsafeMutablePointer(to: &key) { ptr in
+                        
+                        // Retrieves the public key from a certificate...
+                        SecCertificateCopyPublicKey(certData, UnsafeMutablePointer(ptr))
+                    }
+
+                    if status != errSecSuccess {
+            
+                        throw Error(code: ERR_EXTRACT_PUBLIC_KEY_FAILED, reason: "Unable to extract public key from data.")
+                    }
+
+                #else
+                   
+                    key = SecCertificateCopyPublicKey(certData)
+
                 #endif
             #endif
 		
