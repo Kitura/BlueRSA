@@ -32,7 +32,7 @@ var targetDependencies: [Target.Dependency] = []
 #elseif os(Linux)
 	
     let CryptoLibUrl = "https://github.com/Kitura/OpenSSL.git"
-    let CryptoLibVersion: Package.Dependency.Requirement = .upToNextMajor(from: "1.0.1")
+    let CryptoLibVersion: Package.Dependency.Requirement = .upToNextMajor(from: "1.0.200")
     targetDependencies.append(.byName(name: "OpenSSL"))
 	
 #else
