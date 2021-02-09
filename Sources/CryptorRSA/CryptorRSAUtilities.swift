@@ -366,28 +366,3 @@ extension String {
 		return result
 	}
 }
-
-
-// MARK: -
-
-#if !os(Linux)
-
-	// MARK: -- CFString Extension for Hashing
-	
-	///
-	/// Extension to CFString to make it hashable.
-	///
-	extension CFString: Hashable {
-		
-		/// Return the hash value of a CFString
-		public var hashValue: Int {
-			return (self as String).hashValue
-		}
-		
-		/// Comparison of CFStrings
-		static public func == (lhs: CFString, rhs: CFString) -> Bool {
-			return lhs as String == rhs as String
-		}
-	}
-	
-#endif
