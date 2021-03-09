@@ -58,7 +58,7 @@ matrix:
       env: SWIFT_SNAPSHOT=$SWIFT_DEVELOPMENT_SNAPSHOT
 
 before_install:
-  - git clone https://github.com/IBM-Swift/Package-Builder.git
+  - git clone https://github.com/Kitura/Package-Builder.git
 
 script:
   - openssl version
