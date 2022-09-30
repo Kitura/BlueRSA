@@ -27,20 +27,20 @@ Swift cross-platform RSA wrapper library for RSA encryption and signing. Works o
 ### Swift
 
 * Swift Open Source `swift-4.0.0-RELEASE` toolchain (**Minimum REQUIRED for latest release**)
-* Swift Open Source `swift-4.2-RELEASE` toolchain (**Recommended**)
+* Swift Open Source `swift-5.2-RELEASE` toolchain (**Recommended**)
 * Swift toolchain included in *Xcode Version 10.0 (10A255) or higher*.
 
 ### macOS
 
-* macOS 10.12.0 (*Sierra*) or higher
-* Xcode Version 9.0 (9A325) or higher using the included toolchain (**Minimum REQUIRED for latest release**).
-* Xcode Version 10.0 (10A255) or higher using the included toolchain (**Recommended**).
+* macOS 11.5.0 (*Big Sur*) or higher
+* Xcode Version 12.0 (9A325) or higher using the included toolchain (**Minimum REQUIRED for latest release**).
+* Xcode Version 13.4.1 (13F100) or higher using the included toolchain (**Recommended**).
 
 ### iOS
 
-* iOS 10.3 or higher
+* iOS 14.5 or higher
 * Xcode Version 9.0 (9A325) or higher using the included toolchain (**Minimum REQUIRED for latest release**).
-* Xcode Version 10.0 (10A255) or higher using the included toolchain (**Recommended**).
+* Xcode Version 13.4.1 (13F100) or higher using the included toolchain (**Recommended**).
 
 ### Linux
 
