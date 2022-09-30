@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "4F3FBB8E-2678-4A3F-A8C1-4F6CC12DADE7",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testExecutionOrdering" : "random"
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:CryptorRSA.xcodeproj",
+        "identifier" : "502F0A9328E74DF5009CE053",
+        "name" : "CryptorRSA-iOSTests"
+      }
+    }
+  ],
+  "version" : 1
+}

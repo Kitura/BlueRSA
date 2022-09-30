@@ -1,0 +1,29 @@
+{
+  "configurations" : [
+    {
+      "id" : "8216C5C2-3BA7-437A-A26B-B3A21C8757DE",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:CryptorRSA.xcodeproj",
+      "identifier" : "OBJ_16",
+      "name" : "CryptorRSA"
+    },
+    "testExecutionOrdering" : "random"
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:CryptorRSA.xcodeproj",
+        "identifier" : "OBJ_23",
+        "name" : "CryptorRSATests"
+      }
+    }
+  ],
+  "version" : 1
+}
