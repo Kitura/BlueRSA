@@ -531,7 +531,7 @@ extension CryptorRSA {
     /// - Returns: 		A tuple containing the (`PrivateKey`, `PublicKey`) instances.
 	///
 	public class func makeKeyPair(_ keySize: RSAKey.KeySize) throws -> (PrivateKey, PublicKey) {
-		#if os(Linux)
+	#if os(Linux)
 			var pkey = EVP_PKEY_new()
 			let ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nil)
 			defer {
@@ -550,7 +550,7 @@ extension CryptorRSA {
 
 			return(privKey, pubKey)
 
-		#else
+	#else
 			#if targetEnvironment(simulator)
 				let publicKeyAttributes: [NSObject: Any] = [:]
 				let privateKeyAbbributes: [NSObject: Any] = [:]
@@ -582,7 +582,7 @@ extension CryptorRSA {
 			let publicKey = PublicKey(with: pubKey)
 
 			return (privateKey, publicKey)
-		#endif
+	#endif
 	}
     
 	
