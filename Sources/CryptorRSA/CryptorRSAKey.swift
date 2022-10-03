@@ -531,58 +531,58 @@ extension CryptorRSA {
     /// - Returns: 		A tuple containing the (`PrivateKey`, `PublicKey`) instances.
 	///
 	public class func makeKeyPair(_ keySize: RSAKey.KeySize) throws -> (PrivateKey, PublicKey) {
-#if os(Linux)
-        var pkey = EVP_PKEY_new()
-		let ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nil)
-		defer {
-			EVP_PKEY_CTX_free(ctx)
-		}
-		guard EVP_PKEY_keygen_init(ctx) == 1,
-			EVP_PKEY_CTX_ctrl(ctx, -1, EVP_PKEY_OP_KEYGEN, EVP_PKEY_CTRL_RSA_KEYGEN_BITS, Int32(keySize.bits), nil) == 1,
-			EVP_PKEY_keygen(ctx, &pkey) == 1
-			else {
-				EVP_PKEY_free(pkey)
-				throw Error(code: ERR_INIT_PK, reason: "Could not generate rsa pair for \(keySize.bits) bits")
-		}
-		let privKey = PrivateKey(with: .make(optional: pkey))
-		let publicPem = try RSAKey.getPEMString(reference: privKey.reference, keyType: .publicType, stripped: false)
-		let pubKey = try CryptorRSA.createPublicKey(withPEM: publicPem)
+		#if os(Linux)
+			var pkey = EVP_PKEY_new()
+			let ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nil)
+			defer {
+				EVP_PKEY_CTX_free(ctx)
+			}
+			guard EVP_PKEY_keygen_init(ctx) == 1,
+				EVP_PKEY_CTX_ctrl(ctx, -1, EVP_PKEY_OP_KEYGEN, EVP_PKEY_CTRL_RSA_KEYGEN_BITS, Int32(keySize.bits), nil) == 1,
+				EVP_PKEY_keygen(ctx, &pkey) == 1
+				else {
+					EVP_PKEY_free(pkey)
+					throw Error(code: ERR_INIT_PK, reason: "Could not generate rsa pair for \(keySize.bits) bits")
+			}
+			let privKey = PrivateKey(with: .make(optional: pkey))
+			let publicPem = try RSAKey.getPEMString(reference: privKey.reference, keyType: .publicType, stripped: false)
+			let pubKey = try CryptorRSA.createPublicKey(withPEM: publicPem)
 
-        return(privKey, pubKey)
+			return(privKey, pubKey)
 
-#else
-    #if targetEnvironment(simulator)
-        let publicKeyAttributes: [NSObject: Any] = [:]
-        let privateKeyAbbributes: [NSObject: Any] = [:]
-    #else
-        let publicKeyAttributes: [NSObject: Any] = [
-            kSecAttrIsPermanent: true,
-        ]
-        let privateKeyAbbributes: [NSObject: Any] = [
-            kSecAttrIsPermanent: true,
-        ]
-    #endif
+		#else
+			#if targetEnvironment(simulator)
+				let publicKeyAttributes: [NSObject: Any] = [:]
+				let privateKeyAbbributes: [NSObject: Any] = [:]
+			#else
+				let publicKeyAttributes: [NSObject: Any] = [
+					kSecAttrIsPermanent: true,
+				]
+				let privateKeyAbbributes: [NSObject: Any] = [
+					kSecAttrIsPermanent: true,
+				]
+			#endif
 
-		let parameters: [NSObject: Any] = [
-			kSecAttrKeyType: kSecAttrKeyTypeRSA,
-			kSecAttrKeySizeInBits: keySize.bits,
-            kSecPublicKeyAttrs: publicKeyAttributes,
-            kSecPrivateKeyAttrs: privateKeyAbbributes,
-        ]
-       
-        var error: Unmanaged<CFError>?
+			let parameters: [NSObject: Any] = [
+				kSecAttrKeyType: kSecAttrKeyTypeRSA,
+				kSecAttrKeySizeInBits: keySize.bits,
+				kSecPublicKeyAttrs: publicKeyAttributes,
+				kSecPrivateKeyAttrs: privateKeyAbbributes,
+			]
+		   
+			var error: Unmanaged<CFError>?
 
-        // The keys are automatically stored in the keychain
-        guard let privKey = SecKeyCreateRandomKey(parameters as CFDictionary, &error),
-            let pubKey = SecKeyCopyPublicKey(privKey) else {
-            throw Error(code: ERR_INIT_PK, reason: "Could not generate rsa pair for \(keySize.bits) bits (\(String(describing: error)))")
-        }
+			// The keys are automatically stored in the keychain
+			guard let privKey = SecKeyCreateRandomKey(parameters as CFDictionary, &error),
+				let pubKey = SecKeyCopyPublicKey(privKey) else {
+				throw Error(code: ERR_INIT_PK, reason: "Could not generate rsa pair for \(keySize.bits) bits (\(String(describing: error)))")
+			}
 
-        let privateKey = PrivateKey(with: privKey)
-        let publicKey = PublicKey(with: pubKey)
+			let privateKey = PrivateKey(with: privKey)
+			let publicKey = PublicKey(with: pubKey)
 
-		return (privateKey, publicKey)
-#endif
+			return (privateKey, publicKey)
+		#endif
 	}
     
 	

@@ -767,7 +767,7 @@ cSNAr2BBC8bJ9AfZnRu9+Y1/VyXY91R95bQoMFfgwZdMUEyuL5gG524QplqF
 				let decryptedString = try decrypted?.string(using: .utf8)
 				XCTAssertEqual(decryptedString, str)
 			} catch {
-                XCTFail("test_makeKeyPair failed for bitSize: \(bitSize.bits), with error: \(error)")
+				XCTFail("test_makeKeyPair failed for bitSize: \(bitSize.bits), with error: \(error)")
 			}
 		}
 		
