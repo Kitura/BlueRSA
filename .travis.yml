@@ -38,7 +38,6 @@ matrix:
       sudo: required
       env: SWIFT_SNAPSHOT=$SWIFT_DEVELOPMENT_SNAPSHOT
 
-
 before_install:
   - git clone https://github.com/Kitura/Package-Builder.git
 
