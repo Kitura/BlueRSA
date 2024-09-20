@@ -286,7 +286,7 @@ public extension CryptorRSA {
 		index += 1
 		
 		let strippedKeyBytes = [UInt8](byteArray[index...keyData.count - 1])
-		let data = Data(bytes: strippedKeyBytes)
+        let data = Data(strippedKeyBytes)
 		return data
 	}
 	
