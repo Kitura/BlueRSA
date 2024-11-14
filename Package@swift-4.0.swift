@@ -24,7 +24,7 @@ import PackageDescription
 
 var targetDependencies: [Target.Dependency] = []
 
-#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+#if !os(Linux)
 	
     let CryptoLibUrl = "https://github.com/Kitura/CommonCrypto.git"
     let CryptoLibVersion: Package.Dependency.Requirement = .upToNextMajor(from: "1.0.200")
