@@ -553,19 +553,35 @@ extension CryptorRSA {
 
         #else
 
-			let parameters: [String: AnyObject] = [
-				kSecAttrKeyType as String:          kSecAttrKeyTypeRSA,
-				kSecAttrKeySizeInBits as String:    keySize.bits as AnyObject,
-				kSecPublicKeyAttrs as String: [ kSecAttrIsPermanent as String: true as AnyObject ] as AnyObject,
-				kSecPrivateKeyAttrs as String: [ kSecAttrIsPermanent as String: true as AnyObject ] as AnyObject,
+			#if targetEnvironment(simulator)
+				let publicKeyAttributes: [NSObject: Any] = [:]
+				let privateKeyAbbributes: [NSObject: Any] = [:]
+			#else
+				let publicKeyAttributes: [NSObject: Any] = [
+					kSecAttrIsPermanent: true,
 				]
-			var pubKey, privKey: SecKey?
-			let status = SecKeyGeneratePair(parameters as CFDictionary, &pubKey, &privKey)
-			guard status == 0, let newPubKey = pubKey, let newPrivKey = privKey else {
-				throw Error(code: ERR_INIT_PK, reason: "Could not generate rsa pair for \(keySize.bits) bits")
+				let privateKeyAbbributes: [NSObject: Any] = [
+					kSecAttrIsPermanent: true,
+				]
+			#endif
+
+			let parameters: [NSObject: Any] = [
+				kSecAttrKeyType: kSecAttrKeyTypeRSA,
+				kSecAttrKeySizeInBits: keySize.bits,
+				kSecPublicKeyAttrs: publicKeyAttributes,
+				kSecPrivateKeyAttrs: privateKeyAbbributes,
+			]
+		   
+			var error: Unmanaged<CFError>?
+
+			// The keys are automatically stored in the keychain
+			guard let privKey = SecKeyCreateRandomKey(parameters as CFDictionary, &error),
+				let pubKey = SecKeyCopyPublicKey(privKey) else {
+				throw Error(code: ERR_INIT_PK, reason: "Could not generate rsa pair for \(keySize.bits) bits (\(String(describing: error)))")
 			}
-			let privateKey = PrivateKey(with: newPrivKey)
-			let publicKey = PublicKey(with: newPubKey)
+
+			let privateKey = PrivateKey(with: privKey)
+			let publicKey = PublicKey(with: pubKey)
 
 			return (privateKey, publicKey)
         #endif
