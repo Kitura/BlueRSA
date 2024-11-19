@@ -19,7 +19,7 @@
 // 	limitations under the License.
 //
 
-#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
+#if !os(Linux)
 	import CommonCrypto
 #elseif os(Linux)
 	import OpenSSL
@@ -283,7 +283,7 @@ public extension CryptorRSA {
 		index += 1
 		
 		let strippedKeyBytes = [UInt8](byteArray[index...keyData.count - 1])
-		let data = Data(bytes: UnsafePointer<UInt8>(strippedKeyBytes), count: keyData.count - index)
+        let data = Data(strippedKeyBytes)
 		return data
 	}
 	
@@ -363,28 +363,3 @@ extension String {
 		return result
 	}
 }
-
-
-// MARK: -
-
-#if !os(Linux)
-
-	// MARK: -- CFString Extension for Hashing
-	
-	///
-	/// Extension to CFString to make it hashable.
-	///
-	extension CFString: Hashable {
-		
-		/// Return the hash value of a CFString
-		public var hashValue: Int {
-			return (self as String).hashValue
-		}
-		
-		/// Comparison of CFStrings
-		static public func == (lhs: CFString, rhs: CFString) -> Bool {
-			return lhs as String == rhs as String
-		}
-	}
-	
-#endif

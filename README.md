@@ -2,17 +2,11 @@
     <a href="https://www.kitura.io/packages.html#all">
     <img src="https://img.shields.io/badge/docs-kitura.io-1FBCE4.svg" alt="APIDoc">
     </a>
-    <a href="https://travis-ci.org/IBM-Swift/BlueRSA">
-    <img src="https://travis-ci.org/IBM-Swift/BlueRSA.svg?branch=master" alt="Build Status - Master">
-    </a>
-    <img src="https://img.shields.io/badge/os-macOS-green.svg?style=flat" alt="macOS">
-    <img src="https://img.shields.io/badge/os-iOS-green.svg?style=flat" alt="iOS">
-    <img src="https://img.shields.io/badge/os-linux-green.svg?style=flat" alt="Linux">
-    <img src="https://img.shields.io/badge/license-Apache2-blue.svg?style=flat" alt="Apache 2">
-    <a href="http://swift-at-ibm-slack.mybluemix.net/">
-    <img src="http://swift-at-ibm-slack.mybluemix.net/badge.svg" alt="Slack Status">
-    </a>
 </p>
+
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FKitura%2FBlueRSA%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/Kitura/BlueRSA)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FKitura%2FBlueRSA%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/Kitura/BlueRSA)
+
 
 # BlueRSA
 
@@ -27,20 +21,20 @@ Swift cross-platform RSA wrapper library for RSA encryption and signing. Works o
 ### Swift
 
 * Swift Open Source `swift-4.0.0-RELEASE` toolchain (**Minimum REQUIRED for latest release**)
-* Swift Open Source `swift-4.2-RELEASE` toolchain (**Recommended**)
+* Swift Open Source `swift-5.2-RELEASE` toolchain (**Recommended**)
 * Swift toolchain included in *Xcode Version 10.0 (10A255) or higher*.
 
 ### macOS
 
-* macOS 10.12.0 (*Sierra*) or higher
-* Xcode Version 9.0 (9A325) or higher using the included toolchain (**Minimum REQUIRED for latest release**).
-* Xcode Version 10.0 (10A255) or higher using the included toolchain (**Recommended**).
+* macOS 11.5.0 (*Big Sur*) or higher
+* Xcode Version 12.0 (9A325) or higher using the included toolchain (**Minimum REQUIRED for latest release**).
+* Xcode Version 13.4.1 (13F100) or higher using the included toolchain (**Recommended**).
 
 ### iOS
 
-* iOS 10.3 or higher
+* iOS 14.5 or higher
 * Xcode Version 9.0 (9A325) or higher using the included toolchain (**Minimum REQUIRED for latest release**).
-* Xcode Version 10.0 (10A255) or higher using the included toolchain (**Recommended**).
+* Xcode Version 13.4.1 (13F100) or higher using the included toolchain (**Recommended**).
 
 ### Linux
 
@@ -79,7 +73,7 @@ To run the supplied unit tests for **CryptorRSA** from the command line:
 To include BlueRSA into a Swift Package Manager package, add it to the `dependencies` attribute defined in your `Package.swift` file. You can select the version using the `majorVersion` and `minor` parameters. For example:
 ```
 	dependencies: [
-		.Package(url: "https://github.com/IBM-Swift/BlueRSA", majorVersion: <majorVersion>, minor: <minor>)
+		.package(url: "https://github.com/Kitura/BlueRSA", majorVersion: <majorVersion>, minor: <minor>)
 	]
 ```
 
@@ -87,7 +81,7 @@ To include BlueRSA into a Swift Package Manager package, add it to the `dependen
 
 To include BlueRSA in a project using Carthage, add a line to your `Cartfile` with the GitHub organization and project names and version. For example:
 ```
-	github "IBM-Swift/BlueRSA" ~> <majorVersion>.<minor>
+	github "Kitura/BlueRSA" ~> <majorVersion>.<minor>
 ```
 
 ### Before starting
@@ -184,7 +178,7 @@ let myData: Data = <... Data to be encrypted ...>
 
 let publicKey = try CryptorRSA.createPublicKey(withPEMNamed: keyName, onPath: keyPath)
 let myPlaintext = CryptorRSA.createPlaintext(with: myData)
-let encryptedData = try myPlaintext.encrypt(with: publicKey, algorithm: .sha1)
+let encryptedData = try myPlaintext.encrypted(with: publicKey, algorithm: .sha1)
 
 ...
 
@@ -248,9 +242,9 @@ let privateKey = try CryptorRSA.createPrivateKey(withPEMNamed: pkeyName, onPath:
 let myData: Data = <... Data to be encrypted ...>
 
 let myPlaintext = CryptorRSA.createPlaintext(with: myData)
-let encryptedData = try myPlaintext.encrypt(with: publicKey, algorithm: .sha1)
+let encryptedData = try myPlaintext.encrypted(with: publicKey, algorithm: .sha1)
 
-let decryptedData = try encryptedData.decrypt(with: privateKey, algorithm: .sha1)
+let decryptedData = try encryptedData.decrypted(with: privateKey, algorithm: .sha1)
 
 ...
 
@@ -315,4 +309,4 @@ We love to talk server-side Swift and Kitura. Join our [Slack](http://swift-at-i
 
 ## License
 
-This library is licensed under Apache 2.0. Full license text is available in [LICENSE](https://github.com/IBM-Swift/BlueRSA/blob/master/LICENSE).
+This library is licensed under Apache 2.0. Full license text is available in [LICENSE](https://github.com/Kitura/BlueRSA/blob/master/LICENSE).
