@@ -807,7 +807,7 @@ AqJRAgMBAAE=
 		let data1 = Data(base64Encoded: pemString) ?? Data()
 		print("data1 count=\(data1.count)")
 		do {
-			let pubKey = try CryptorRSA.createPublicKey(withPEM: pemString)
+			let _ = try CryptorRSA.createPublicKey(withPEM: pemString)
 			print("pemString1 successful")
 		} catch {
 			XCTFail("Error creating public key from pemString: \(error)")

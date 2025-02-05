@@ -225,7 +225,7 @@ public extension CryptorRSA {
 		if keyData[26] == 0x30 {
 			return(keyData.advanced(by: 26))
 		}
-		
+        
 		let count = keyData.count / MemoryLayout<CUnsignedChar>.size
 		
 		guard count > 0 else {
