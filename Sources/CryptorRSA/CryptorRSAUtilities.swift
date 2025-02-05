@@ -219,10 +219,10 @@ public extension CryptorRSA {
 	///
 	/// - Returns:					`Data` containing the public with header (if present) removed.
 	///
-	static func stripX509CertificateHeader(for keyData: Data) throws -> Data {
+	static func stripX509CertificateHeader(for keyData: Data, type: CryptorRSA.RSAKey.KeyType) throws -> Data {
 		
 		// If private key in pkcs8 format, strip the header
-		if keyData[26] == 0x30 {
+        if keyData[26] == 0x30 && type == .privateType {
 			return(keyData.advanced(by: 26))
 		}
 		
