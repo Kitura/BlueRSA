@@ -659,7 +659,7 @@ extension CryptorRSA {
 				let base64Data = Data(base64Encoded: base64String) {
 				data = base64Data
 			}
-			data = try CryptorRSA.stripX509CertificateHeader(for: data)
+			data = try CryptorRSA.stripX509CertificateHeader(for: data, type: type)
 			self.pemString = CryptorRSA.convertDerToPem(from: data, type: type)
 			self.type = type            
             reference = try CryptorRSA.createKey(from: data, type: type)
@@ -777,7 +777,7 @@ extension CryptorRSA {
 					guard let derData = Data(base64Encoded: derString) else {
 						throw Error(code: ERR_INIT_PK, reason: "Couldn't read PEM String")
 					}
-					let strippedDer = try CryptorRSA.stripX509CertificateHeader(for: derData)
+					let strippedDer = try CryptorRSA.stripX509CertificateHeader(for: derData, type: keyType)
 					let pkcs1PEM = CryptorRSA.convertDerToPem(from: strippedDer, type: keyType)
 					return pkcs1PEM
 				}
